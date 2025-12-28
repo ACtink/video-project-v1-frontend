@@ -8,6 +8,7 @@ export const WebRTCProvider = ({ children }) => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
+  const [cleanVideoChatMessagesUI, setCleanVideoChatMessagesUI] = useState(false);
 
   const pcRef = useRef(null);
   const dataChannelRef = useRef(null);
@@ -137,10 +138,14 @@ export const WebRTCProvider = ({ children }) => {
 
   const cleanupCall = () => {
     dataChannelRef.current?.close();
+    setDataChannelReady(false);
+    setDataChannel(null);
     pcRef.current?.close();
     dataChannelRef.current = null;
     pcRef.current = null;
+    setCleanVideoChatMessagesUI(true);
   };
+
 
   return (
     <webRTCContext.Provider
@@ -156,7 +161,9 @@ export const WebRTCProvider = ({ children }) => {
         cleanupCall,
         dataChannelReady,
         dataChannel,
-        setDataChannel
+        setDataChannel,
+        cleanVideoChatMessagesUI,
+        setCleanVideoChatMessagesUI,
       }}
     >
       {children}

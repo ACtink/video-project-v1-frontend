@@ -2,7 +2,14 @@ import { useContext, useEffect, useState } from "react";
 import { webRTCContext } from "../../context/WebRTC";
 
 function VideoChatBox({ wsConnected }) {
-  const { sendMessage, dataChannelRef , dataChannelReady , dataChannel } = useContext(webRTCContext);
+  const {
+    sendMessage,
+    dataChannelRef,
+    dataChannelReady,
+    dataChannel,
+    cleanVideoChatMessagesUI,
+    setCleanVideoChatMessagesUI,
+  } = useContext(webRTCContext);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -25,6 +32,13 @@ function VideoChatBox({ wsConnected }) {
     };
   }, [dataChannel]);
 
+
+  useEffect(() => {
+    if (cleanVideoChatMessagesUI) {
+      setMessages([]);
+      setCleanVideoChatMessagesUI(false);
+    }
+  }, [cleanVideoChatMessagesUI, setCleanVideoChatMessagesUI]);
 
 
 
@@ -69,7 +83,7 @@ function VideoChatBox({ wsConnected }) {
                   : "mr-auto bg-white/70 text-black"
               }`}
             >
-            {msg.from === "self" ? "You: " : "Stranger: "} {msg.text}
+              {msg.from === "self" ? "You: " : "Stranger: "} {msg.text}
             </div>
           ))}
         </div>
@@ -80,14 +94,34 @@ function VideoChatBox({ wsConnected }) {
             <input
               type="text"
               value={input}
+              disabled={!dataChannel}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               placeholder="Message…"
-              className="flex-1 px-3 py-2 rounded-md bg-white/70 text-gray-800 text-sm focus:outline-none"
+              className="
+        flex-1 px-3 py-2 rounded-md text-sm
+        bg-white/70 text-gray-800
+        focus:outline-none
+
+        disabled:bg-gray-200
+        disabled:text-gray-400
+        disabled:cursor-not-allowed
+        disabled:opacity-60
+      "
             />
+
             <button
               onClick={handleSendMessage}
-              className="px-3 py-2 bg-cyan-400 text-black rounded-md text-sm font-semibold"
+              disabled={!dataChannel}
+              className="
+        px-3 py-2 rounded-md text-sm font-semibold
+        bg-cyan-400 text-black
+
+        disabled:bg-gray-300
+        disabled:text-gray-500
+        disabled:cursor-not-allowed
+        disabled:opacity-60
+      "
             >
               Send
             </button>
