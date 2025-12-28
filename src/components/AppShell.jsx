@@ -5,6 +5,9 @@ import HomeView from "./views/HomeView";
 import VideoView from "./views/VideoView";
 import ChatView from "./views/ChatView";
 import ProfileView from "./views/ProfileView";
+import { WebSocketProvider } from "../context/WebSocket.jsx";
+import { WebRTCProvider } from "../context/WebRTC.jsx";
+import { RTCBridge } from "../context/RTCBridge.jsx";
 
 const tabs = [
   { id: "home", icon: Home },
@@ -33,7 +36,12 @@ function AppShell() {
     <div className="h-full w-full relative flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
       {/* Main content */}
       <div className="flex-1 overflow-hidden  pb-28">
-        {renderView()}
+        <WebRTCProvider>
+          <WebSocketProvider>
+            <RTCBridge />
+            {renderView()}
+          </WebSocketProvider>
+        </WebRTCProvider>
       </div>
 
       {/* Bottom feature bar */}

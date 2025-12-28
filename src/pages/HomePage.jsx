@@ -16,7 +16,7 @@ function HomePage() {
 
   const { user } = useAuth();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   
 
