@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
       setUser(data.user);
+      console.log("Fetched user profile:", data.user);
     } catch {
       setUser(null);
     } finally {

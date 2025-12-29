@@ -1,49 +1,96 @@
+import React, { useEffect, useState, useContext } from "react";
 import VideoChatBox from "./VideoChatBox";
-import React, { createContext, useEffect, useState, useContext } from "react";
 import { websocketContext } from "../../context/WebSocket.jsx";
 import { setupUserMedia } from "../../utils/userMedia.js";
 import { webRTCContext } from "../../context/WebRTC.jsx";
+import DisplayUserInfoCard from "../DisplayUserInfoCard.jsx";
+import Loader from "../Loader.jsx";
 
 function VideoView() {
+  const { connectToWebSocketServer, sendSignal, wsConnected } =
+    useContext(websocketContext);
+
+  const {
+    localVideoRef,
+    localStreamRef,
+    remoteVideoRef,
+    videoCallLoader,
+    setVideoCallLoader,
+    showUserCard,
+    setShowUserCard,
+    dataChannelForJsonMessages,
+    dataChannelForJsonRef,
+  } = useContext(webRTCContext);
+
+  /**
+   * UI PHASES
+   * idle → loading → card → video
+   */
+  const [viewPhase, setViewPhase] = useState("idle");
+
+  /* -------------------- CONNECT TO WS -------------------- */
+
+  useEffect(() => {
+    connectToWebSocketServer();
+  }, []);
+
+  /* -------------------- HANDLE USER INFO -------------------- */
+
+  // useEffect(() => {
+
+  //   console.log("in the video viws useeffect")
+
+  //       console.log("data channel for json  ",dataChannelForJsonRef.current);
+
+  //   if (!dataChannelForJsonRef.current) return;
 
 
-const { clientSocket, wsConnected, connectToWebSocketServer ,sendSignal } = useContext(websocketContext);
+  //   let timer;
 
-const { localVideoRef, localStreamRef , remoteVideoRef  } = useContext(webRTCContext);
+  //   const handleJsonMessage = (e) => {
+  //     console.log("handle json message is running ")
+  //     let msg;
+  //     try {
+  //       msg = JSON.parse(e.data);
+  //       console.log("user info", msg)
+  //     } catch {
+  //       return;
+  //     }
+
+  //     if (msg.type === "userInfo") {
+  //       setVideoCallLoader(false)
+  //       setShowUserCard(true);
+
+  //       timer = setTimeout(() => {
+  //         setShowUserCard(false);
+  //       }, 5000);
+  //     }
+  //   };
+
+  //           dataChannelForJsonRef.current.addEventListener(
+  //             "message",
+  //             handleJsonMessage
+  //           );
+
+  //   return () => {
+  //     clearTimeout(timer);
+  //     dataChannelForJsonMessages.current.removeEventListener(
+  //       "message",
+  //       handleJsonMessage
+  //     );
+  //   };
+  // }, [dataChannelForJsonMessages]);
 
 
-useEffect(() => {
 
-  const connectToServer = async()=>{
+useEffect(()=>{
 
-      await connectToWebSocketServer();
-
-      console.log("WebSocket connected:", wsConnected);
-
-
-
-  }
-
-  connectToServer();
-
-}, []); 
   
 
 
 
 
-
-
-const handleStart = async () => {
-  // 1️⃣ Get camera + mic first
-  await setupUserMedia(localVideoRef, localStreamRef );
-
-
-  // 2 Tell server you want to match
-  sendSignal({
-    type: "join-queue",
-  });
-};
+},[])
 
 
 
@@ -51,27 +98,28 @@ const handleStart = async () => {
 
 
 
+
+
+
+  /* -------------------- START CALL -------------------- */
+
+  const handleStart = async () => {
+    await setupUserMedia(localVideoRef, localStreamRef);
+
+    sendSignal({ type: "join-queue" });
+
+    // Loader starts here
+    setViewPhase("loading");
+    setVideoCallLoader(true);
+  };
+
+  /* -------------------- UI -------------------- */
 
   return (
     <div className="w-full h-full flex flex-col px-4 py-4 text-white bg-gradient-to-br from-[#0b0f1a] via-[#1a0f2e] to-[#0b1a2e]">
-      {/* VIDEOS & CHAT */}
       <div className="flex-1 w-full flex flex-col xl:flex-row gap-4 xl:gap-6 overflow-hidden">
         {/* LOCAL VIDEO */}
-
-        <div
-          className="
-              order-1
-              xl:order-1
-              w-full
-              xl:flex-[3]
-              h-[45vh]
-              xl:h-full
-              rounded-xl
-              border-[3px] border-cyan-400
-              bg-black
-              overflow-hidden
-            "
-        >
+        <div className="order-1 xl:flex-[3] h-[45vh] xl:h-full rounded-xl border-[3px] border-cyan-400 bg-black overflow-hidden">
           <video
             ref={localVideoRef}
             autoPlay
@@ -82,32 +130,26 @@ const handleStart = async () => {
         </div>
 
         {/* CHAT */}
-
         <VideoChatBox wsConnected={wsConnected} />
 
         {/* REMOTE VIDEO */}
-
-        <div
-          className="
-                  order-2
-                  xl:order-3
-                  w-full
-                  xl:flex-[3]
-                  h-[25vh]
-                  xl:h-full
-                  rounded-xl
-                  border-[3px] border-cyan-400
-                  bg-black
-                  overflow-hidden
-                "
-        >
+        <div className="relative order-2 xl:flex-[3] h-[25vh] xl:h-full rounded-xl border-[3px] border-cyan-400 bg-black overflow-hidden">
+          {/* VIDEO (hidden until phase === video) */}
           <video
+            ref={remoteVideoRef}
             autoPlay
             muted
             playsInline
-            ref={remoteVideoRef}
-            className="w-full h-full object-contain"
+            className={`
+    w-full h-full object-contain
+    transition-opacity duration-300
+    ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
+  `}
           />
+
+          {/* OVERLAYS */}
+          {videoCallLoader && <Loader />}
+          {showUserCard && <DisplayUserInfoCard />}
         </div>
       </div>
 
@@ -119,12 +161,15 @@ const handleStart = async () => {
         >
           Start
         </button>
+
         <button className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95">
           Next
         </button>
+
         <button className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95">
           Close
         </button>
+
         <button className="px-5 py-2 rounded-lg font-bold bg-red-600 text-white hover:bg-red-700 transition active:scale-95">
           Exit
         </button>

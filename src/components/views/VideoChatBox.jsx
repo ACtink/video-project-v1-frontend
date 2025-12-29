@@ -4,34 +4,50 @@ import { webRTCContext } from "../../context/WebRTC";
 function VideoChatBox({ wsConnected }) {
   const {
     sendMessage,
+    pcRef,
     dataChannelRef,
     dataChannelReady,
     dataChannel,
     cleanVideoChatMessagesUI,
     setCleanVideoChatMessagesUI,
+    sendJsonMessage,
   } = useContext(webRTCContext);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // Receive messages
+  //Receive messages
+
   useEffect(() => {
-    console.log("Data Channel value in VideoChatBox:", dataChannel);
+    // console.log("Data Channel value in VideoChatBox:", dataChannel);
 
     if (!dataChannel) return;
 
     const handleMessage = (e) => {
-      console.log("naya message aya", e.data);
-      setMessages((prev) => [...prev, { from: "peer", text: e.data }]);
+      console.log("naya message aya hai chatbox ke liye", e.data);
+
+      let msg;
+
+ 
+        msg = e.data;
+
+ 
+      
+
+      console.log("Normalized message:", JSON.stringify(msg));
+
+        setMessages((prev) => [...prev, { from: "peer", text: msg }]);
+      
     };
 
-    dataChannel.onmessage = handleMessage;
+    dataChannel.addEventListener("message", handleMessage);
 
     return () => {
-      dataChannel.onmessage = null;
+      dataChannel.removeEventListener("message", handleMessage);
     };
   }, [dataChannel]);
 
+  
 
   useEffect(() => {
     if (cleanVideoChatMessagesUI) {
@@ -55,81 +71,123 @@ function VideoChatBox({ wsConnected }) {
   };
 
   return (
-    <div className="order-3 xl:order-2 w-full xl:flex-[2] h-[30vh] xl:h-full flex flex-col bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden">
-      {/* TOP */}
-      <div className="shrink-0 px-4 py-4 border-b border-white/20">
-        <h3 className="font-semibold text-white text-sm">Video Chat</h3>
-        <p className="text-xs text-white/60">Connected with a stranger</p>
-        <p className="text-xs text-cyan-400 mt-1">
-          {wsConnected
-            ? "🟢 Connection established"
-            : "🔴 Connection not established"}
-        </p>
-      </div>
-
-      {/* CHAT AREA */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 px-3 py-2 space-y-2 overflow-y-auto text-sm">
-          {messages.length === 0 && (
-            <div className="text-center text-white/50">Say hello 👋</div>
-          )}
-
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`max-w-[75%] px-3 py-2 rounded-lg break-words ${
-                msg.from === "self"
-                  ? "ml-auto bg-cyan-400 text-black"
-                  : "mr-auto bg-white/70 text-black"
+    <div
+      className="
+    order-3 xl:order-2
+    w-full xl:flex-[2]
+    h-[32vh] sm:h-[40vh] xl:h-full
+    flex flex-col
+    bg-white/10 backdrop-blur-xl
+    border border-white/20
+    rounded-2xl overflow-hidden
+    shadow-lg
+  "
+    >
+      {/* HEADER */}
+      <div className="shrink-0 px-4 py-3 border-b border-white/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-white text-sm">Chat With the Stranger</h3>
+            <p
+              className={`text-xs font-medium ${
+                pcRef.current?.connectionState
+                  ? "text-emerald-400"
+                  : "text-red-400"
               }`}
             >
-              {msg.from === "self" ? "You: " : "Stranger: "} {msg.text}
-            </div>
-          ))}
-        </div>
-
-        {/* INPUT */}
-        <div className="px-3 py-2 border-t border-white/20">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              disabled={!dataChannel}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Message…"
-              className="
-        flex-1 px-3 py-2 rounded-md text-sm
-        bg-white/70 text-gray-800
-        focus:outline-none
-
-        disabled:bg-gray-200
-        disabled:text-gray-400
-        disabled:cursor-not-allowed
-        disabled:opacity-60
-      "
-            />
-
-            <button
-              onClick={handleSendMessage}
-              disabled={!dataChannel}
-              className="
-        px-3 py-2 rounded-md text-sm font-semibold
-        bg-cyan-400 text-black
-
-        disabled:bg-gray-300
-        disabled:text-gray-500
-        disabled:cursor-not-allowed
-        disabled:opacity-60
-      "
-            >
-              Send
-            </button>
+              {pcRef.current?.connectionState === "connected"
+                ? "Connected with a stranger"
+                : "Not connected yet"}
+            </p>
           </div>
+
+          <span
+            className={`text-xs font-medium ${
+              wsConnected ? "text-emerald-400" : "text-red-400"
+            }`}
+          >
+            {wsConnected ? "● Server is Online" : "● Server is Offline"}
+          </span>
+        </div>
+      </div>
+
+      {/* CHAT BODY */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 text-sm">
+        {messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-white/40 text-sm">
+            Say hello 👋
+          </div>
+        )}
+
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex ${
+              msg.from === "self" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`
+              max-w-[80%] px-4 py-2 rounded-2xl
+              break-words leading-relaxed
+              ${
+                msg.from === "self"
+                  ? "bg-cyan-400 text-black rounded-br-sm"
+                  : "bg-white/80 text-black rounded-bl-sm"
+              }
+            `}
+            >
+              <p className="text-xs font-semibold opacity-70 mb-0.5">
+                {msg.from === "self" ? "You" : "Stranger"}
+              </p>
+              <p>{msg.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* INPUT BAR */}
+      <div className="shrink-0 px-3 py-3 border-t border-white/20 bg-black/10">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={input}
+            disabled={!dataChannel}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder={
+              dataChannel ? "Type a message…" : "Find stranger first..."
+            }
+            className="
+            flex-1 px-4 py-2.5 rounded-full text-sm
+            bg-white/80 text-gray-900
+            focus:outline-none focus:ring-2 focus:ring-cyan-400
+
+            disabled:bg-white/30
+            disabled:text-white/40
+            disabled:cursor-not-allowed
+          "
+          />
+
+          <button
+            onClick={handleSendMessage}
+            disabled={!dataChannel}
+            className="
+            shrink-0 px-4 py-2.5 rounded-full
+            bg-cyan-400 text-black text-sm font-semibold
+            transition active:scale-95
+
+            disabled:bg-gray-400
+            disabled:text-gray-600
+            disabled:cursor-not-allowed
+          "
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>
   );
-}
 
+}
 export default VideoChatBox;

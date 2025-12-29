@@ -1,6 +1,7 @@
 
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useRef , useState} from "react";
+import { useAuth } from "../hooks/useAuth";
 
 export const webRTCContext = createContext(null);
 
@@ -9,12 +10,24 @@ export const WebRTCProvider = ({ children }) => {
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const [cleanVideoChatMessagesUI, setCleanVideoChatMessagesUI] = useState(false);
+const [showUserCard, setShowUserCard] = useState(false);
+
+  const { user } = useAuth();
 
   const pcRef = useRef(null);
   const dataChannelRef = useRef(null);
 
+  const [videoCallLoader, setVideoCallLoader] = useState(false);
+
 
   const [dataChannel, setDataChannel] = useState(null);
+
+    const dataChannelForJsonRef = useRef(null);
+
+
+    const [dataChannelForJsonMessages, setDataChannelForJsonMessages] = useState(null);
+
+
 
 
   const [dataChannelReady, setDataChannelReady] = useState(false);
@@ -35,23 +48,123 @@ export const WebRTCProvider = ({ children }) => {
       }
     };
 
-    pcRef.current.oniceconnectionstatechange = () => {
+    pcRef.current.oniceconnectionstatechange = async () => {
       console.log("ICE STATE:", pcRef.current.iceConnectionState);
+      if( pcRef.current.iceConnectionState === "disconnected" || pcRef.current.iceConnectionState === "failed"){
+        console.log("Peer disconnected");
+        // You can add cleanup logic here if needed
+      }if(pcRef.current.iceConnectionState === "connected" ){
+
+
+        sendJsonMessage({
+            type: "userInfo",
+            data: {
+              username: user?.username,
+              country: user?.country,
+            },
+          });
+
+                  setVideoCallLoader(false);
+
+        // await sendJsonMessage({username:user?.username,country:user?.country})
+        // setShowUserCard(true);
+        // setTimeout(() => {
+        // setShowUserCard(false);
+        // }, 5000);
+        console.log("Peers are connected via webrtc")
+      }
     };
 
+    // pcRef.current.ondatachannel = (event) => {
+
+    //   if(event.channel.label =="chat"){
+    //             console.log("calling in if chat data channel ");
+
+
+    //      dataChannelRef.current = event.channel;
+    //           //  setDataChannelReady(true);
+    //                  setDataChannel(dataChannelRef.current);
+
+
+
+    //   }
+     
+    //   console.log("data channel ki current value update hui hai dekho ye hai", event.channel);
+    //   console.log("DataChannel received");
+    //   // dataChannelRef.current.onmessage = (e) =>
+    //   //   console.log("📩", e.data);
+
+    //   if(event.channel=="info"){
+    //     console.log("calling in if info data channel ")
+    //     dataChannelForJsonRef.current = event.channel
+    //           setDataChannelForJsonMessages(dataChannelForJsonRef.current);
+
+    //   }
+    // };
+
+
     pcRef.current.ondatachannel = (event) => {
-      dataChannelRef.current = event.channel;
-      console.log("data channel ki current value update hui hai dekho ye hai", dataChannelRef.current);
-      console.log("DataChannel received");
-      setDataChannelReady(true);
-      setDataChannel(dataChannelRef.current);
-      // dataChannelRef.current.onmessage = (e) =>
-      //   console.log("📩", e.data);
+      const channel = event.channel;
+
+      if (channel.label === "chat") {
+        dataChannelRef.current = channel;
+        setDataChannel(channel);
+      }
+
+      if (channel.label === "info") {
+        console.log("calling in if info data channel");
+
+        dataChannelForJsonRef.current = channel;
+
+
+         dataChannelForJsonRef.current.onmessage = (e) => {
+           if (!dataChannelForJsonRef.current) return;
+
+           handleJsonMessage(e);
+         };   
+
+
+        setDataChannelForJsonMessages(channel);
+
+        // ✅ WAIT FOR OPEN, THEN SEND USER INFO
+        channel.onopen = () => {
+          console.log("✅ Info DataChannel open (callee)");
+          // setVideoCallLoader(false);
+
+
+        
+        };
+      }
     };
 
     
 
   };
+
+
+  const handleJsonMessage = (e) => {
+    console.log("handle json message is running ");
+    let msg;
+    try {
+      msg = JSON.parse(e.data);
+      console.log("user info", msg);
+    } catch {
+      return;
+    }
+
+    if (msg.type === "userInfo") {
+      setVideoCallLoader(false);
+      setShowUserCard(true);
+
+    }
+  };
+
+
+
+
+
+
+
 
   const startWebRTC = async (messagetype, userRole, sendSignal) => {
    await createPeerConnection(sendSignal);
@@ -64,18 +177,69 @@ export const WebRTCProvider = ({ children }) => {
     });
 
     if (userRole === "caller") {
+
+    dataChannelForJsonRef.current =
+                await pcRef.current.createDataChannel("info");
+
+    dataChannelForJsonRef.current.onmessage = (e)=>{
+
+          if (!dataChannelForJsonRef.current) return;
+
+
+          handleJsonMessage(e)
+
+
+    }            
+
       dataChannelRef.current =
-        pcRef.current.createDataChannel("chat");
+      await pcRef.current.createDataChannel("chat");
+
+
+
+
 
     console.log("data channel ki current value update hui hai dekho ye hai", dataChannelRef.current);
 
       dataChannelRef.current.onopen = () =>{
       console.log("✅ DataChannel open");
-      setDataChannelReady(true);
+      // setDataChannelReady(true);
       setDataChannel(dataChannelRef.current);
-      // dataChannelRef.current.onmessage = (e) =>
-      //   console.log("📩", e.data) ;
+
+     
     }
+
+    // dataChannelForJsonRef.current.onopen = () => {
+    //   console.log("✅ DataChannel open");
+    //   setDataChannelForJsonMessages(dataChannelForJsonRef.current);
+      
+    // };
+
+dataChannelForJsonRef.current.onopen = () => {
+  console.log("✅ Info DataChannel open");
+  setDataChannelForJsonMessages(dataChannelForJsonRef.current);
+
+    // setVideoCallLoader(false);
+
+
+  // ✅ SEND USER INFO HERE (SAFE)
+  // sendJsonMessage(
+  //   {
+  //     type: "userInfo",
+  //     data: {
+  //       username: user?.username,
+  //       country: user?.country,
+  //     },
+  //   }
+  // );
+
+
+
+
+}
+
+
+
+
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
 
@@ -130,20 +294,41 @@ export const WebRTCProvider = ({ children }) => {
     }
   };
 
-  const sendMessage = (text) => {
-    if (dataChannelRef.current?.readyState === "open") {
-      dataChannelRef.current.send(text);
-    }
-  };
+
+
+ const sendMessage = (text) => {
+   if (dataChannelRef.current?.readyState !== "open") return;
+
+   dataChannelRef.current.send(text);
+ };
+
+
+
+ const sendJsonMessage = (data) => {
+
+  console.log("sendjsonmessage is called")
+  console.log("jsonchannel ki value in json send message",dataChannelForJsonRef)
+   if (dataChannelForJsonRef.current?.readyState !== "open") return;
+
+
+   let message = JSON.stringify(data)
+console.log("printing message before sending to data channel", message)
+  //  dataChannelForJsonRef.current.send(message)
+ };
+
+
 
   const cleanupCall = () => {
     dataChannelRef.current?.close();
+    dataChannelForJsonRef.current.close()
     setDataChannelReady(false);
     setDataChannel(null);
     pcRef.current?.close();
     dataChannelRef.current = null;
     pcRef.current = null;
     setCleanVideoChatMessagesUI(true);
+    dataChannelForJsonRef.current = null
+    setDataChannelForJsonMessages(null)
   };
 
 
@@ -151,6 +336,7 @@ export const WebRTCProvider = ({ children }) => {
     <webRTCContext.Provider
       value={{
         localVideoRef,
+        pcRef,
         remoteVideoRef,
         localStreamRef,
         startWebRTC,
@@ -160,10 +346,18 @@ export const WebRTCProvider = ({ children }) => {
         sendMessage,
         cleanupCall,
         dataChannelReady,
-        dataChannel,
+        dataChannel: dataChannel,
         setDataChannel,
         cleanVideoChatMessagesUI,
         setCleanVideoChatMessagesUI,
+        videoCallLoader,
+        setVideoCallLoader,
+        showUserCard,
+        setShowUserCard,
+        dataChannelForJsonMessages,
+        setDataChannelForJsonMessages,
+        sendJsonMessage,
+        dataChannelForJsonRef
       }}
     >
       {children}
