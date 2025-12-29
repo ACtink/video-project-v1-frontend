@@ -17,6 +17,7 @@ const [showUserCard, setShowUserCard] = useState(false);
   const pcRef = useRef(null);
   const dataChannelRef = useRef(null);
 
+
   const [videoCallLoader, setVideoCallLoader] = useState(false);
 
 
@@ -27,10 +28,87 @@ const [showUserCard, setShowUserCard] = useState(false);
 
     const [dataChannelForJsonMessages, setDataChannelForJsonMessages] = useState(null);
 
-
+const [matchedUser, setMatchedUser] = useState(null)
 
 
   const [dataChannelReady, setDataChannelReady] = useState(false);
+
+
+
+  const handleJsonMessage = (e) => {
+    console.log("handle json message is running ");
+    let msg;
+    try {
+      msg = JSON.parse(e.data);
+    } catch {
+      return;
+    }
+
+    if (msg.type === "userInfo") {
+
+      console.log("user info aayi hai ", msg)
+
+      setMatchedUser(msg)
+
+      setVideoCallLoader(false);
+     
+    }
+  };
+
+
+
+
+
+
+
+
+const handleInfoChannel = (channel) => {
+  dataChannelForJsonRef.current = channel;
+  setDataChannelForJsonMessages(channel);
+
+  channel.onopen = () => {
+    console.log("✅ info channel ready:", channel.label);
+
+     sendJsonMessage({
+       type: "userInfo",
+       data: {
+         username: user?.username,
+         country: user?.country,
+       },
+     });
+
+    // 🔥 This fires on BOTH caller & receiver
+    // Safe place to:
+    // - stop loader
+    // - send userInfo
+    // - enable UI
+  };
+
+  channel.onmessage = (e) => {
+    console.log("📩 info:", e.data);
+    handleJsonMessage(e)
+
+
+
+
+
+  };
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const createPeerConnection = (sendSignal) => {
     pcRef.current = new RTCPeerConnection({
@@ -55,16 +133,12 @@ const [showUserCard, setShowUserCard] = useState(false);
         // You can add cleanup logic here if needed
       }if(pcRef.current.iceConnectionState === "connected" ){
 
+        console.log("after successful connection-value of dcjson", dataChannelForJsonRef.current)
 
-        sendJsonMessage({
-            type: "userInfo",
-            data: {
-              username: user?.username,
-              country: user?.country,
-            },
-          });
 
-                  setVideoCallLoader(false);
+       
+
+    
 
         // await sendJsonMessage({username:user?.username,country:user?.country})
         // setShowUserCard(true);
@@ -112,28 +186,30 @@ const [showUserCard, setShowUserCard] = useState(false);
       }
 
       if (channel.label === "info") {
-        console.log("calling in if info data channel");
+        console.log("calling in if info data channel on receiver side of data channel ");
 
-        dataChannelForJsonRef.current = channel;
+            handleInfoChannel(channel);
 
-
-         dataChannelForJsonRef.current.onmessage = (e) => {
-           if (!dataChannelForJsonRef.current) return;
-
-           handleJsonMessage(e);
-         };   
+        // dataChannelForJsonRef.current = channel;
 
 
-        setDataChannelForJsonMessages(channel);
+        //  dataChannelForJsonRef.current.onmessage = (e) => {
+        //    if (!dataChannelForJsonRef.current) return;
+
+        //    handleJsonMessage(e);
+        //  };   
+
+
+        // setDataChannelForJsonMessages(channel);
 
         // ✅ WAIT FOR OPEN, THEN SEND USER INFO
-        channel.onopen = () => {
-          console.log("✅ Info DataChannel open (callee)");
-          // setVideoCallLoader(false);
+        // channel.onopen = () => {
+        //   console.log("✅ Info DataChannel open (callee)");
+        //   // setVideoCallLoader(false);
 
 
         
-        };
+        // };
       }
     };
 
@@ -142,22 +218,7 @@ const [showUserCard, setShowUserCard] = useState(false);
   };
 
 
-  const handleJsonMessage = (e) => {
-    console.log("handle json message is running ");
-    let msg;
-    try {
-      msg = JSON.parse(e.data);
-      console.log("user info", msg);
-    } catch {
-      return;
-    }
-
-    if (msg.type === "userInfo") {
-      setVideoCallLoader(false);
-      setShowUserCard(true);
-
-    }
-  };
+  
 
 
 
@@ -178,18 +239,19 @@ const [showUserCard, setShowUserCard] = useState(false);
 
     if (userRole === "caller") {
 
-    dataChannelForJsonRef.current =
-                await pcRef.current.createDataChannel("info");
-
-    dataChannelForJsonRef.current.onmessage = (e)=>{
-
-          if (!dataChannelForJsonRef.current) return;
+      const infoChannel = pcRef.current.createDataChannel("info");
+      handleInfoChannel(infoChannel);
 
 
-          handleJsonMessage(e)
+    // dataChannelForJsonRef.current.onmessage = (e)=>{
+
+    //       if (!dataChannelForJsonRef.current) return;
 
 
-    }            
+    //       handleJsonMessage(e)
+
+
+    // }            
 
       dataChannelRef.current =
       await pcRef.current.createDataChannel("chat");
@@ -198,7 +260,7 @@ const [showUserCard, setShowUserCard] = useState(false);
 
 
 
-    console.log("data channel ki current value update hui hai dekho ye hai", dataChannelRef.current);
+    // console.log("data channel ki current value update hui hai dekho ye hai", dataChannelRef.current);
 
       dataChannelRef.current.onopen = () =>{
       console.log("✅ DataChannel open");
@@ -214,9 +276,9 @@ const [showUserCard, setShowUserCard] = useState(false);
       
     // };
 
-dataChannelForJsonRef.current.onopen = () => {
-  console.log("✅ Info DataChannel open");
-  setDataChannelForJsonMessages(dataChannelForJsonRef.current);
+// dataChannelForJsonRef.current.onopen = () => {
+//   console.log("✅ Info DataChannel open");
+//   setDataChannelForJsonMessages(dataChannelForJsonRef.current);
 
     // setVideoCallLoader(false);
 
@@ -235,7 +297,7 @@ dataChannelForJsonRef.current.onopen = () => {
 
 
 
-}
+// }
 
 
 
@@ -307,13 +369,13 @@ dataChannelForJsonRef.current.onopen = () => {
  const sendJsonMessage = (data) => {
 
   console.log("sendjsonmessage is called")
-  console.log("jsonchannel ki value in json send message",dataChannelForJsonRef)
+  console.log("jsonchannel ki value in json send message sent after conncting webrtc -value connected",dataChannelForJsonRef.current)
    if (dataChannelForJsonRef.current?.readyState !== "open") return;
 
 
    let message = JSON.stringify(data)
 console.log("printing message before sending to data channel", message)
-  //  dataChannelForJsonRef.current.send(message)
+   dataChannelForJsonRef.current.send(message)
  };
 
 
@@ -357,7 +419,8 @@ console.log("printing message before sending to data channel", message)
         dataChannelForJsonMessages,
         setDataChannelForJsonMessages,
         sendJsonMessage,
-        dataChannelForJsonRef
+        dataChannelForJsonRef,
+        matchedUser
       }}
     >
       {children}

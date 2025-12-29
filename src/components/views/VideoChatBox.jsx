@@ -16,6 +16,11 @@ function VideoChatBox({ wsConnected }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
+
+
+
+
+
   //Receive messages
 
   useEffect(() => {

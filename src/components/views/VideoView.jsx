@@ -20,13 +20,18 @@ function VideoView() {
     setShowUserCard,
     dataChannelForJsonMessages,
     dataChannelForJsonRef,
+    matchedUser
   } = useContext(webRTCContext);
 
-  /**
-   * UI PHASES
-   * idle → loading → card → video
-   */
-  const [viewPhase, setViewPhase] = useState("idle");
+
+
+    const [isLoaderDone, setIsLoaderDone] = useState(false);
+    const [isUserCardDone, setIsUserCardDone] = useState(false);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+    const shouldShowVideo = isLoaderDone && isUserCardDone && isVideoPlaying;
+
+const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
 
   /* -------------------- CONNECT TO WS -------------------- */
 
@@ -83,14 +88,27 @@ function VideoView() {
 
 
 
-useEffect(()=>{
-
-  
 
 
 
 
-},[])
+  useEffect(()=>{
+
+    let timer;
+    if (!videoCallLoader && matchedUser ) {
+      console.log("calling in if useeffect")
+      console.log("value of matched user in if condition of useeffect" , matchedUser)
+      timer = setTimeout(() => {
+        setShowUserCard(false);
+      }, 3000);
+      setShowUserCard(true);
+    }
+
+      return () => {
+        clearTimeout(timer);
+       
+      };
+  },[videoCallLoader])
 
 
 
@@ -109,7 +127,6 @@ useEffect(()=>{
     sendSignal({ type: "join-queue" });
 
     // Loader starts here
-    setViewPhase("loading");
     setVideoCallLoader(true);
   };
 
@@ -149,7 +166,7 @@ useEffect(()=>{
 
           {/* OVERLAYS */}
           {videoCallLoader && <Loader />}
-          {showUserCard && <DisplayUserInfoCard />}
+          {showUserCard && <DisplayUserInfoCard  strangerInfo={matchedUser} />}
         </div>
       </div>
 
