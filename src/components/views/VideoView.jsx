@@ -20,11 +20,25 @@ function VideoView() {
     setShowUserCard,
     dataChannelForJsonMessages,
     dataChannelForJsonRef,
-    matchedUser
+    matchedUser,
+    pcState,
+    remoteStream,
+    dataChannel,
+    pcReady,
+    dataChannelReady,
+    remoteStreamReady,
+    videoPlayingReady,
+    cleanupFull,
+    sessionActive,
+    setSessionActive,
+    cleanupRemotePeer
   } = useContext(webRTCContext);
 
 
 
+  const [uiState, setUiState] = useState("idle"); 
+
+const [started , setStarted] = useState(false)
     const [isLoaderDone, setIsLoaderDone] = useState(false);
     const [isUserCardDone, setIsUserCardDone] = useState(false);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -32,6 +46,36 @@ function VideoView() {
     const shouldShowVideo = isLoaderDone && isUserCardDone && isVideoPlaying;
 
 const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
+
+const allGoodAndConnected =
+  pcReady && remoteStreamReady && videoPlayingReady;
+
+  // const allGoodAndConnected =
+  // //   pcReady && remoteStreamReady && videoPlayingReady;
+  // const startButtonStage = !pcReady && uiState == "idle";
+  //   const exitButtonStage = !pcReady && uiState == "started" && localVideoRef!=null && localStreamRef!=null
+    // const nextButtonStage = pcReady && remoteStreamReady && videoPlayingReady;
+
+  
+
+    // const allGoodAndConnected =
+    //   pcReady && remoteStreamReady && videoPlayingReady;
+
+  console.log("value of pcReady", pcReady);
+    console.log("value of remoteStreamReady", remoteStreamReady);
+
+      console.log("value of videoPlayingReady", videoPlayingReady);
+
+        console.log("value of dataChannelReady", dataChannelReady);
+
+
+
+console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
+
+
+
+
+
 
   /* -------------------- CONNECT TO WS -------------------- */
 
@@ -87,8 +131,7 @@ const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
   // }, [dataChannelForJsonMessages]);
 
 
-
-
+ 
 
 
 
@@ -122,6 +165,10 @@ const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
   /* -------------------- START CALL -------------------- */
 
   const handleStart = async () => {
+
+         setSessionActive(true);
+
+
     await setupUserMedia(localVideoRef, localStreamRef);
 
     sendSignal({ type: "join-queue" });
@@ -129,6 +176,78 @@ const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
     // Loader starts here
     setVideoCallLoader(true);
   };
+
+
+
+  //  const handleExit = () => {
+  //      setUiState("idle");
+
+  //    // cleanup logic (close pc, stop tracks, etc.)
+
+
+  //       cleanupCallWhenCloseButtonIsPressed();
+
+  //  };
+
+
+
+
+
+
+    //  const handleStart = () => {
+    //    setUiState("searching");
+    //    // start matchmaking / webrtc
+    //  };
+
+  
+    //  const handleConnected = () => {
+    //    setUiState("connected");
+    //    // call this when peer is connected
+    //  };
+
+     const handleNext = () => {
+      //  setUiState("started");
+       // disconnect current peer & requeue
+       cleanupRemotePeer()
+        setSessionActive(true);
+     };
+
+
+    const handleClose = ()=>{
+
+            //  setUiState("idle");
+            //  setStarted(false)
+            //  cleanupCallWhenCloseButtonIsPressed
+              cleanupFull();
+              setSessionActive(false);
+
+
+     }
+
+    
+
+
+
+    // useEffect(() => {
+    //   const allReady =
+    //     ready.pc &&
+    //     ready.remoteStream &&
+    //     ready.videoPlaying &&
+    //     ready.dataChannel;
+
+    //   if (allReady && uiState !== "connected") {
+    //     setUiState("connected");
+    //   }
+    // }, [ready, uiState]);
+
+
+
+
+
+
+
+
+
 
   /* -------------------- UI -------------------- */
 
@@ -166,30 +285,58 @@ const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
 
           {/* OVERLAYS */}
           {videoCallLoader && <Loader />}
-          {showUserCard && <DisplayUserInfoCard  strangerInfo={matchedUser} />}
+          {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
         </div>
       </div>
 
       {/* CONTROLS */}
       <div className="mt-3 flex flex-wrap gap-3 justify-center shrink-0">
-        <button
-          onClick={handleStart}
-          className="px-5 py-2 rounded-lg font-bold bg-cyan-400 text-black hover:bg-cyan-300 transition active:scale-95"
-        >
-          Start
-        </button>
+        {!sessionActive && (
+          <>
+            {" "}
+            <button
+              disabled={started}
+              onClick={handleStart}
+              className="px-5 py-2 rounded-lg font-bold bg-cyan-400 text-black hover:bg-cyan-300 transition active:scale-95"
+            >
+              Start
+            </button>
+          </>
+        )}
 
-        <button className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95">
-          Next
-        </button>
+        {sessionActive && !allGoodAndConnected && (
+          <>
+            {/* <button
+              onClick={handleExit}
+              className="px-5 py-2 rounded-lg font-bold bg-red-600 text-white hover:bg-red-700 transition active:scale-95"
+            >
+              Exit
+            </button> */}
+            <button
+              onClick={handleClose}
+              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
+            >
+              Close
+            </button>
+          </>
+        )}
+        {sessionActive && allGoodAndConnected && (
+          <>
+            <button
+              onClick={handleNext}
+              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95"
+            >
+              Next
+            </button>
 
-        <button className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95">
-          Close
-        </button>
-
-        <button className="px-5 py-2 rounded-lg font-bold bg-red-600 text-white hover:bg-red-700 transition active:scale-95">
-          Exit
-        </button>
+            <button
+              onClick={handleClose}
+              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
+            >
+              Close
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

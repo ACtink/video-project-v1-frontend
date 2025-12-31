@@ -18,7 +18,7 @@ export function RTCBridge() {
 
       "ice-candidate": (m) => rtc.addIceCandidate(m.candidate),
 
-      "partner-disconnected": () => rtc.cleanupCall(),
+      "partner-disconnected": () => rtc.cleanupFull(),
     });
   }, [rtc, ws]);
 

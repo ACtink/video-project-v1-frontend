@@ -11,6 +11,7 @@ function VideoChatBox({ wsConnected }) {
     cleanVideoChatMessagesUI,
     setCleanVideoChatMessagesUI,
     sendJsonMessage,
+    
   } = useContext(webRTCContext);
 
   const [messages, setMessages] = useState([]);
