@@ -31,7 +31,9 @@ function VideoView() {
     cleanupFull,
     sessionActive,
     setSessionActive,
-    cleanupRemotePeer
+    cleanupRemotePeer,
+    endedByMe,
+    setEndedByMe,
   } = useContext(webRTCContext);
 
 
@@ -79,9 +81,17 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
 
   /* -------------------- CONNECT TO WS -------------------- */
 
-  useEffect(() => {
-    connectToWebSocketServer();
-  }, []);
+  // useEffect(() => {
+  // const ws =  connectToWebSocketServer();
+
+
+  //  return () => {
+  //    if (ws && ws.readyState === WebSocket.OPEN) {
+  //      ws.close();
+  //    }
+  //  };
+
+  // }, []);
 
   /* -------------------- HANDLE USER INFO -------------------- */
 
@@ -143,7 +153,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       console.log("value of matched user in if condition of useeffect" , matchedUser)
       timer = setTimeout(() => {
         setShowUserCard(false);
-      }, 3000);
+      }, 2000);
       setShowUserCard(true);
     }
 
@@ -165,6 +175,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
   /* -------------------- START CALL -------------------- */
 
   const handleStart = async () => {
+  setEndedByMe(false);
 
          setSessionActive(true);
 
@@ -206,23 +217,24 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
     //  };
 
      const handleNext = () => {
-      //  setUiState("started");
+       //  setUiState("started");
        // disconnect current peer & requeue
-       cleanupRemotePeer()
-        setSessionActive(true);
+       setEndedByMe(false); // 🔥 I did NOT leave system
+
+       cleanupRemotePeer();
+       setSessionActive(true);
      };
 
 
     const handleClose = ()=>{
+      //  setUiState("idle");
+      //  setStarted(false)
+      //  cleanupCallWhenCloseButtonIsPressed
+      setEndedByMe(true); // 🔥 I am leaving system
 
-            //  setUiState("idle");
-            //  setStarted(false)
-            //  cleanupCallWhenCloseButtonIsPressed
-              cleanupFull();
-              setSessionActive(false);
-
-
-     }
+      cleanupFull();
+      setSessionActive(false);
+    }
 
     
 

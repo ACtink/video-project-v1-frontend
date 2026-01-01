@@ -40,6 +40,7 @@ const [peerDisconnected, setPeerDisconnected] = useState(false)
 
 const [sessionActive, setSessionActive] = useState(false)
 
+const [endedByMe, setEndedByMe] = useState(false);
 
 
 
@@ -299,7 +300,7 @@ const [sessionActive, setSessionActive] = useState(false)
     }
 
      if (remoteVideoRef.current) {
-       localVideoRef.current.srcObject = null;
+       remoteVideoRef.current.srcObject = null;
      }
 
     // 3️⃣ Close data channels
@@ -387,7 +388,12 @@ const [sessionActive, setSessionActive] = useState(false)
 
 const handleRemoteDisconnect = () => {
   cleanupRemotePeer(); // 🔥 partial reset
-  setSessionActive(false);
+  if (endedByMe) {
+    // I caused this (Close or Next)
+    // Do NOTHING here
+    return;
+  }
+  setSessionActive(true);
 };
 
 
@@ -430,6 +436,9 @@ const handleRemoteDisconnect = () => {
         sessionActive,
         setSessionActive,
         cleanupRemotePeer,
+        setEndedByMe,
+        endedByMe,
+
 
        
         pcState,               // "new" | "connecting" | "connected"
