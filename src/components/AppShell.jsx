@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Home, Video, MessageCircle, User } from "lucide-react";
+
 
 import HomeView from "./views/HomeView";
 import VideoView from "./views/VideoView";
@@ -17,7 +18,17 @@ const tabs = [
 ];
 
 function AppShell() {
-  const [activeTab, setActiveTab] = useState("home");
+  // const [activeTab, setActiveTab] = useState("home");
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeTab") || "home";
+  });
+
+
+  useEffect(() => {
+    localStorage.setItem("activeTab", activeTab);
+  }, [activeTab]);
+
 
   const renderView = () => {
     switch (activeTab) {
