@@ -10,7 +10,7 @@ export function RTCBridge() {
     if (!rtc || !ws) return;
 
     ws.registerHandlers({
-      matched: (m) => rtc.startWebRTC(m.type, m.role, ws.sendSignal),
+      "matched_ack": (m) => rtc.startWebRTC(m.type, m.role, ws.sendSignal),
 
       offer: (m) => rtc.handleOffer(m.type, m.offer, ws.sendSignal),
 

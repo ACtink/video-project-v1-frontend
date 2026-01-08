@@ -7,7 +7,7 @@ import DisplayUserInfoCard from "../DisplayUserInfoCard.jsx";
 import Loader from "../Loader.jsx";
 
 function VideoView() {
-  const { connectToWebSocketServer, sendSignal, wsConnected } =
+  const { connectToWebSocketServer, sendSignal, wsConnected , uiState , setUiState } =
     useContext(websocketContext);
 
   const {
@@ -34,11 +34,12 @@ function VideoView() {
     cleanupRemotePeer,
     endedByMe,
     setEndedByMe,
+    setMatchedUser
   } = useContext(webRTCContext);
 
 
 
-  const [uiState, setUiState] = useState("idle"); 
+  // const [uiState, setUiState] = useState("idle"); 
 
 const [started , setStarted] = useState(false)
     const [isLoaderDone, setIsLoaderDone] = useState(false);
@@ -152,6 +153,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       console.log("calling in if useeffect")
       console.log("value of matched user in if condition of useeffect" , matchedUser)
       timer = setTimeout(() => {
+        setMatchedUser(null);
         setShowUserCard(false);
       }, 2000);
       setShowUserCard(true);
@@ -159,6 +161,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
 
       return () => {
         clearTimeout(timer);
+        
        
       };
   },[videoCallLoader])
@@ -175,9 +178,10 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
   /* -------------------- START CALL -------------------- */
 
   const handleStart = async () => {
-  setEndedByMe(false);
 
-         setSessionActive(true);
+  // setEndedByMe(false);
+
+  // setSessionActive(true);
 
 
     await setupUserMedia(localVideoRef, localStreamRef);
@@ -221,8 +225,10 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
        // disconnect current peer & requeue
        setEndedByMe(false); // 🔥 I did NOT leave system
 
-       cleanupRemotePeer();
-       setSessionActive(true);
+       sendSignal({ type: "next" });
+
+      //  cleanupRemotePeer();
+      //  setSessionActive(true);
      };
 
 
@@ -231,8 +237,9 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       //  setStarted(false)
       //  cleanupCallWhenCloseButtonIsPressed
       setEndedByMe(true); // 🔥 I am leaving system
+      sendSignal({ type: "end-call" });
 
-      cleanupFull();
+      // cleanupFull();
       setSessionActive(false);
     }
 
@@ -303,7 +310,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
 
       {/* CONTROLS */}
       <div className="mt-3 flex flex-wrap gap-3 justify-center shrink-0">
-        {!sessionActive && (
+        {uiState == "idle" && (
           <>
             {" "}
             <button
@@ -316,7 +323,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
           </>
         )}
 
-        {sessionActive && !allGoodAndConnected && (
+        {uiState == "successfully_queued" && (
           <>
             {/* <button
               onClick={handleExit}
@@ -332,11 +339,16 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
             </button>
           </>
         )}
-        {sessionActive && allGoodAndConnected && (
+        {(allGoodAndConnected ||
+          uiState == "successfully_skipped_and_searching") && (
           <>
             <button
               onClick={handleNext}
-              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95"
+              disabled={
+                uiState == "successfully_skipped_and_searching" ? true : false
+              }
+              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95
+             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
             >
               Next
             </button>
@@ -349,6 +361,27 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
             </button>
           </>
         )}
+        {/* {uiState == "successfully_skipped_and_searching" && (
+          <>
+            <button
+              onClick={handleNext}
+              disabled={
+                uiState == "successfully_skipped_and_searching" ? true : false
+              }
+              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95
+             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
+            >
+              Next
+            </button>
+
+            <button
+              onClick={handleClose}
+              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
+            >
+              Close
+            </button>
+          </>
+        )} */}
       </div>
     </div>
   );

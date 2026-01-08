@@ -101,6 +101,9 @@ const [endedByMe, setEndedByMe] = useState(false);
   };
 
   const createPeerConnection = (sendSignal) => {
+
+        console.log("createPeerConnection function is running ");
+
     pcRef.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -128,6 +131,19 @@ const [endedByMe, setEndedByMe] = useState(false);
 
        console.log("PC state:", state);
 
+        if (state === "connected") {
+          // ✅ Peer connection fully established
+          // safe place to:
+          // - enable Next / Close buttons
+          // - mark call as active
+          // - notify UI
+                    setPcReady(true);
+                    console.log("Peers are connected via webrtc");
+
+
+          return;
+        }
+
        if (
          state === "disconnected" ||
          state === "failed" ||
@@ -154,9 +170,9 @@ const [endedByMe, setEndedByMe] = useState(false);
         );
 
 
-          setPcReady(true);
+          // setPcReady(true);
 
-        console.log("Peers are connected via webrtc");
+        // console.log("Peers are connected via webrtc");
       }
     };
 
@@ -184,6 +200,8 @@ const [endedByMe, setEndedByMe] = useState(false);
   };
 
   const startWebRTC = async (messagetype, userRole, sendSignal) => {
+
+    console.log("startwebrtc function is running ")
     await createPeerConnection(sendSignal);
 
     console.log("SIGNALING:", pcRef.current.signalingState);
@@ -354,10 +372,11 @@ const [endedByMe, setEndedByMe] = useState(false);
 
      // 6️⃣ Reset UI state
      setDataChannel(null);
+     setPcReady(false)
      setDataChannelForJsonMessages(null);
      setDataChannelReady(false);
      setCleanVideoChatMessagesUI(true);
-     setVideoCallLoader(false);
+     setVideoCallLoader(true);
    };
 
 
@@ -438,6 +457,7 @@ const handleRemoteDisconnect = () => {
         cleanupRemotePeer,
         setEndedByMe,
         endedByMe,
+        setMatchedUser,
 
 
        

@@ -1,6 +1,7 @@
 
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { webRTCContext } from "./WebRTC";
 
 export const websocketContext = createContext(null);
 
@@ -8,6 +9,11 @@ export const WebSocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const handlersRef = useRef({});
   const [wsConnected, setWsConnected] = React.useState(false);
+
+const { setVideoCallLoader, cleanupFull, cleanupRemotePeer } =
+  useContext(webRTCContext);
+
+  const [uiState , setUistate] = useState("idle")
 
 let pingInterval
 
@@ -36,7 +42,7 @@ let pingInterval
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ type: "ping" }));
     }
-  }, 30000);
+  }, 300000);
 
 
       setWsConnected(true);
@@ -56,6 +62,75 @@ let pingInterval
    socketRef.current.onmessage = (event) => {
      try {
        const message = JSON.parse(event.data);
+
+
+       switch (message.type) {
+         case "queued_ack":
+           if (message.success == "ok") {
+             setUistate("successfully_queued");
+             break;
+           } else {
+             return;
+           }
+         case "matched_ack":
+           if (message.success == "ok") {
+             setUistate("successfully_matched");
+             break;
+           } else {
+             return;
+           }
+
+         case "next_ack":
+           if (message.success == "ok") {
+             setUistate("successfully_done_next");
+             setVideoCallLoader(true);
+
+             cleanupRemotePeer()
+             break;
+           } else {
+             return;
+           }
+         case "close_ack":
+           if (message.success == "ok") {
+             setUistate("successfully_closed");
+             break;
+           } else {
+             return;
+           }
+         case "queued_and_searching_next_for_you":
+           if (message.success == "ok") {
+            console.log("case--------------->queued_and_searching_next_for_you ");
+             setUistate("successfully_skipped_and_searching");
+             setVideoCallLoader(true);
+             cleanupRemotePeer()
+             break;
+           } else {
+             return;
+           }
+         case "successfully_ended_call":
+           if (message.success == "ok") {
+                        console.log(
+                          "case--------------->successfully_ended_call"
+                        );
+
+             setUistate("idle");
+            //  setVideoCallLoader(false);
+             cleanupFull()
+             break;
+           } else {
+             return;
+           }
+       }
+       
+
+
+
+
+
+
+
+
+
        handlersRef.current[message.type]?.(message);
      } catch (e) {
        console.warn("Invalid WS message:", event.data);
@@ -98,6 +173,7 @@ let pingInterval
 
 
    const sendSignal = (msg) => {
+    console.log("sending message to server", msg)
       if (!socketRef.current) return;
 
       if (socketRef.current.readyState !== WebSocket.OPEN) {
@@ -110,7 +186,7 @@ let pingInterval
 
   return (
     <websocketContext.Provider
-      value={{  sendSignal, registerHandlers , wsConnected }}
+      value={{  sendSignal, registerHandlers , wsConnected , uiState , setUistate}}
     >
       {children}
     </websocketContext.Provider>
