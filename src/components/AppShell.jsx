@@ -16,14 +16,17 @@ const tabs = [
   { id: "profile", icon: User },
 ];
 
-function AppShell() {
+function AppShell({ setShowHeader }) {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "home";
   });
 
-  useEffect(() => {
-    localStorage.setItem("activeTab", activeTab);
-  }, [activeTab]);
+useEffect(() => {
+  localStorage.setItem("activeTab", activeTab);
+
+  // 🔥 layout decision here
+  setShowHeader(activeTab !== "video");
+}, [activeTab, setShowHeader]);
 
   const renderView = () => {
     switch (activeTab) {

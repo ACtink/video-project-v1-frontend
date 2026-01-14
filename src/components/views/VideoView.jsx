@@ -237,7 +237,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       //  setUiState("idle");
       //  setStarted(false)
       //  cleanupCallWhenCloseButtonIsPressed
-      setEndedByMe(true); // 🔥 I am leaving system
+      // setEndedByMe(true); // 🔥 I am leaving system
       sendSignal({ type: "end-call" });
 
       // cleanupFull();
@@ -286,7 +286,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
         </div>
 
         {/* CHAT */}
-        <VideoChatBox wsConnected={wsConnected} />
+        {/* <VideoChatBox wsConnected={wsConnected} uiState={uiState} /> */}
 
         {/* REMOTE VIDEO */}
         <div className="relative order-2 xl:flex-[3] h-[25vh] xl:h-full rounded-xl border-[3px] border-cyan-400 bg-black overflow-hidden">
@@ -304,7 +304,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
           />
 
           {/* OVERLAYS */}
-          {videoCallLoader && <Loader />}
+          {(videoCallLoader && uiState !== "idle") && <Loader />}
           {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
         </div>
       </div>

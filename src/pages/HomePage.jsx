@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
@@ -15,6 +15,8 @@ function HomePage() {
 
 
 const { user, loading } = useAuth();
+  const [showHeader, setShowHeader] = useState(true);
+
 
   // const navigate = useNavigate();
 
@@ -25,7 +27,7 @@ const { user, loading } = useAuth();
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 text-white flex flex-col">
-      <Layout header={<Header />}>
+      <Layout header={<Header />} showHeader={showHeader}>
         {loading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 animate-fade-in">
@@ -47,7 +49,7 @@ const { user, loading } = useAuth();
             </div>
           </div>
         ) : user ? (
-          <AppShell />
+          <AppShell setShowHeader={setShowHeader} />
         ) : (
           <LandingInfo />
         )}

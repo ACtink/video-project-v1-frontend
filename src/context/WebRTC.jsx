@@ -323,6 +323,7 @@ export const WebRTCProvider = ({ children }) => {
     dataChannelForJsonRef.current = null;
 
     // 6️⃣ Reset UI state
+    setStrangerUserProfileData(null);
     setDataChannel(null);
     setDataChannelForJsonMessages(null);
     setDataChannelReady(false);

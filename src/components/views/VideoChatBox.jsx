@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { UserPlus, UserCheck } from "lucide-react";
 import { webRTCContext } from "../../context/WebRTC";
+import { websocketContext } from "../../context/WebSocket";
 
-function VideoChatBox({ wsConnected }) {
+function VideoChatBox({ wsConnected , uiState }) {
   const {
     sendMessage,
     pcRef,
@@ -15,6 +16,8 @@ function VideoChatBox({ wsConnected }) {
     strangerUserProfileData,
     setstrangerUserProfileData,
   } = useContext(webRTCContext);
+
+  // const {uiState} = useContext(websocketContext);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -157,7 +160,12 @@ function VideoChatBox({ wsConnected }) {
                           }
                         `}
               >
-                {isFollowing ? <UserCheck size={18} /> : <UserPlus size={18} />}
+                {uiState !== "idle" &&
+                  (isFollowing ? (
+                    <UserCheck size={18} />
+                  ) : (
+                    <UserPlus size={18} />
+                  ))}
               </button>
             )}
 
