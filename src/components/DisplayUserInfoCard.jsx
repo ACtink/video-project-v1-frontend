@@ -33,6 +33,9 @@ function DisplayUserInfoCard({ strangerInfo = {} }) {
         </p>
 
         <h2 className="text-2xl font-semibold text-white">
+          {strangerInfo?.data?.id || "unknown id"}
+        </h2>
+        <h2 className="text-2xl font-semibold text-white">
           {strangerInfo?.data?.username || "Anonymous"}
         </h2>
 

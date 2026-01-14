@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Home, Video, MessageCircle, User } from "lucide-react";
 
-
 import HomeView from "./views/HomeView";
 import VideoView from "./views/VideoView";
 import ChatView from "./views/ChatView";
@@ -18,22 +17,18 @@ const tabs = [
 ];
 
 function AppShell() {
-  // const [activeTab, setActiveTab] = useState("home");
-
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "home";
   });
-
 
   useEffect(() => {
     localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
-
   const renderView = () => {
     switch (activeTab) {
       case "video":
-        return <VideoView />;
+        return <VideoView activeTab={activeTab} />;
       case "chat":
         return <ChatView />;
       case "profile":
@@ -44,9 +39,9 @@ function AppShell() {
   };
 
   return (
-    <div className="h-full w-full relative flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+    <div className="h-full w-full relative flex flex-col bg-black">
       {/* Main content */}
-      <div className="flex-1 overflow-hidden  pb-28">
+      <div className="flex-1 overflow-hidden pb-28">
         <WebRTCProvider>
           <WebSocketProvider>
             <RTCBridge />
@@ -56,8 +51,20 @@ function AppShell() {
       </div>
 
       {/* Bottom feature bar */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2">
-        <div className="flex gap-4 px-5 py-3 bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full flex justify-center px-4">
+        <div
+          className="
+            w-fit
+            flex justify-center
+            gap-4 sm:gap-6 lg:gap-8
+            px-6 sm:px-10 lg:px-16
+            py-3
+            bg-white/20 backdrop-blur-xl
+            border border-white/30
+            rounded-2xl
+            shadow-2xl
+          "
+        >
           {tabs.map(({ id, icon: Icon }) => (
             <button
               key={id}

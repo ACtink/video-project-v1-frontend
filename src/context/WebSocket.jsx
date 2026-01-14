@@ -2,6 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { webRTCContext } from "./WebRTC";
+import { useAuth } from "../hooks/useAuth";
 
 export const websocketContext = createContext(null);
 
@@ -10,12 +11,51 @@ export const WebSocketProvider = ({ children }) => {
   const handlersRef = useRef({});
   const [wsConnected, setWsConnected] = React.useState(false);
 
+    const [messages, setMessages] = React.useState([]);
+
+      const { user } = useAuth(); // ✅ current logged-in user
+    
+
+
 const { setVideoCallLoader, cleanupFull, cleanupRemotePeer } =
   useContext(webRTCContext);
 
   const [uiState , setUistate] = useState("idle")
 
 let pingInterval
+
+function handleIncomingMessage(message) {
+  // message = { messageId, from, text, createdAt }
+
+  setMessages((prev) => {
+    const exists = prev.some((m) => m.messageId === message.messageId);
+    if (exists) return prev;
+
+    console.log("Received new message:", message);
+    console.log("Current user id:", user._id);
+
+    return [
+      ...prev,
+      {
+        messageId: message?.message.messageId,
+        from: message?.message.from, // ✅ sender id
+        to: user._id, // ✅ receiver = me
+        text: message?.message.text,
+        status: "delivered",
+        createdAt: new Date(message?.message.createdAt).getTime(),
+      },
+    ];
+  });
+}
+
+function handleAck({ messageId, status }) {
+
+  console.log("Received ack for message:", messageId, "with status:", status);
+  setMessages((prev) =>
+    prev.map((msg) => (msg.messageId === messageId ? { ...msg, status } : msg))
+  );
+}
+
 
 
   function connectToWebSocketServer() {
@@ -36,6 +76,14 @@ let pingInterval
     socketRef.current =  new WebSocket(url);
 
     socketRef.current.onopen = (event) => {
+
+
+  // socketRef.current.send(
+  //   JSON.stringify({
+  //     type: "chat_auth",
+  //     token,
+  //   })
+  // );
   console.log("WebSocket connected");
 
    pingInterval = setInterval(() => {
@@ -65,6 +113,14 @@ let pingInterval
 
 
        switch (message.type) {
+         case "chat_deliver":
+           handleIncomingMessage(message);
+           break;
+
+         case "ack":
+           handleAck(message);
+           break;
+
          case "queued_ack":
            if (message.success == "ok") {
              setUistate("successfully_queued");
@@ -85,7 +141,7 @@ let pingInterval
              setUistate("successfully_done_next");
              setVideoCallLoader(true);
 
-             cleanupRemotePeer()
+             cleanupRemotePeer();
              break;
            } else {
              return;
@@ -99,23 +155,23 @@ let pingInterval
            }
          case "queued_and_searching_next_for_you":
            if (message.success == "ok") {
-            console.log("case--------------->queued_and_searching_next_for_you ");
+             console.log(
+               "case--------------->queued_and_searching_next_for_you "
+             );
              setUistate("successfully_skipped_and_searching");
              setVideoCallLoader(true);
-             cleanupRemotePeer()
+             cleanupRemotePeer();
              break;
            } else {
              return;
            }
          case "successfully_ended_call":
            if (message.success == "ok") {
-                        console.log(
-                          "case--------------->successfully_ended_call"
-                        );
+             console.log("case--------------->successfully_ended_call");
 
              setUistate("idle");
-            //  setVideoCallLoader(false);
-             cleanupFull()
+             //  setVideoCallLoader(false);
+             cleanupFull();
              break;
            } else {
              return;
@@ -186,7 +242,7 @@ let pingInterval
 
   return (
     <websocketContext.Provider
-      value={{  sendSignal, registerHandlers , wsConnected , uiState , setUistate}}
+      value={{  sendSignal, registerHandlers , wsConnected , uiState , setUistate , messages, setMessages }}
     >
       {children}
     </websocketContext.Provider>

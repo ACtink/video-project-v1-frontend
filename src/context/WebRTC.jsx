@@ -11,6 +11,7 @@ export const WebRTCProvider = ({ children }) => {
   const [cleanVideoChatMessagesUI, setCleanVideoChatMessagesUI] =
     useState(false);
   const [showUserCard, setShowUserCard] = useState(false);
+  const [strangerUserProfileData, setStrangerUserProfileData] = useState(null); // cached profile
 
   const { user } = useAuth();
 
@@ -30,29 +31,23 @@ export const WebRTCProvider = ({ children }) => {
 
   const [dataChannelReady, setDataChannelReady] = useState(false);
 
+  const [pcReady, setPcReady] = useState(false);
+  const [pcState, setPcState] = useState(false);
+  const [remoteStreamReady, setRemoteStreamReady] = useState(false);
+  const [videoPlayingReady, setVideoPlayingReady] = useState(false);
 
-const [pcReady, setPcReady] = useState(false);
-const [pcState, setPcState] = useState(false);
-const [remoteStreamReady, setRemoteStreamReady] = useState(false);
-const [videoPlayingReady, setVideoPlayingReady] = useState(false);
+  const [peerDisconnected, setPeerDisconnected] = useState(false);
 
-const [peerDisconnected, setPeerDisconnected] = useState(false)
+  const [sessionActive, setSessionActive] = useState(false);
 
-const [sessionActive, setSessionActive] = useState(false)
+  const [endedByMe, setEndedByMe] = useState(false);
 
-const [endedByMe, setEndedByMe] = useState(false);
+  // const endSession = () => {
 
-
-
-
-// const endSession = () => {
-
-//    setSessionActive(false); 
-//   cleanupCallWhenCloseButtonIsPressed();
-//  // UI → Start only
-// };
-
-
+  //    setSessionActive(false);
+  //   cleanupCallWhenCloseButtonIsPressed();
+  //  // UI → Start only
+  // };
 
   const handleJsonMessage = (e) => {
     console.log("handle json message is running ");
@@ -67,6 +62,8 @@ const [endedByMe, setEndedByMe] = useState(false);
       console.log("user info aayi hai ", msg);
 
       setMatchedUser(msg);
+      setStrangerUserProfileData(msg);
+
 
       setVideoCallLoader(false);
     }
@@ -79,9 +76,12 @@ const [endedByMe, setEndedByMe] = useState(false);
     channel.onopen = () => {
       console.log("✅ info channel ready:", channel.label);
 
+      console.log("user ki info in datachannel open--->", user);
+
       sendJsonMessage({
         type: "userInfo",
         data: {
+          id: user?._id,
           username: user?.username,
           country: user?.country,
         },
@@ -96,13 +96,13 @@ const [endedByMe, setEndedByMe] = useState(false);
 
     channel.onmessage = (e) => {
       console.log("📩 info:", e.data);
+      console.log("user info---->", e.data);
       handleJsonMessage(e);
     };
   };
 
   const createPeerConnection = (sendSignal) => {
-
-        console.log("createPeerConnection function is running ");
+    console.log("createPeerConnection function is running ");
 
     pcRef.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -111,12 +111,11 @@ const [endedByMe, setEndedByMe] = useState(false);
     pcRef.current.ontrack = (event) => {
       remoteVideoRef.current.srcObject = event.streams[0];
       console.log("REMOTE STREAM is being received");
-  setRemoteStreamReady(true);
-
+      setRemoteStreamReady(true);
     };
 
     remoteVideoRef.current.onplaying = () => {
-  setVideoPlayingReady(true);
+      setVideoPlayingReady(true);
     };
 
     pcRef.current.onicecandidate = (event) => {
@@ -127,32 +126,30 @@ const [endedByMe, setEndedByMe] = useState(false);
 
     pcRef.current.onconnectionstatechange = () => {
       setPcState(pcRef.current.connectionState);
-       const state = pcRef.current.connectionState;
+      const state = pcRef.current.connectionState;
 
-       console.log("PC state:", state);
+      console.log("PC state:", state);
 
-        if (state === "connected") {
-          // ✅ Peer connection fully established
-          // safe place to:
-          // - enable Next / Close buttons
-          // - mark call as active
-          // - notify UI
-                    setPcReady(true);
-                    console.log("Peers are connected via webrtc");
+      if (state === "connected") {
+        // ✅ Peer connection fully established
+        // safe place to:
+        // - enable Next / Close buttons
+        // - mark call as active
+        // - notify UI
+        setPcReady(true);
+        console.log("Peers are connected via webrtc");
 
+        return;
+      }
 
-          return;
-        }
-
-       if (
-         state === "disconnected" ||
-         state === "failed" ||
-         state === "closed"
-       ) {
-          handleRemoteDisconnect();
-       }
+      if (
+        state === "disconnected" ||
+        state === "failed" ||
+        state === "closed"
+      ) {
+        handleRemoteDisconnect();
+      }
     };
-
 
     pcRef.current.oniceconnectionstatechange = async () => {
       console.log("ICE STATE:", pcRef.current.iceConnectionState);
@@ -169,14 +166,11 @@ const [endedByMe, setEndedByMe] = useState(false);
           dataChannelForJsonRef.current
         );
 
-
-          // setPcReady(true);
+        // setPcReady(true);
 
         // console.log("Peers are connected via webrtc");
       }
     };
-
-
 
     pcRef.current.ondatachannel = (event) => {
       const channel = event.channel;
@@ -194,14 +188,12 @@ const [endedByMe, setEndedByMe] = useState(false);
         handleInfoChannel(channel);
       }
 
-  setDataChannelReady(true);
-
+      setDataChannelReady(true);
     };
   };
 
   const startWebRTC = async (messagetype, userRole, sendSignal) => {
-
-    console.log("startwebrtc function is running ")
+    console.log("startwebrtc function is running ");
     await createPeerConnection(sendSignal);
 
     console.log("SIGNALING:", pcRef.current.signalingState);
@@ -222,14 +214,10 @@ const [endedByMe, setEndedByMe] = useState(false);
         setDataChannel(dataChannelRef.current);
       };
 
-
       dataChannelRef.current.onclose = () => {
         console.log("DataChannel closed");
-         handleRemoteDisconnect();
-
+        handleRemoteDisconnect();
       };
-
-
 
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
@@ -317,9 +305,9 @@ const [endedByMe, setEndedByMe] = useState(false);
       localVideoRef.current.srcObject = null;
     }
 
-     if (remoteVideoRef.current) {
-       remoteVideoRef.current.srcObject = null;
-     }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
 
     // 3️⃣ Close data channels
     dataChannelRef.current?.close();
@@ -333,94 +321,82 @@ const [endedByMe, setEndedByMe] = useState(false);
     pcRef.current = null;
     dataChannelRef.current = null;
     dataChannelForJsonRef.current = null;
-    
 
     // 6️⃣ Reset UI state
     setDataChannel(null);
     setDataChannelForJsonMessages(null);
     setDataChannelReady(false);
     setCleanVideoChatMessagesUI(true);
-    setVideoCallLoader(false)
-    setRemoteStreamReady(false)
-    setVideoPlayingReady(false)
-    setPcReady(false)
+    setVideoCallLoader(false);
+    setRemoteStreamReady(false);
+    setVideoPlayingReady(false);
+    setPcReady(false);
   };
 
-   const cleanupRemotePeer = () => {
-     // 1️⃣ Stop camera & mic
+  const cleanupRemotePeer = () => {
+    // 1️⃣ Stop camera & mic
     //  if (localStreamRef.current) {
     //    localStreamRef.current.getTracks().forEach((track) => track.stop());
     //  }
 
-     // 2️⃣ Detach video
+    // 2️⃣ Detach video
     //  if (localVideoRef.current) {
     //    localVideoRef.current.srcObject = null;
     //  }
 
-     // 3️⃣ Close data channels
-     dataChannelRef.current?.close();
-     dataChannelForJsonRef.current?.close();
+    // 3️⃣ Close data channels
+    dataChannelRef.current?.close();
+    dataChannelForJsonRef.current?.close();
 
-     // 4️⃣ Close peer connection
-     pcRef.current?.close();
+    // 4️⃣ Close peer connection
+    pcRef.current?.close();
 
-     // 5️⃣ Reset refs
+    // 5️⃣ Reset refs
     //  localStreamRef.current = null;
-     pcRef.current = null;
-     dataChannelRef.current = null;
-     dataChannelForJsonRef.current = null;
+    pcRef.current = null;
+    dataChannelRef.current = null;
+    dataChannelForJsonRef.current = null;
 
-     // 6️⃣ Reset UI state
-     setDataChannel(null);
-     setPcReady(false)
-     setDataChannelForJsonMessages(null);
-     setDataChannelReady(false);
-     setCleanVideoChatMessagesUI(true);
-     setVideoCallLoader(true);
-   };
+    // 6️⃣ Reset UI state
+    setDataChannel(null);
+    setPcReady(false);
+    setDataChannelForJsonMessages(null);
+    setDataChannelReady(false);
+    setCleanVideoChatMessagesUI(true);
+    setVideoCallLoader(true);
+  };
 
+  // const handlePeerDisconnected = () => {
+  //   console.log("Peer disconnected");
 
-// const handlePeerDisconnected = () => {
-//   console.log("Peer disconnected");
+  //   cleanupCallWhenCloseButtonIsPressed(); // stop streams, close pc
 
-//   cleanupCallWhenCloseButtonIsPressed(); // stop streams, close pc
+  // }
 
-// }
+  // const handlePeerDisconnected = () => {
+  //   console.log("Peer disconnected");
+  //   setPeerDisconnected(true)
+  //             setPcReady(false);
 
-// const handlePeerDisconnected = () => {
-//   console.log("Peer disconnected");
-//   setPeerDisconnected(true)
-//             setPcReady(false);
+  //   if(pcRef.current!=null && localVideoRef.current != null ){
 
+  //     cleanupCallWhenNextButtonIsPressed(); // stop streams, close pc
+  //   }
+  // else{
+  //   cleanupCallWhenCloseButtonIsPressed()
+  // }
 
-//   if(pcRef.current!=null && localVideoRef.current != null ){
+  // };
 
-
-//     cleanupCallWhenNextButtonIsPressed(); // stop streams, close pc
-//   }
-// else{
-//   cleanupCallWhenCloseButtonIsPressed()
-// }
-
-
-// };
-
-const handleRemoteDisconnect = () => {
-  cleanupRemotePeer(); // 🔥 partial reset
-  if (endedByMe) {
-    // I caused this (Close or Next)
-    // Do NOTHING here
-    return;
-  }
-  setSessionActive(true);
-};
-
-
-
-
-
-
-
+  const handleRemoteDisconnect = () => {
+    cleanupRemotePeer(); // 🔥 partial reset
+    if (endedByMe) {
+      // I caused this (Close or Next)
+      // Do NOTHING here
+      return;
+    }
+    setSessionActive(true);
+  };
 
   return (
     <webRTCContext.Provider
@@ -458,10 +434,10 @@ const handleRemoteDisconnect = () => {
         setEndedByMe,
         endedByMe,
         setMatchedUser,
+        strangerUserProfileData,
+        setStrangerUserProfileData,
 
-
-       
-        pcState,               // "new" | "connecting" | "connected"
+        pcState, // "new" | "connecting" | "connected"
       }}
     >
       {children}

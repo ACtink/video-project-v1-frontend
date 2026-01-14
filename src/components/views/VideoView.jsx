@@ -6,7 +6,7 @@ import { webRTCContext } from "../../context/WebRTC.jsx";
 import DisplayUserInfoCard from "../DisplayUserInfoCard.jsx";
 import Loader from "../Loader.jsx";
 
-function VideoView() {
+function VideoView({ activeTab }) {
   const { connectToWebSocketServer, sendSignal, wsConnected , uiState , setUiState } =
     useContext(websocketContext);
 
@@ -146,6 +146,8 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
 
 
 
+
+
   useEffect(()=>{
 
     let timer;
@@ -164,8 +166,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
         
        
       };
-  },[videoCallLoader])
-
+  },[videoCallLoader, matchedUser])
 
 
 

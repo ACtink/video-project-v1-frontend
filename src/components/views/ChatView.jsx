@@ -1,18 +1,33 @@
-import { useState } from "react";
-import { MessageCircle, ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import ChatBox from "./ChatBox";
-
-const mockChats = [
-  { id: 1, username: "alex", lastMessage: "Hey!" },
-  { id: 2, username: "maria", lastMessage: "See you later" },
-  { id: 3, username: "john", lastMessage: "Hello" },
-];
 
 function ChatView() {
   const [activeChat, setActiveChat] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/chat/contacts", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        setChats(data);
+      } catch (err) {
+        console.error("Failed to load chats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChats();
+  }, []);
 
   return (
-    <div className="w-full h-full bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden flex">
+    <div className="w-full h-full bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden flex">
       {/* CHAT LIST */}
       <div
         className={`
@@ -27,18 +42,27 @@ function ChatView() {
         </div>
 
         <div className="overflow-y-auto">
-          {mockChats.map((chat) => (
-            <button
-              key={chat.id}
-              onClick={() => setActiveChat(chat)}
-              className="w-full text-left px-4 py-3 hover:bg-white/20 transition"
-            >
-              <p className="text-white font-medium">{chat.username}</p>
-              <p className="text-white/60 text-sm truncate">
-                {chat.lastMessage}
-              </p>
-            </button>
-          ))}
+          {loading && (
+            <p className="p-4 text-white/60 text-sm">Loading chats…</p>
+          )}
+
+          {!loading && chats.length === 0 && (
+            <p className="p-4 text-white/60 text-sm">No chats available</p>
+          )}
+
+          {!loading &&
+            chats.map((chat) => (
+              <button
+                key={chat._id}
+                onClick={() => setActiveChat(chat)}
+                className="w-full text-left px-4 py-3 hover:bg-white/20 transition"
+              >
+                <p className="text-white font-medium">{chat.username}</p>
+                <p className="text-white/60 text-sm truncate">
+                  Start a conversation
+                </p>
+              </button>
+            ))}
         </div>
       </div>
 
