@@ -2,6 +2,9 @@ import { useState } from "react";
 import { joinUser } from "../api/auth";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import { COUNTRIES } from "../data/countries";
+import CountrySelect from "../components/CountrySelect";
+import GenderSelect from "../components/GenderSelect";
 
 const JoinPage = () => {
   const [formData, setFormData] = useState({
@@ -49,7 +52,9 @@ const JoinPage = () => {
         password: formData.password,
         age: Number(formData.age),
         country: formData.country.trim(),
+        gender: formData.gender,
         acceptedTerms: formData.acceptedTerms,
+        
       });
 
       setSuccess(true);
@@ -60,6 +65,7 @@ const JoinPage = () => {
         password: "",
         age: "",
         country: "",
+        gender: "",
         acceptedTerms: false,
       });
     } catch (err) {
@@ -165,21 +171,39 @@ const JoinPage = () => {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-white">
-                  Country
-                </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  placeholder="Your country"
-                  required
-                  className="mt-1 w-full px-4 py-3 rounded-xl bg-white/70 text-gray-800 placeholder-gray-500 border border-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
+             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* ===================== COUNTRY ===================== */}
+  <div>
+    <label className="block text-sm font-medium text-white">
+      Country
+    </label>
+
+    <CountrySelect
+      value={formData.country}
+      countries={COUNTRIES}
+      onChange={(code) =>
+        setFormData((prev) => ({ ...prev, country: code }))
+      }
+    />
+  </div>
+
+  {/* ===================== GENDER ===================== */}
+  <div>
+    <label className="block text-sm font-medium text-white">
+      Gender
+    </label>
+
+    <GenderSelect
+      value={formData.gender}
+      onChange={(val) =>
+        setFormData((prev) => ({ ...prev, gender: val }))
+      }
+    />
+  </div>
+</div>
+
               </div>
-            </div>
+     
 
             <div className="flex items-start gap-3">
               <input

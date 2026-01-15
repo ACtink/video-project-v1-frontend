@@ -157,7 +157,7 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       timer = setTimeout(() => {
         setMatchedUser(null);
         setShowUserCard(false);
-      }, 2000);
+      }, 3000);
       setShowUserCard(true);
     }
 
@@ -299,7 +299,7 @@ return (
           `}
         />
 
-        {videoCallLoader && uiState !== "idle" && <Loader />}
+        {videoCallLoader && uiState !== "idle" && <Loader uiState={uiState} allGoodAndConnected={allGoodAndConnected} />}
         {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
       </div>
     </div>
@@ -398,7 +398,7 @@ return (
             <>
               <button
                 onClick={handleNext}
-                disabled={uiState === "successfully_skipped_and_searching"}
+                disabled={uiState === "successfully_skipped_and_searching" || videoCallLoader || !allGoodAndConnected || showUserCard}
                 className="
                   w-[30%]
                   sm:w-[200px]

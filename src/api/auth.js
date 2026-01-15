@@ -1,4 +1,6 @@
 export const joinUser = async (payload) => {
+
+  console.log("Joining user with payload:", payload);
   const response = await fetch("http://localhost:3000/api/auth/join", {
     method: "POST",
     headers: {
