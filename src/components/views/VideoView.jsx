@@ -270,122 +270,207 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
 
 
   /* -------------------- UI -------------------- */
-
-  return (
-    <div className="w-full h-full flex flex-col px-4 py-4 text-white bg-gradient-to-br from-[#0b0f1a] via-[#1a0f2e] to-[#0b1a2e]">
-      <div className="flex-1 w-full flex flex-col xl:flex-row gap-4 xl:gap-6 overflow-hidden">
-        {/* LOCAL VIDEO */}
-        <div className="order-1 xl:flex-[3] h-[45vh] xl:h-full rounded-xl border-[3px] border-cyan-400 bg-black overflow-hidden">
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-contain"
-          />
-        </div>
-
-        {/* CHAT */}
-        {/* <VideoChatBox wsConnected={wsConnected} uiState={uiState} /> */}
-
-        {/* REMOTE VIDEO */}
-        <div className="relative order-2 xl:flex-[3] h-[25vh] xl:h-full rounded-xl border-[3px] border-cyan-400 bg-black overflow-hidden">
-          {/* VIDEO (hidden until phase === video) */}
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className={`
-    w-full h-full object-contain
-    transition-opacity duration-300
-    ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
-  `}
-          />
-
-          {/* OVERLAYS */}
-          {(videoCallLoader && uiState !== "idle") && <Loader />}
-          {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
-        </div>
+return (
+  <div className="w-full h-full flex flex-col text-white bg-gradient-to-br from-[#0b0f1a] via-[#1a0f2e] to-[#0b1a2e]">
+    {/* ===================== TOP : VIDEO AREA (70% on xl) ===================== */}
+    <div className="flex flex-col xl:flex-row xl:h-[70%] gap-0 overflow-hidden">
+      {/* LOCAL VIDEO */}
+      <div className="xl:flex-1 h-[45vh] xl:h-full bg-black overflow-hidden">
+        <video
+          ref={localVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
       </div>
 
+      {/* REMOTE VIDEO */}
+      <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className={`
+            w-full h-full object-cover
+            transition-opacity duration-300
+            ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
+          `}
+        />
+
+        {videoCallLoader && uiState !== "idle" && <Loader />}
+        {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
+      </div>
+    </div>
+
+    {/* ===================== BOTTOM : CONTROLS + CHAT (30% on xl) ===================== */}
+    <div className="mt-3 xl:mt-0 flex flex-row xl:h-[30%] shrink-0">
       {/* CONTROLS */}
-      <div className="mt-3 flex flex-wrap gap-3 justify-center shrink-0">
-        {uiState == "idle" && (
-          <>
-            {" "}
+      <div className="xl:w-1/2 w-full flex items-center justify-center px-4 xl:items-stretch">
+        {/* FIXED / RESPONSIVE CONTROL AREA */}
+        <div
+          className="
+                    w-full
+                    max-w-[520px]
+                    flex
+                    flex-nowrap
+                    justify-center  
+                    gap-3
+                    py-2 sm:py-3 xl:py-4
+                    xl:h-full
+                    xl:items-stretch
+                  "
+        >
+          {/* START */}
+          {uiState === "idle" && (
             <button
               disabled={started}
               onClick={handleStart}
-              className="px-5 py-2 rounded-lg font-bold bg-cyan-400 text-black hover:bg-cyan-300 transition active:scale-95"
+              className="
+                w-[90%]
+                sm:w-[220px]
+                xl:w-[240px]
+                h-[64px] sm:h-[72px] xl:h-full
+                text-base sm:text-lg xl:text-xl
+                font-bold
+                rounded-xl
+                bg-cyan-400 text-black
+                hover:bg-cyan-300
+                shadow-lg
+                transition
+                active:scale-95
+                disabled:opacity-50
+              "
             >
               Start
             </button>
-          </>
-        )}
+          )}
 
-        {uiState == "successfully_queued" && (
-          <>
-            {/* <button
-              onClick={handleExit}
-              className="px-5 py-2 rounded-lg font-bold bg-red-600 text-white hover:bg-red-700 transition active:scale-95"
-            >
-              Exit
-            </button> */}
-            <button
-              onClick={handleClose}
-              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
-            >
-              Close
-            </button>
-          </>
-        )}
-        {(allGoodAndConnected ||
-          uiState == "successfully_skipped_and_searching") && (
-          <>
-            <button
-              onClick={handleNext}
-              disabled={
-                uiState == "successfully_skipped_and_searching" ? true : false
-              }
-              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95
-             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
-            >
-              Next
-            </button>
+          {/* CLOSE (QUEUED) */}
+          {uiState === "successfully_queued" && (
+            <>
+              <button
+                onClick={handleClose}
+                className="
+                  w-[45%]
+                  sm:w-[220px]
+                  xl:w-[240px]
+                  h-[64px] sm:h-[72px] xl:h-full
+                  text-base sm:text-lg xl:text-xl
+                  font-bold
+                  rounded-xl
+                  bg-red-500 text-white
+                  hover:bg-red-600
+                  shadow-lg
+                  transition
+                  active:scale-95
+                "
+              >
+                Close
+              </button>
 
-            <button
-              onClick={handleClose}
-              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
-            >
-              Close
-            </button>
-          </>
-        )}
-        {/* {uiState == "successfully_skipped_and_searching" && (
-          <>
-            <button
-              onClick={handleNext}
-              disabled={
-                uiState == "successfully_skipped_and_searching" ? true : false
-              }
-              className="px-5 py-2 rounded-lg font-bold bg-yellow-400 text-black hover:bg-yellow-300 transition active:scale-95
-             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
-            >
-              Next
-            </button>
+              {/* COUNTRY CARD */}
+              {/* <div
+                className="
+                  w-[45%]
+                  sm:w-[220px]
+                  xl:w-[240px]
+                  h-[64px] sm:h-[72px] xl:h-full
+                  flex items-center justify-center
+                  text-base sm:text-lg xl:text-xl
+                  font-semibold
+                  rounded-xl
+                  bg-white/10
+                  border border-white/20
+                  backdrop-blur-md
+                  shadow-lg
+                "
+              >
+                🌍 {matchedUser?.country || "Unknown"}
+              </div> */}
+            </>
+          )}
 
-            <button
-              onClick={handleClose}
-              className="px-5 py-2 rounded-lg font-bold bg-red-500 text-white hover:bg-red-600 transition active:scale-95"
-            >
-              Close
-            </button>
-          </>
-        )} */}
+          {/* NEXT + CLOSE */}
+          {(allGoodAndConnected ||
+            uiState === "successfully_skipped_and_searching") && (
+            <>
+              <button
+                onClick={handleNext}
+                disabled={uiState === "successfully_skipped_and_searching"}
+                className="
+                  w-[30%]
+                  sm:w-[200px]
+                  xl:w-[220px]
+                  h-[64px] sm:h-[72px] xl:h-full
+                  text-base sm:text-lg xl:text-xl
+                  font-bold
+                  rounded-xl
+                  bg-yellow-400 text-black
+                  hover:bg-yellow-300
+                  shadow-lg
+                  transition
+                  active:scale-95
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
+              >
+                Next
+              </button>
+
+              <button
+                onClick={handleClose}
+                className="
+                  w-[30%]
+                  sm:w-[200px]
+                  xl:w-[220px]
+                  h-[64px] sm:h-[72px] xl:h-full
+                  text-base sm:text-lg xl:text-xl
+                  font-bold
+                  rounded-xl
+                  bg-red-500 text-white
+                  hover:bg-red-600
+                  shadow-lg
+                  transition
+                  active:scale-95
+                "
+              >
+                Close
+              </button>
+
+              {/* COUNTRY CARD */}
+              {/* <div
+                className="
+                  w-[30%]
+                  sm:w-[200px]
+                  xl:w-[220px]
+                  h-[64px] sm:h-[72px] xl:h-full
+                  flex items-center justify-center
+                  text-base sm:text-lg xl:text-xl
+                  font-semibold
+                  rounded-xl
+                  bg-white/10
+                  border border-white/20
+                  backdrop-blur-md
+                  shadow-lg
+                "
+              >
+                🌍 {matchedUser?.country || "Unknown"}
+              </div> */}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* CHAT (desktop only) */}
+      <div className="hidden xl:flex xl:w-1/2 overflow-hidden">
+        <VideoChatBox wsConnected={wsConnected} uiState={uiState} />
       </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 export default VideoView;

@@ -3,7 +3,7 @@ import { UserPlus, UserCheck } from "lucide-react";
 import { webRTCContext } from "../../context/WebRTC";
 import { websocketContext } from "../../context/WebSocket";
 
-function VideoChatBox({ wsConnected , uiState }) {
+function VideoChatBox({ wsConnected, uiState }) {
   const {
     sendMessage,
     pcRef,
@@ -17,11 +17,8 @@ function VideoChatBox({ wsConnected , uiState }) {
     setstrangerUserProfileData,
   } = useContext(webRTCContext);
 
-  // const {uiState} = useContext(websocketContext);
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-
   const [isFollowing, setIsFollowing] = useState(false);
 
   // Receive messages
@@ -34,10 +31,7 @@ function VideoChatBox({ wsConnected , uiState }) {
     };
 
     dataChannel.addEventListener("message", handleMessage);
-
-    return () => {
-      dataChannel.removeEventListener("message", handleMessage);
-    };
+    return () => dataChannel.removeEventListener("message", handleMessage);
   }, [dataChannel]);
 
   useEffect(() => {
@@ -49,7 +43,6 @@ function VideoChatBox({ wsConnected , uiState }) {
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
-
     sendMessage(input);
     setMessages((prev) => [...prev, { from: "self", text: input }]);
     setInput("");
@@ -61,25 +54,12 @@ function VideoChatBox({ wsConnected , uiState }) {
         `http://localhost:3000/api/users/${strangerUserProfileData?.data?.id}/follow`,
         {
           method: "POST",
-          credentials: "include", // if using cookies
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`, // use this instead if header-based auth
-          },
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
         }
       );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error(data.message);
-        return;
-      }
-      if (res.ok) {
-        setIsFollowing(true);
-      }
-
-      console.log("Followed successfully");
+      if (res.ok) setIsFollowing(true);
     } catch (err) {
       console.error("Follow error:", err);
     }
@@ -92,11 +72,8 @@ function VideoChatBox({ wsConnected , uiState }) {
       try {
         const res = await fetch(
           `http://localhost:3000/api/users/${strangerUserProfileData.data.id}/is-following`,
-          {
-            credentials: "include",
-          }
+          { credentials: "include" }
         );
-
         const data = await res.json();
         setIsFollowing(data.isFollowing);
       } catch (err) {
@@ -115,8 +92,7 @@ function VideoChatBox({ wsConnected , uiState }) {
         h-[32vh] sm:h-[40vh] xl:h-full
         flex flex-col
         bg-white/10 backdrop-blur-xl
-        border border-white/20
-        rounded-2xl overflow-hidden
+        overflow-hidden
         shadow-lg
       "
     >
@@ -140,40 +116,43 @@ function VideoChatBox({ wsConnected , uiState }) {
             </p>
           </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-3">
-            {/* Add Friend Button (Lucide) */}
+          <div className="flex items-center gap-6">
+            {/* FOLLOW / FRIEND CTA */}
             {strangerUserProfileData && (
               <button
                 onClick={handleFollowUser}
                 disabled={isFollowing}
-                className={`
-                          w-9 h-9
-                          flex items-center justify-center
-                          rounded-full
-                          transition
-                          active:scale-95
-                          ${
-                            isFollowing
-                              ? "bg-emerald-500/20 text-emerald-400 cursor-default"
-                              : "bg-white/10 hover:bg-white/20"
-                          }
-                        `}
+                className="flex items-center"
               >
-                {uiState !== "idle" &&
-                  (isFollowing ? (
-                    <UserCheck size={18} />
-                  ) : (
-                    <UserPlus size={18} />
-                  ))}
+                {uiState !== "idle" && (
+                  <span
+                    className={`
+            px-3 py-1.5
+            text-xs font-semibold
+            tracking-wide
+            rounded-md
+            border
+            transition-all
+            ${
+              isFollowing
+                ? "bg-pink-500/10 text-pink-400 border-pink-400/30 shadow-[0_0_12px_rgba(236,72,153,0.35)]"
+                : "bg-white/10 text-white border-white/20 hover:bg-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.25)]"
+            }
+          `}
+                  >
+                    {isFollowing ? "Friends ♥" : "Add Friend"}
+                  </span>
+                )}
               </button>
             )}
 
-            {/* Server Status */}
+            {/* SERVER STATUS */}
             <span
-              className={`text-xs font-medium ${
-                wsConnected ? "text-emerald-400" : "text-red-400"
-              }`}
+              className={`
+      text-xs font-medium
+      mt-0.5
+      ${wsConnected ? "text-emerald-400" : "text-red-400"}
+    `}
             >
               {wsConnected ? "● Server is Online" : "● Server is Offline"}
             </span>
@@ -198,12 +177,12 @@ function VideoChatBox({ wsConnected , uiState }) {
           >
             <div
               className={`
-                max-w-[80%] px-4 py-2 rounded-2xl
+                max-w-[80%] px-4 py-2 rounded-md
                 break-words leading-relaxed
                 ${
                   msg.from === "self"
-                    ? "bg-cyan-400 text-black rounded-br-sm"
-                    : "bg-white/80 text-black rounded-bl-sm"
+                    ? "bg-cyan-400 text-black"
+                    : "bg-white/80 text-black"
                 }
               `}
             >
@@ -229,7 +208,7 @@ function VideoChatBox({ wsConnected , uiState }) {
               dataChannel ? "Type a message…" : "Find stranger first..."
             }
             className="
-              flex-1 px-4 py-2.5 rounded-full text-sm
+              flex-1 px-4 py-2.5 rounded-md text-sm
               bg-white/80 text-gray-900
               focus:outline-none focus:ring-2 focus:ring-cyan-400
               disabled:bg-white/30
@@ -242,7 +221,7 @@ function VideoChatBox({ wsConnected , uiState }) {
             onClick={handleSendMessage}
             disabled={!dataChannel}
             className="
-              shrink-0 px-4 py-2.5 rounded-full
+              shrink-0 px-4 py-2.5 rounded-md
               bg-cyan-400 text-black text-sm font-semibold
               transition active:scale-95
               disabled:bg-gray-400

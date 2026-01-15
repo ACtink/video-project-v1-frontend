@@ -32,9 +32,9 @@ function DisplayUserInfoCard({ strangerInfo = {} }) {
           You are connecting with
         </p>
 
-        <h2 className="text-2xl font-semibold text-white">
+        {/* <h2 className="text-2xl font-semibold text-white">
           {strangerInfo?.data?.id || "unknown id"}
-        </h2>
+        </h2> */}
         <h2 className="text-2xl font-semibold text-white">
           {strangerInfo?.data?.username || "Anonymous"}
         </h2>
