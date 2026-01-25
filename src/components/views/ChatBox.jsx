@@ -11,6 +11,9 @@ function ChatBox({ chat, onBack }) {
   const { user } = useAuth(); // ✅ current logged-in user
   const { sendSignal, messages, setMessages } = useContext(websocketContext);
 
+
+  console.log("ChatBox render:", { chat, user });
+
   const [text, setText] = useState("");
 
   const myUserId = user._id;
@@ -146,6 +149,23 @@ function ChatBox({ chat, onBack }) {
         >
           <ArrowLeft size={20} />
         </button>
+
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
+          {chat.profilePicture ? (
+            <img
+              src={chat.profilePicture}
+              alt={chat.username}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-sm font-semibold">
+              {chat.username?.[0]?.toUpperCase() || "U"}
+            </span>
+          )}
+        </div>
+
+        {/* Username */}
         <h3 className="font-semibold text-lg">{chat.username}</h3>
       </div>
 

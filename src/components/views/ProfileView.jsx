@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import ProfilePhotoModal from "../ProfilePhotoModal";
 import FollowersFollowingModal from "../FollowersFollowingModal";
 import CreatePostModal from "../CreatePostModal";
+import ProfilePosts from "../ProfilePosts";
 
 function ProfileView({ user: profileUser }) {
-  const { user: authUser } = useAuth();
+  const { user: authUser , setUser } = useAuth();
   const navigate = useNavigate();
 
   // ✅ HOOKS MUST ALWAYS RUN
@@ -20,6 +21,8 @@ function ProfileView({ user: profileUser }) {
   let user = profileUser || authUser;
 
 const [createOpen, setCreateOpen] = useState(false);
+
+
 
   
 
@@ -60,16 +63,48 @@ const [createOpen, setCreateOpen] = useState(false);
    };
 
   // Handle file selection
-  const handleFileChange = (e) => {
+ const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log("Selected file:", file);
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file");
+      return;
+    }
 
-    // TODO: upload to backend
-    setOpen(false);
-  };
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB");
+      return;
+    }
 
+    try {
+      const formData = new FormData();
+      formData.append("profilePicture", file);
+
+      const res = await fetch(
+        "http://localhost:3000/api/upload/profile-picture",
+        {
+          method: "PUT",
+          credentials: "include",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const updatedUser = await res.json();
+
+      // 🔥 update auth context
+      setUser(updatedUser);
+
+      setOpen(false);
+    } catch (err) {
+      console.error("Profile picture upload failed", err);
+      alert("Failed to upload profile picture");
+    } finally {
+      e.target.value = "";
+    }
+  }
   // Remove photo
   const handleRemovePhoto = () => {
     console.log("Remove profile photo");
@@ -79,7 +114,7 @@ const [createOpen, setCreateOpen] = useState(false);
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex justify-center">
+    <div className="min-h-screen bg-black text-white flex justify-center overflow-y-auto">
       {/* CENTER COLUMN */}
       <div className="w-full max-w-[935px] px-4 pt-10">
         {/* GO BACK BUTTON */}
@@ -104,8 +139,18 @@ const [createOpen, setCreateOpen] = useState(false);
               isMe ? "cursor-pointer" : ""
             }`}
           >
-            <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-3xl sm:text-4xl font-semibold">
-              {user.username?.[0]?.toUpperCase() || "U"}
+            <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full overflow-hidden  bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center">
+              {user.profilePicture ? (
+                <img
+                  src={user.profilePicture}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl sm:text-4xl font-semibold">
+                  {user.username?.[0]?.toUpperCase() || "U"}
+                </span>
+              )}
             </div>
           </div>
 
@@ -190,7 +235,7 @@ const [createOpen, setCreateOpen] = useState(false);
         <div className="mt-12 border-t border-white/20" />
 
         {/* OPTIONAL INFO SECTION */}
-        <div className="mt-6 max-w-xl text-sm space-y-4">
+        {/* <div className="mt-6 max-w-xl text-sm space-y-4">
           <div className="flex justify-between">
             <span className="text-white/60">Username</span>
             <span>{user.username}</span>
@@ -200,7 +245,9 @@ const [createOpen, setCreateOpen] = useState(false);
             <span className="text-white/60">Email</span>
             <span>{user.email}</span>
           </div>
-        </div>
+        </div> */}
+
+        <ProfilePosts userId={user._id} />
 
         {/* 🔽 MODAL (MUST BE HERE) */}
         <ProfilePhotoModal

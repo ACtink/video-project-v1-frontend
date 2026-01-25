@@ -52,7 +52,7 @@ useEffect(() => {
   return (
     <div className="h-full w-full relative flex flex-col bg-black">
       {/* Main content */}
-      <div className="flex-1 overflow-hidden mb-20 md:mb-30 ">
+      <div className="flex-1 overflow-y-auto mb-20 md:mb-30">
         <WebRTCProvider>
           <WebSocketProvider>
             <RTCBridge />

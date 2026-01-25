@@ -232,16 +232,25 @@ function VideoView({ onUiStateChange }) {
   /* -------------------- UI -------------------- */
   return (
     <div
-      className="w-full h-[96vh] flex flex-col text-white bg-gradient-to-br
+      className="
+    w-full
+    h-[96vh]
+    overflow-hidden
+    flex
+    flex-col
+    text-white
+    bg-gradient-to-br
     from-[#0f172a]
     via-[#020617]
     to-[#020617]
     rounded-xl
-    border border-white/10
-    backdrop-blur-xl "
+    border
+    border-white/10
+    backdrop-blur-xl
+  "
     >
       {/* ===================== TOP : VIDEO AREA (70% on xl) ===================== */}
-      <div className="flex flex-col xl:flex-row xl:h-[65%] gap-0 overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row overflow-hidden">
         {/* LOCAL VIDEO */}
         <div className="xl:flex-1 h-[45vh] xl:h-full bg-black overflow-hidden">
           <video
@@ -305,10 +314,7 @@ function VideoView({ onUiStateChange }) {
       </div>
 
       {/* ===================== BOTTOM : CONTROLS + CHAT (30% on xl) ===================== */}
-      <div
-        className="mt-3 xl:mt-0 xl:h-[28%] flex flex-row  bg-white/10 
-  shrink-0"
-      >
+      <div className="h-[180px] xl:h-[220px] flex flex-row bg-white/10 shrink-0">
         {/* CONTROLS */}
         <div className="xl:w-1/2 w-full flex items-center justify-center px-4 xl:items-stretch">
           {/* FIXED / RESPONSIVE CONTROL AREA */}

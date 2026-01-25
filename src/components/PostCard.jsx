@@ -1,10 +1,20 @@
+import { useNavigate } from "react-router-dom";
+
 function PostCard({ post }) {
+  console.log("Rendering PostCard for post:", post);
+
+
+
+  const navigate = useNavigate();
   return (
     <div className="bg-black border border-white/10 rounded-lg overflow-hidden shadow max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div
+        onClick={() => navigate(`/profile/${post.user.username}`)}
+        className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+      >
         <img
-          src={post.user.avatarUrl}
+          src={post.user.profilePicture}
           alt=""
           className="w-8 h-8 rounded-full object-cover"
         />
@@ -30,9 +40,9 @@ function PostCard({ post }) {
 
         {/* Caption */}
         {post.caption && (
-          <p className="text-sm leading-snug">
-            <span className="font-medium mr-1">{post.user.username}</span>
-            {post.caption}
+          <p className="text-sm leading-relaxed text-white/90">
+            <span className="font-semibold mr-2">{post.user.username}</span>
+            <span className="text-white/80">{post.caption}</span>
           </p>
         )}
 
