@@ -17,7 +17,7 @@ function Header() {
 
   if (loading) return null; // or spinner
   return (
-    <header className="flex justify-between items-center px-6 md:px-10 py-5 md:py-6">
+    <header className="flex bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white justify-between items-center px-6 md:px-10 py-5 md:py-6">
       <h1 className="text-xl md:text-2xl font-bold tracking-wide">
         <span className="cursor-pointer" onClick={() => navigate("/")}>
           HelloStranger
@@ -26,7 +26,7 @@ function Header() {
 
       <div className="flex gap-3 md:gap-4">
         {!user ? (
-          <div className='flex gap-3'>
+          <div className="flex gap-3">
             {" "}
             <button
               className="px-3 md:px-4 py-2 rounded-md border border-white/30 hover:bg-white/10 transition text-sm md:text-base"

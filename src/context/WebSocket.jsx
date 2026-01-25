@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { webRTCContext } from "./WebRTC";
 import { useAuth } from "../hooks/useAuth";
+import { saveMessage } from "../utils/saveMessage";
 
 export const websocketContext = createContext(null);
 
@@ -107,13 +108,15 @@ function handleAck({ messageId, status }) {
 
 
 
-   socketRef.current.onmessage = (event) => {
+   socketRef.current.onmessage = async (event) => {
      try {
        const message = JSON.parse(event.data);
 
 
        switch (message.type) {
          case "chat_deliver":
+          console.log("Received chat_deliver message:", message.message);
+           await saveMessage(message);
            handleIncomingMessage(message);
            break;
 

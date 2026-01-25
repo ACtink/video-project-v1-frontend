@@ -1,0 +1,59 @@
+function PostCard({ post }) {
+  return (
+    <div className="bg-black border border-white/10 rounded-lg overflow-hidden shadow max-w-md mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2">
+        <img
+          src={post.user.avatarUrl}
+          alt=""
+          className="w-8 h-8 rounded-full object-cover"
+        />
+        <span className="font-medium text-sm">{post.user.username}</span>
+      </div>
+
+      {/* Image */}
+      <img
+        src={post.imageUrl}
+        alt=""
+        className="w-full max-h-[420px] object-cover"
+      />
+
+      {/* Actions */}
+      <div className="px-3 py-2 space-y-1.5">
+        <div className="flex items-center gap-3 text-lg">
+          <button className="hover:text-red-500 transition">❤️</button>
+          <button className="hover:text-blue-400 transition">💬</button>
+        </div>
+
+        {/* Likes */}
+        <p className="text-sm font-medium">{post.likesCount} likes</p>
+
+        {/* Caption */}
+        {post.caption && (
+          <p className="text-sm leading-snug">
+            <span className="font-medium mr-1">{post.user.username}</span>
+            {post.caption}
+          </p>
+        )}
+
+        {/* Comments */}
+        <p className="text-white/60 text-sm cursor-pointer">
+          View all {post.commentsCount} comments
+        </p>
+
+        {/* Time */}
+        <p className="text-xs text-white/40">
+          {new Date(post.createdAt).toLocaleDateString()}
+        </p>
+
+        {/* Add Comment */}
+        <input
+          placeholder="Add a comment..."
+          className="w-full bg-transparent border-t border-white/10 pt-1.5 text-sm outline-none placeholder-white/40"
+        />
+      </div>
+    </div>
+  );
+}
+
+export default PostCard;

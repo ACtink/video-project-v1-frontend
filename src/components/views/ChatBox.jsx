@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import { websocketContext } from "../../context/WebSocket";
 import { useAuth } from "../../hooks/useAuth";
 
+import { getChatMessages } from "../../utils/getMessages";
+import { saveMessage } from "../../utils/saveMessage";
+
 function ChatBox({ chat, onBack }) {
   const { user } = useAuth(); // ✅ current logged-in user
   const { sendSignal, messages, setMessages } = useContext(websocketContext);
@@ -26,7 +29,7 @@ function ChatBox({ chat, onBack }) {
   /* ======================================================
      SEND MESSAGE
   ====================================================== */
-  const handleSend = () => {
+  const handleSend = async() => {
     if (!text.trim()) return;
 
     const messageId = uuidv4();
@@ -45,6 +48,19 @@ function ChatBox({ chat, onBack }) {
       },
     ]);
 
+
+         saveMessage({        
+          type: "chat_message",
+          message: {
+            messageId,
+            from: myUserId,
+            to: chat._id,
+            text,
+            createdAt,
+          },
+        })  
+      
+
     // 2️⃣ Send via WebSocket
     sendSignal({
       type: "chat_message",
@@ -56,6 +72,27 @@ function ChatBox({ chat, onBack }) {
 
     setText("");
   };
+
+
+  useEffect(() => {
+    if (!chat?._id) return;
+
+    const loadFromIndexedDB = async () => {
+      const cachedMessages = await getChatMessages(myUserId, chat._id);
+
+      console.log("Loaded messages from IndexedDB:", cachedMessages);
+
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.messageId));
+        const newOnes = cachedMessages.filter(
+          (m) => !existingIds.has(m.messageId),
+        );
+        return [...prev, ...newOnes];
+      });
+    };
+
+    loadFromIndexedDB();
+  }, [chat._id, myUserId, setMessages]);
 
 
   useEffect(() => {

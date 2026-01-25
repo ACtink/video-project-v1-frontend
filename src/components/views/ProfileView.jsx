@@ -1,13 +1,39 @@
 import { useAuth } from "../../hooks/useAuth";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProfilePhotoModal from "../ProfilePhotoModal";
+import FollowersFollowingModal from "../FollowersFollowingModal";
+import CreatePostModal from "../CreatePostModal";
 
-function ProfileView() {
-  const { user } = useAuth();
-  if (!user) return null;
+function ProfileView({ user: profileUser }) {
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
 
+  // ✅ HOOKS MUST ALWAYS RUN
   const [open, setOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
+  const [listType, setListType] = useState(null);
   const fileInputRef = useRef(null);
+
+  console.log("ProfileView render:", { profileUser, authUser });
+
+  let user = profileUser || authUser;
+
+const [createOpen, setCreateOpen] = useState(false);
+
+  
+
+  // if (!user) return null; // ✅ SAFE NOW
+
+  const isMe = user._id === authUser?._id;
+
+  const isFollowing =
+    !!authUser &&
+    !!profileUser &&
+    profileUser.followers?.some(
+      (id) => id.toString() === authUser._id.toString(),
+    );
+
 
   // Open file picker
   const handleUploadClick = () => {
@@ -15,6 +41,23 @@ function ProfileView() {
       fileInputRef.current.click();
     }
   };
+
+
+   const handleFollowUser = async () => {
+     try {
+       const res = await fetch(
+         `http://localhost:3000/api/users/${profileUser?._id}/follow`,
+         {
+           method: "POST",
+           credentials: "include",
+           headers: { "Content-Type": "application/json" },
+         },
+       );
+
+     } catch (err) {
+       console.error("Follow error:", err);
+     }
+   };
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -39,12 +82,27 @@ function ProfileView() {
     <div className="min-h-screen bg-black text-white flex justify-center">
       {/* CENTER COLUMN */}
       <div className="w-full max-w-[935px] px-4 pt-10">
+        {/* GO BACK BUTTON */}
+        {!isMe && (
+          <div className="mb-4 flex items-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-white/80 hover:text-white text-sm sm:text-base px-2 py-1 rounded-lg hover:bg-white/10 transition"
+            >
+              <span className="text-lg sm:text-xl">←</span>
+              <span className="hidden sm:inline">Go back</span>
+            </button>
+          </div>
+        )}
+
         {/* PROFILE HEADER */}
         <div className="flex flex-col justify-between sm:flex-row sm:items-start gap-8">
           {/* AVATAR */}
           <div
-            onClick={() => setOpen(true)}
-            className="cursor-pointer flex justify-center sm:justify-start"
+            onClick={isMe ? () => setOpen(true) : undefined}
+            className={`flex justify-center sm:justify-start ${
+              isMe ? "cursor-pointer" : ""
+            }`}
           >
             <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-3xl sm:text-4xl font-semibold">
               {user.username?.[0]?.toUpperCase() || "U"}
@@ -60,12 +118,24 @@ function ProfileView() {
                 <div className="text-white/70">posts</div>
               </div>
 
-              <div className="text-center sm:text-left cursor-pointer">
+              <div
+                className="text-center sm:text-left cursor-pointer"
+                onClick={() => {
+                  setListType("followers");
+                  setListOpen(true);
+                }}
+              >
                 <span className="font-semibold">{user.followers.length}</span>
                 <div className="text-white/70">followers</div>
               </div>
 
-              <div className="text-center sm:text-left cursor-pointer">
+              <div
+                className="text-center sm:text-left cursor-pointer"
+                onClick={() => {
+                  setListType("following");
+                  setListOpen(true);
+                }}
+              >
                 <span className="font-semibold">{user.following.length}</span>
                 <div className="text-white/70">following</div>
               </div>
@@ -81,12 +151,37 @@ function ProfileView() {
 
             {/* ACTION BUTTONS */}
             <div className="flex gap-3 mt-2">
-              <button className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10 transition">
-                Edit profile
-              </button>
-              <button className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10 transition">
-                Message
-              </button>
+              {isMe ? (
+                <>
+                  <button
+                    onClick={() => setCreateOpen(true)}
+                    className="flex-1 px-4 py-1.5 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-700 transition"
+                  >
+                    Create post
+                  </button>
+                  <button className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10">
+                    Edit profile
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleFollowUser}
+                    disabled={isFollowing}
+                    className={`flex-1 px-4 py-1.5 text-sm rounded-lg transition ${
+                      isFollowing
+                        ? "border border-white/30 text-white hover:bg-white/10"
+                        : "bg-indigo-600 hover:bg-indigo-700"
+                    }`}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </button>
+
+                  {/* <button className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10">
+                    Message
+                  </button> */}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -124,6 +219,15 @@ function ProfileView() {
           onChange={handleFileChange}
         />
       </div>
+
+      <CreatePostModal open={createOpen} onClose={() => setCreateOpen(false)} />
+
+      <FollowersFollowingModal
+        open={listOpen}
+        onClose={() => setListOpen(false)}
+        title={listType === "followers" ? "Followers" : "Following"}
+        ids={listType === "followers" ? user.followers : user.following}
+      />
     </div>
   );
 }

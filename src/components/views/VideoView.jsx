@@ -5,10 +5,16 @@ import { setupUserMedia } from "../../utils/userMedia.js";
 import { webRTCContext } from "../../context/WebRTC.jsx";
 import DisplayUserInfoCard from "../DisplayUserInfoCard.jsx";
 import Loader from "../Loader.jsx";
+import AddFriend from "../AddFriend.jsx";
 
-function VideoView({ activeTab }) {
-  const { connectToWebSocketServer, sendSignal, wsConnected , uiState , setUiState } =
-    useContext(websocketContext);
+function VideoView({ onUiStateChange }) {
+  const {
+    connectToWebSocketServer,
+    sendSignal,
+    wsConnected,
+    uiState,
+    setUiState,
+  } = useContext(websocketContext);
 
   const {
     localVideoRef,
@@ -34,57 +40,48 @@ function VideoView({ activeTab }) {
     cleanupRemotePeer,
     endedByMe,
     setEndedByMe,
-    setMatchedUser
+    setMatchedUser,
   } = useContext(webRTCContext);
 
+  // const [uiState, setUiState] = useState("idle");
 
+  const [started, setStarted] = useState(false);
+  const [isLoaderDone, setIsLoaderDone] = useState(false);
+  const [isUserCardDone, setIsUserCardDone] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  // const [uiState, setUiState] = useState("idle"); 
+  const shouldShowVideo = isLoaderDone && isUserCardDone && isVideoPlaying;
 
-const [started , setStarted] = useState(false)
-    const [isLoaderDone, setIsLoaderDone] = useState(false);
-    const [isUserCardDone, setIsUserCardDone] = useState(false);
-    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false);
 
-    const shouldShowVideo = isLoaderDone && isUserCardDone && isVideoPlaying;
-
-const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false)
-
-const allGoodAndConnected =
-  pcReady && remoteStreamReady && videoPlayingReady;
+  const allGoodAndConnected = pcReady && remoteStreamReady && videoPlayingReady;
 
   // const allGoodAndConnected =
   // //   pcReady && remoteStreamReady && videoPlayingReady;
   // const startButtonStage = !pcReady && uiState == "idle";
   //   const exitButtonStage = !pcReady && uiState == "started" && localVideoRef!=null && localStreamRef!=null
-    // const nextButtonStage = pcReady && remoteStreamReady && videoPlayingReady;
+  // const nextButtonStage = pcReady && remoteStreamReady && videoPlayingReady;
 
-  
-
-    // const allGoodAndConnected =
-    //   pcReady && remoteStreamReady && videoPlayingReady;
+  // const allGoodAndConnected =
+  //   pcReady && remoteStreamReady && videoPlayingReady;
 
   console.log("value of pcReady", pcReady);
-    console.log("value of remoteStreamReady", remoteStreamReady);
+  console.log("value of remoteStreamReady", remoteStreamReady);
 
-      console.log("value of videoPlayingReady", videoPlayingReady);
+  console.log("value of videoPlayingReady", videoPlayingReady);
 
-        console.log("value of dataChannelReady", dataChannelReady);
+  console.log("value of dataChannelReady", dataChannelReady);
 
+  console.log("value of allGoodAndConnected--------->", allGoodAndConnected);
 
-
-console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
-
-
-
-
-
+  useEffect(() => {
+    onUiStateChange(uiState);
+  }, [uiState]);
 
   /* -------------------- CONNECT TO WS -------------------- */
 
   // useEffect(() => {
   // const ws =  connectToWebSocketServer();
-
 
   //  return () => {
   //    if (ws && ws.readyState === WebSocket.OPEN) {
@@ -103,7 +100,6 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
   //       console.log("data channel for json  ",dataChannelForJsonRef.current);
 
   //   if (!dataChannelForJsonRef.current) return;
-
 
   //   let timer;
 
@@ -141,19 +137,14 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
   //   };
   // }, [dataChannelForJsonMessages]);
 
-
- 
-
-
-
-
-
-  useEffect(()=>{
-
+  useEffect(() => {
     let timer;
-    if (!videoCallLoader && matchedUser ) {
-      console.log("calling in if useeffect")
-      console.log("value of matched user in if condition of useeffect" , matchedUser)
+    if (!videoCallLoader && matchedUser) {
+      console.log("calling in if useeffect");
+      console.log(
+        "value of matched user in if condition of useeffect",
+        matchedUser,
+      );
       timer = setTimeout(() => {
         setMatchedUser(null);
         setShowUserCard(false);
@@ -161,29 +152,19 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
       setShowUserCard(true);
     }
 
-      return () => {
-        clearTimeout(timer);
-        
-       
-      };
-  },[videoCallLoader, matchedUser])
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [videoCallLoader, matchedUser]);
 
-
-
-
-
-
-
-
+  const showAddFriend = !videoCallLoader && !showUserCard && uiState !== "idle";
 
   /* -------------------- START CALL -------------------- */
 
   const handleStart = async () => {
+    // setEndedByMe(false);
 
-  // setEndedByMe(false);
-
-  // setSessionActive(true);
-
+    // setSessionActive(true);
 
     await setupUserMedia(localVideoRef, localStreamRef);
 
@@ -193,100 +174,87 @@ console.log("value of allGoodAndConnected--------->" , allGoodAndConnected)
     setVideoCallLoader(true);
   };
 
-
-
   //  const handleExit = () => {
   //      setUiState("idle");
 
   //    // cleanup logic (close pc, stop tracks, etc.)
 
-
   //       cleanupCallWhenCloseButtonIsPressed();
 
   //  };
 
+  //  const handleStart = () => {
+  //    setUiState("searching");
+  //    // start matchmaking / webrtc
+  //  };
 
+  //  const handleConnected = () => {
+  //    setUiState("connected");
+  //    // call this when peer is connected
+  //  };
 
+  const handleNext = () => {
+    //  setUiState("started");
+    // disconnect current peer & requeue
+    setEndedByMe(false); // 🔥 I did NOT leave system
 
+    sendSignal({ type: "next" });
 
+    //  cleanupRemotePeer();
+    //  setSessionActive(true);
+  };
 
-    //  const handleStart = () => {
-    //    setUiState("searching");
-    //    // start matchmaking / webrtc
-    //  };
+  const handleClose = () => {
+    //  setUiState("idle");
+    //  setStarted(false)
+    //  cleanupCallWhenCloseButtonIsPressed
+    // setEndedByMe(true); // 🔥 I am leaving system
+    sendSignal({ type: "end-call" });
 
-  
-    //  const handleConnected = () => {
-    //    setUiState("connected");
-    //    // call this when peer is connected
-    //  };
+    // cleanupFull();
+    setSessionActive(false);
+  };
 
-     const handleNext = () => {
-       //  setUiState("started");
-       // disconnect current peer & requeue
-       setEndedByMe(false); // 🔥 I did NOT leave system
+  // useEffect(() => {
+  //   const allReady =
+  //     ready.pc &&
+  //     ready.remoteStream &&
+  //     ready.videoPlaying &&
+  //     ready.dataChannel;
 
-       sendSignal({ type: "next" });
+  //   if (allReady && uiState !== "connected") {
+  //     setUiState("connected");
+  //   }
+  // }, [ready, uiState]);
 
-      //  cleanupRemotePeer();
-      //  setSessionActive(true);
-     };
-
-
-    const handleClose = ()=>{
-      //  setUiState("idle");
-      //  setStarted(false)
-      //  cleanupCallWhenCloseButtonIsPressed
-      // setEndedByMe(true); // 🔥 I am leaving system
-      sendSignal({ type: "end-call" });
-
-      // cleanupFull();
-      setSessionActive(false);
-    }
-
-    
-
-
-
-    // useEffect(() => {
-    //   const allReady =
-    //     ready.pc &&
-    //     ready.remoteStream &&
-    //     ready.videoPlaying &&
-    //     ready.dataChannel;
-
-    //   if (allReady && uiState !== "connected") {
-    //     setUiState("connected");
-    //   }
-    // }, [ready, uiState]);
-
-
-
-
-
-
-
-
-
+  //        bg-white/10 backdrop-blur-xl
 
   /* -------------------- UI -------------------- */
-return (
-  <div className="w-full h-full flex flex-col text-white bg-gradient-to-br from-[#0b0f1a] via-[#1a0f2e] to-[#0b1a2e]">
-    {/* ===================== TOP : VIDEO AREA (70% on xl) ===================== */}
-    <div className="flex flex-col xl:flex-row xl:h-[70%] gap-0 overflow-hidden">
-      {/* LOCAL VIDEO */}
-      <div className="xl:flex-1 h-[45vh] xl:h-full bg-black overflow-hidden">
-        <video
-          ref={localVideoRef}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        />
-      </div>
+  return (
+    <div
+      className="w-full h-[96vh] flex flex-col text-white bg-gradient-to-br
+    from-[#0f172a]
+    via-[#020617]
+    to-[#020617]
+    rounded-xl
+    border border-white/10
+    backdrop-blur-xl "
+    >
+      {/* ===================== TOP : VIDEO AREA (70% on xl) ===================== */}
+      <div className="flex flex-col xl:flex-row xl:h-[65%] gap-0 overflow-hidden">
+        {/* LOCAL VIDEO */}
+        <div className="xl:flex-1 h-[45vh] xl:h-full bg-black overflow-hidden">
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-      {/* REMOTE VIDEO */}
-      <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
+        {/* REMOTE VIDEO */}
+        {/* <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
         <video
           ref={remoteVideoRef}
           autoPlay
@@ -299,60 +267,97 @@ return (
           `}
         />
 
-        {videoCallLoader && uiState !== "idle" && <Loader uiState={uiState} allGoodAndConnected={allGoodAndConnected} />}
+        {videoCallLoader && uiState !== "idle" && (
+          <Loader uiState={uiState} allGoodAndConnected={allGoodAndConnected} />
+        )}
         {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
-      </div>
-    </div>
+      </div> */}
 
-    {/* ===================== BOTTOM : CONTROLS + CHAT (30% on xl) ===================== */}
-    <div className="mt-3 xl:mt-0 flex flex-row xl:h-[30%] shrink-0">
-      {/* CONTROLS */}
-      <div className="xl:w-1/2 w-full flex items-center justify-center px-4 xl:items-stretch">
-        {/* FIXED / RESPONSIVE CONTROL AREA */}
-        <div
-          className="
-                    w-full
-                    max-w-[520px]
-                    flex
-                    flex-nowrap
-                    justify-center  
-                    gap-3
-                    py-2 sm:py-3 xl:py-4
-                    xl:h-full
-                    xl:items-stretch
-                  "
-        >
-          {/* START */}
-          {uiState === "idle" && (
-            <button
-              disabled={started}
-              onClick={handleStart}
-              className="
-                w-[90%]
-                sm:w-[220px]
-                xl:w-[240px]
-                h-[64px] sm:h-[72px] xl:h-full
-                text-base sm:text-lg xl:text-xl
-                font-bold
-                rounded-xl
-                bg-cyan-400 text-black
-                hover:bg-cyan-300
-                shadow-lg
-                transition
-                active:scale-95
-                disabled:opacity-50
-              "
-            >
-              Start
-            </button>
+        <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className={`
+      w-full h-full object-cover
+      transition-opacity duration-300
+      ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
+    `}
+          />
+
+          {videoCallLoader && uiState !== "idle" && (
+            <Loader
+              uiState={uiState}
+              allGoodAndConnected={allGoodAndConnected}
+            />
           )}
 
-          {/* CLOSE (QUEUED) */}
-          {uiState === "successfully_queued" && (
-            <>
+          {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
+
+          {/* ✅ AddFriend overlay */}
+          {showAddFriend && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <AddFriend uiState={uiState} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===================== BOTTOM : CONTROLS + CHAT (30% on xl) ===================== */}
+      <div
+        className="mt-3 xl:mt-0 xl:h-[28%] flex flex-row  bg-white/10 
+  shrink-0"
+      >
+        {/* CONTROLS */}
+        <div className="xl:w-1/2 w-full flex items-center justify-center px-4 xl:items-stretch">
+          {/* FIXED / RESPONSIVE CONTROL AREA */}
+          <div
+            className="
+                        w-full
+                        max-w-[520px]
+                        flex
+                        flex-nowrap
+                        justify-center  
+                        gap-3
+                        py-2 sm:py-3 xl:py-4
+                        xl:h-full
+                        xl:items-stretch
+                      
+                      "
+          >
+            {/* START */}
+            {uiState === "idle" && (
               <button
-                onClick={handleClose}
-                className="
+                disabled={started}
+                onClick={handleStart}
+                className={`
+                        w-[90%]
+                        sm:w-[220px]
+                        xl:w-[240px]
+                        h-[64px] sm:h-[72px] xl:h-full
+                        text-lg sm:text-xl xl:text-2xl
+                        font-bold
+                        rounded-xl
+                        bg-cyan-400 text-black
+                        hover:bg-cyan-300
+                        shadow-lg shadow-cyan-400/60
+                        transition
+                        active:scale-95
+                        disabled:opacity-50
+                        ${!started ? "animate-pulse" : ""}
+  `}
+              >
+                Start
+              </button>
+            )}
+
+            {/* CLOSE (QUEUED) */}
+            {uiState === "successfully_queued" && (
+              <>
+                <button
+                  onClick={handleClose}
+                  className="
                   w-[45%]
                   sm:w-[220px]
                   xl:w-[240px]
@@ -366,12 +371,12 @@ return (
                   transition
                   active:scale-95
                 "
-              >
-                Close
-              </button>
+                >
+                  Close
+                </button>
 
-              {/* COUNTRY CARD */}
-              {/* <div
+                {/* COUNTRY CARD */}
+                {/* <div
                 className="
                   w-[45%]
                   sm:w-[220px]
@@ -389,17 +394,22 @@ return (
               >
                 🌍 {matchedUser?.country || "Unknown"}
               </div> */}
-            </>
-          )}
+              </>
+            )}
 
-          {/* NEXT + CLOSE */}
-          {(allGoodAndConnected ||
-            uiState === "successfully_skipped_and_searching") && (
-            <>
-              <button
-                onClick={handleNext}
-                disabled={uiState === "successfully_skipped_and_searching" || videoCallLoader || !allGoodAndConnected || showUserCard}
-                className="
+            {/* NEXT + CLOSE */}
+            {(allGoodAndConnected ||
+              uiState === "successfully_skipped_and_searching") && (
+              <>
+                <button
+                  onClick={handleNext}
+                  disabled={
+                    uiState === "successfully_skipped_and_searching" ||
+                    videoCallLoader ||
+                    !allGoodAndConnected ||
+                    showUserCard
+                  }
+                  className="
                   w-[30%]
                   sm:w-[200px]
                   xl:w-[220px]
@@ -415,13 +425,13 @@ return (
                   disabled:opacity-50
                   disabled:cursor-not-allowed
                 "
-              >
-                Next
-              </button>
+                >
+                  Next
+                </button>
 
-              <button
-                onClick={handleClose}
-                className="
+                <button
+                  onClick={handleClose}
+                  className="
                   w-[30%]
                   sm:w-[200px]
                   xl:w-[220px]
@@ -435,12 +445,12 @@ return (
                   transition
                   active:scale-95
                 "
-              >
-                Close
-              </button>
+                >
+                  Close
+                </button>
 
-              {/* COUNTRY CARD */}
-              {/* <div
+                {/* COUNTRY CARD */}
+                {/* <div
                 className="
                   w-[30%]
                   sm:w-[200px]
@@ -458,19 +468,18 @@ return (
               >
                 🌍 {matchedUser?.country || "Unknown"}
               </div> */}
-            </>
-          )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* CHAT (desktop only) */}
+        <div className="hidden xl:flex xl:w-1/2 overflow-hidden">
+          <VideoChatBox wsConnected={wsConnected} uiState={uiState} />
         </div>
       </div>
-
-      {/* CHAT (desktop only) */}
-      <div className="hidden xl:flex xl:w-1/2 overflow-hidden">
-        <VideoChatBox wsConnected={wsConnected} uiState={uiState} />
-      </div>
     </div>
-  </div>
-);
-
+  );
 }
 
 export default VideoView;

@@ -19,7 +19,6 @@ function VideoChatBox({ wsConnected, uiState }) {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [isFollowing, setIsFollowing] = useState(false);
 
   // Receive messages
   useEffect(() => {
@@ -48,41 +47,41 @@ function VideoChatBox({ wsConnected, uiState }) {
     setInput("");
   };
 
-  const handleFollowUser = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/users/${strangerUserProfileData?.data?.id}/follow`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+  // const handleFollowUser = async () => {
+  //   try {
+  //     const res = await fetch(
+  //       `http://localhost:3000/api/users/${strangerUserProfileData?.data?.id}/follow`,
+  //       {
+  //         method: "POST",
+  //         credentials: "include",
+  //         headers: { "Content-Type": "application/json" },
+  //       }
+  //     );
 
-      if (res.ok) setIsFollowing(true);
-    } catch (err) {
-      console.error("Follow error:", err);
-    }
-  };
+  //     if (res.ok) setIsFollowing(true);
+  //   } catch (err) {
+  //     console.error("Follow error:", err);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (!strangerUserProfileData?.data?.id) return;
+  // useEffect(() => {
+  //   if (!strangerUserProfileData?.data?.id) return;
 
-    const checkFollowStatus = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:3000/api/users/${strangerUserProfileData.data.id}/is-following`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        setIsFollowing(data.isFollowing);
-      } catch (err) {
-        console.error("Follow status error", err);
-      }
-    };
+  //   const checkFollowStatus = async () => {
+  //     try {
+  //       const res = await fetch(
+  //         `http://localhost:3000/api/users/${strangerUserProfileData.data.id}/is-following`,
+  //         { credentials: "include" }
+  //       );
+  //       const data = await res.json();
+  //       setIsFollowing(data.isFollowing);
+  //     } catch (err) {
+  //       console.error("Follow status error", err);
+  //     }
+  //   };
 
-    checkFollowStatus();
-  }, [strangerUserProfileData]);
+  //   checkFollowStatus();
+  // }, [strangerUserProfileData]);
 
   return (
     <div
@@ -91,9 +90,9 @@ function VideoChatBox({ wsConnected, uiState }) {
         w-full xl:flex-[2]
         h-[32vh] sm:h-[40vh] xl:h-full
         flex flex-col
-        bg-white/10 backdrop-blur-xl
         overflow-hidden
         shadow-lg
+        border-l border-white/10
       "
     >
       {/* HEADER */}
@@ -118,7 +117,7 @@ function VideoChatBox({ wsConnected, uiState }) {
 
           <div className="flex items-center gap-6">
             {/* FOLLOW / FRIEND CTA */}
-            {strangerUserProfileData && (
+            {/* {strangerUserProfileData && (
               <button
                 onClick={handleFollowUser}
                 disabled={isFollowing}
@@ -127,12 +126,12 @@ function VideoChatBox({ wsConnected, uiState }) {
                 {uiState !== "idle" && (
                   <span
                     className={`
-            px-3 py-1.5
-            text-xs font-semibold
-            tracking-wide
-            rounded-md
-            border
-            transition-all
+                      px-3 py-1.5
+                      text-xs font-semibold
+                      tracking-wide
+                      rounded-md
+                      border
+                      transition-all
             ${
               isFollowing
                 ? "bg-pink-500/10 text-pink-400 border-pink-400/30 shadow-[0_0_12px_rgba(236,72,153,0.35)]"
@@ -144,7 +143,7 @@ function VideoChatBox({ wsConnected, uiState }) {
                   </span>
                 )}
               </button>
-            )}
+            )} */}
 
             {/* SERVER STATUS */}
             <span
