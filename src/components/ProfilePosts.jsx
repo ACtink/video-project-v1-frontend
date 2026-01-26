@@ -10,7 +10,7 @@ const [selectedPost, setSelectedPost] = useState(null);
    const fetchPosts = async () => {
      try {
        const res = await fetch(
-         `http://localhost:3000/api/posts/user/${userId}`,
+         `https://service.weblinkup.online/api/posts/user/${userId}`,
          { credentials: "include" },
        );
        const data = await res.json();

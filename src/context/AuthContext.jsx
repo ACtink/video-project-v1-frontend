@@ -17,9 +17,12 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/auth/profile", {
-        credentials: "include",
-      });
+      const res = await fetch(
+        "https://service.weblinkup.online/api/auth/profile",
+        {
+          credentials: "include",
+        },
+      );
 
       if (!res.ok) throw new Error("Not authenticated");
 
@@ -35,10 +38,13 @@ export const AuthProvider = ({ children }) => {
 
  const logout = async () => {
    try {
-     const response = await fetch("http://localhost:3000/api/auth/logout", {
-       method: "POST",
-       credentials: "include",
-     });
+     const response = await fetch(
+       "https://service.weblinkup.online/api/auth/logout",
+       {
+         method: "POST",
+         credentials: "include",
+       },
+     );
 
      const data = await response.json();
      console.log("Logout response:", data);

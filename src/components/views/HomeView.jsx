@@ -8,7 +8,7 @@ function HomeView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/posts", {
+    fetch("https://service.weblinkup.online/api/posts", {
       credentials: "include",
     })
       .then((res) => res.json())

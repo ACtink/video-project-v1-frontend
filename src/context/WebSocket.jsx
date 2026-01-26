@@ -69,11 +69,16 @@ function handleAck({ messageId, status }) {
     }
 
 
+    // const url =
+    //   window.MODE === "development" || !window.MODE
+    //     ? "ws://localhost:3000"
+    //     : "wss://service.weblinkup.online/";
+
+
     const url =
       window.MODE === "development" || !window.MODE
-        ? "ws://localhost:3000"
-        : "wss://boomless-plushed-paisley.ngrok-free.dev";
-
+        ? "wss://service.weblinkup.online"
+        : "wss://service.weblinkup.online";
 
     // const url = "wss://boomless-plushed-paisley.ngrok-free.dev";
 

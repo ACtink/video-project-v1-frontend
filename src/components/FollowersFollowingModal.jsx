@@ -21,12 +21,15 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
       try {
         setLoading(true);
 
-        const res = await fetch("http://localhost:3000/api/users/by-ids", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ ids }),
-        });
+        const res = await fetch(
+          "https://service.weblinkup.online/api/users/by-ids",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ ids }),
+          },
+        );
 
         const data = await res.json();
         setUsers(data);

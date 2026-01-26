@@ -7,10 +7,13 @@ function TestPage() {
 
   const getData = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/profile", {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://service.weblinkup.online/api/auth/profile",
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
 
       const data = await response.json();
       console.log("Logged in user data:", data);
@@ -23,7 +26,7 @@ function TestPage() {
 
   const logout = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/logout", {
+      const response = await fetch("https://service.weblinkup.online/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });

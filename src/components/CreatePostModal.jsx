@@ -23,7 +23,7 @@ function CreatePostModal({ open, onClose }) {
       formData.append("caption", caption);
 
       const response = await fetch(
-        `http://localhost:3000/api/upload/post`,
+        `https://service.weblinkup.online/api/upload/post`,
         {
           method: "POST",
           credentials: "include", // ✅ cookie-based auth

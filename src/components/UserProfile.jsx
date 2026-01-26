@@ -21,7 +21,7 @@ function UserProfile() {
         setUser(undefined); // trigger loading
 
         const res = await fetch(
-          `http://localhost:3000/api/users/profile/${username}`,
+          `https://service.weblinkup.online/api/users/profile/${username}`,
           { credentials: "include" },
         );
 

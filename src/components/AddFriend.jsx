@@ -29,7 +29,7 @@ function AddFriend({ uiState }) {
       const handleFollowUser = async () => {
         try {
           const res = await fetch(
-            `http://localhost:3000/api/users/${strangerUserProfileData?.data?.id}/follow`,
+            `https://service.weblinkup.online/api/users/${strangerUserProfileData?.data?.id}/follow`,
             {
               method: "POST",
               credentials: "include",
@@ -49,7 +49,7 @@ function AddFriend({ uiState }) {
         const checkFollowStatus = async () => {
           try {
             const res = await fetch(
-              `http://localhost:3000/api/users/${strangerUserProfileData.data.id}/is-following`,
+              `https://service.weblinkup.online/api/users/${strangerUserProfileData.data.id}/is-following`,
               { credentials: "include" },
             );
             const data = await res.json();

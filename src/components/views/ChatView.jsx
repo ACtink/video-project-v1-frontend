@@ -10,9 +10,12 @@ function ChatView() {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/chat/contacts", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          "https://service.weblinkup.online/api/chat/contacts",
+          {
+            credentials: "include",
+          },
+        );
 
         const data = await res.json();
         setChats(data);

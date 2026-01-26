@@ -106,7 +106,7 @@ function ChatBox({ chat, onBack }) {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/chat/messages/${chat._id}`,
+          `https://service.weblinkup.online/api/chat/messages/${chat._id}`,
           { credentials: "include" },
         );
 

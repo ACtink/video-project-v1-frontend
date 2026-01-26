@@ -49,7 +49,7 @@ const [createOpen, setCreateOpen] = useState(false);
    const handleFollowUser = async () => {
      try {
        const res = await fetch(
-         `http://localhost:3000/api/users/${profileUser?._id}/follow`,
+         `https://service.weblinkup.online/api/users/${profileUser?._id}/follow`,
          {
            method: "POST",
            credentials: "include",
@@ -82,7 +82,7 @@ const [createOpen, setCreateOpen] = useState(false);
       formData.append("profilePicture", file);
 
       const res = await fetch(
-        "http://localhost:3000/api/upload/profile-picture",
+        "https://service.weblinkup.online/api/upload/profile-picture",
         {
           method: "PUT",
           credentials: "include",
@@ -111,7 +111,7 @@ const [createOpen, setCreateOpen] = useState(false);
      console.log("Remove profile photo");
 
      const res = await fetch(
-       "http://localhost:3000/api/upload/profile-picture",
+       "https://service.weblinkup.online/api/upload/profile-picture",
        {
          method: "DELETE",
          credentials: "include",

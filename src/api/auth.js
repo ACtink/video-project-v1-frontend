@@ -2,7 +2,7 @@ export const joinUser = async (payload) => {
 
   console.log("Joining user with payload:", payload);
   const response = await fetch(
-    "http://localhost:3000/api/auth/join",
+    "https://service.weblinkup.online/api/auth/join",
     {
       method: "POST",
       headers: {
@@ -25,7 +25,7 @@ export const joinUser = async (payload) => {
 
 export const loginUser = async (payload) => {
   const response = await fetch(
-    "http://localhost:3000/api/auth/login",
+    "https://service.weblinkup.online/api/auth/login",
     {
       method: "POST",
       headers: {
