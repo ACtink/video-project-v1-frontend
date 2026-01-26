@@ -41,13 +41,17 @@ function CreatePostModal({ open, onClose }) {
 
       // reset & close
       setCaption("");
+      setError("")
       setImage(null);
       onClose();
+      window.location.reload();
+
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
+      setError("")
     }
   };
 
@@ -58,7 +62,7 @@ function CreatePostModal({ open, onClose }) {
         <div className="flex justify-between items-center px-4 py-3 border-b border-white/20">
           <h3 className="font-semibold text-white">Create post</h3>
           <button
-            onClick={onClose}
+            onClick={() => { setError(""); onClose(); }}
             className="text-white/60 hover:text-white text-lg"
           >
             ✕

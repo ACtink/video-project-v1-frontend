@@ -69,31 +69,23 @@ function AddFriend({ uiState }) {
     <div>
       {" "}
       {strangerUserProfileData && (
-        <button
-          onClick={handleFollowUser}
-          disabled={isFollowing}
-          className="flex items-center"
+        <span
+          className={`
+    px-6 py-4
+    text-base font-semibold
+    tracking-wide
+    rounded-md
+    border
+    transition-all duration-300
+    ${
+      isFollowing
+        ? "bg-pink-500 text-white border-pink-500 shadow-[0_0_18px_rgba(236,72,153,0.6)]"
+        : "bg-emerald-500 text-black border-emerald-500 hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(52,211,153,0.8)]"
+    }
+  `}
         >
-          {uiState !== "idle" && (
-            <span
-              className={`
-                      px-6 py-4
-                      text-base font-semibold
-                      tracking-wide
-                      rounded-md
-                      border
-                      transition-all
-            ${
-              isFollowing
-                ? "bg-pink-500/10 text-pink-400 border-pink-400/30 shadow-[0_0_12px_rgba(236,72,153,0.35)]"
-                : "bg-white/10 text-white border-white/20 hover:bg-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.25)]"
-            }
-          `}
-            >
-              {isFollowing ? "Friends 💕" : "Add Friend"}
-            </span>
-          )}
-        </button>
+          {isFollowing ? "Friends 💕" : "Add Friend"}
+        </span>
       )}
     </div>
   );

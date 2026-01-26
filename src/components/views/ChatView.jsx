@@ -59,7 +59,7 @@ function ChatView() {
               >
                 <p className="text-white font-medium">{chat.username}</p>
                 <p className="text-white/60 text-sm truncate">
-                  Start a conversation
+                  Start Chatting
                 </p>
               </button>
             ))}

@@ -76,9 +76,17 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 transition"
                   >
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
-                      {u.username?.[0]?.toUpperCase() || "U"}
-                    </div>
+                    {u.profilePicture ? (
+                      <img
+                        src={u.profilePicture}
+                        alt={u.username}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
+                        {u.username?.[0]?.toUpperCase() || "U"}
+                      </div>
+                    )}
 
                     {/* User info */}
                     <div className="flex flex-col">

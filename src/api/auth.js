@@ -1,13 +1,16 @@
 export const joinUser = async (payload) => {
 
   console.log("Joining user with payload:", payload);
-  const response = await fetch("http://localhost:3000/api/auth/join", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    "http://localhost:3000/api/auth/join",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
   const data = await response.json();
 
@@ -21,15 +24,18 @@ export const joinUser = async (payload) => {
 
 
 export const loginUser = async (payload) => {
-  const response = await fetch("http://localhost:3000/api/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include", // 🔥 REQUIRED
+  const response = await fetch(
+    "http://localhost:3000/api/auth/login",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // 🔥 REQUIRED
 
-    body: JSON.stringify(payload),
-  });
+      body: JSON.stringify(payload),
+    },
+  );
 
   const data = await response.json();
 

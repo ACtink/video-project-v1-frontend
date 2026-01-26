@@ -106,12 +106,39 @@ const [createOpen, setCreateOpen] = useState(false);
     }
   }
   // Remove photo
-  const handleRemovePhoto = () => {
-    console.log("Remove profile photo");
+ const handleRemovePhoto = async () => {
+   try {
+     console.log("Remove profile photo");
 
-    // TODO: call backend API
-    setOpen(false);
-  };
+     const res = await fetch(
+       "http://localhost:3000/api/upload/profile-picture",
+       {
+         method: "DELETE",
+         credentials: "include",
+       },
+     );
+
+     if (!res.ok) {
+       const err = await res.json();
+       throw new Error(err?.error || "Failed to remove photo");
+     }
+
+     const data = await res.json();
+     console.log("Profile photo removed:", data);
+
+     // ✅ optional: refresh UI
+     // 1) simplest (for now)
+     window.location.reload();
+
+     // 2) later you can update user state instead
+
+     setOpen(false);
+   } catch (err) {
+     console.error(err);
+     alert(err.message || "Something went wrong");
+   }
+ };
+
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center overflow-y-auto">

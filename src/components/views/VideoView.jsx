@@ -234,7 +234,7 @@ function VideoView({ onUiStateChange }) {
     <div
       className="
     w-full
-    h-[96vh]
+    h-[90vh]
     overflow-hidden
     flex
     flex-col
@@ -314,7 +314,7 @@ function VideoView({ onUiStateChange }) {
       </div>
 
       {/* ===================== BOTTOM : CONTROLS + CHAT (30% on xl) ===================== */}
-      <div className="h-[180px] xl:h-[220px] flex flex-row bg-white/10 shrink-0">
+      <div className="h-[180px] xl:h-[220px] flex flex-row  shrink-0">
         {/* CONTROLS */}
         <div className="xl:w-1/2 w-full flex items-center justify-center px-4 xl:items-stretch">
           {/* FIXED / RESPONSIVE CONTROL AREA */}
@@ -338,20 +338,24 @@ function VideoView({ onUiStateChange }) {
                 disabled={started}
                 onClick={handleStart}
                 className={`
-                        w-[90%]
-                        sm:w-[220px]
-                        xl:w-[240px]
-                        h-[64px] sm:h-[72px] xl:h-full
-                        text-lg sm:text-xl xl:text-2xl
-                        font-bold
-                        rounded-xl
-                        bg-cyan-400 text-black
-                        hover:bg-cyan-300
-                        shadow-lg shadow-cyan-400/60
-                        transition
-                        active:scale-95
-                        disabled:opacity-50
-                        ${!started ? "animate-pulse" : ""}
+    w-[90%]
+    sm:w-[220px]
+    xl:w-[240px]
+    h-[64px] sm:h-[72px] xl:h-full
+    text-lg sm:text-xl xl:text-2xl
+    font-bold
+    rounded-xl
+
+    bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500
+    text-white
+
+    shadow-[0_0_16px_rgba(16,185,129,0.45)]
+    hover:shadow-[0_0_22px_rgba(16,185,129,0.6)]
+    hover:brightness-105
+
+    transition-all duration-300 ease-out
+    active:scale-95
+    disabled:opacity-50 disabled:shadow-none
   `}
               >
                 Start
@@ -378,7 +382,7 @@ function VideoView({ onUiStateChange }) {
                   active:scale-95
                 "
                 >
-                  Close
+                  Stop
                 </button>
 
                 {/* COUNTRY CARD */}
@@ -452,7 +456,7 @@ function VideoView({ onUiStateChange }) {
                   active:scale-95
                 "
                 >
-                  Close
+                  Stop
                 </button>
 
                 {/* COUNTRY CARD */}

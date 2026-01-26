@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PostModal from "./PostModal";
 
 function PostCard({ post }) {
   console.log("Rendering PostCard for post:", post);
+const [selectedPost, setSelectedPost] = useState(null);
 
 
 
@@ -13,19 +16,37 @@ function PostCard({ post }) {
         onClick={() => navigate(`/profile/${post.user.username}`)}
         className="flex items-center gap-2 px-3 py-2 cursor-pointer"
       >
-        <img
-          src={post.user.profilePicture}
-          alt=""
-          className="w-8 h-8 rounded-full object-cover"
-        />
+        {post.user.profilePicture ? (
+          <img
+            src={post.user.profilePicture}
+            alt=""
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className="
+                    w-8 h-8
+                    rounded-full
+                    flex items-center justify-center
+                    bg-emerald-600
+                    text-white
+                    font-bold
+                    text-sm
+                  "
+          >
+            {post.user.username?.charAt(0).toUpperCase()}
+          </div>
+        )}
+
         <span className="font-medium text-sm">{post.user.username}</span>
       </div>
 
       {/* Image */}
       <img
+        onClick={() => setSelectedPost(post)}
         src={post.imageUrl}
         alt=""
-        className="w-full max-h-[420px] object-cover"
+        className="w-full max-h-[420px] object-cover cursor-pointer"
       />
 
       {/* Actions */}
@@ -62,6 +83,9 @@ function PostCard({ post }) {
           className="w-full bg-transparent border-t border-white/10 pt-1.5 text-sm outline-none placeholder-white/40"
         />
       </div>
+      {selectedPost && (
+        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   );
 }

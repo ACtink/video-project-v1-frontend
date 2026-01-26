@@ -7,15 +7,16 @@ import { useAuth } from "../../hooks/useAuth";
 import { getChatMessages } from "../../utils/getMessages";
 import { saveMessage } from "../../utils/saveMessage";
 
+/* ======================================================
+   CANONICAL MESSAGE ID NORMALIZER
+====================================================== */
+const normalizeMessageId = (m) => m.messageId;
+
 function ChatBox({ chat, onBack }) {
-  const { user } = useAuth(); // ✅ current logged-in user
+  const { user } = useAuth();
   const { sendSignal, messages, setMessages } = useContext(websocketContext);
 
-
-  console.log("ChatBox render:", { chat, user });
-
   const [text, setText] = useState("");
-
   const myUserId = user._id;
 
   /* ======================================================
@@ -25,20 +26,20 @@ function ChatBox({ chat, onBack }) {
     return messages.filter(
       (m) =>
         (m.from === myUserId && m.to === chat._id) ||
-        (m.from === chat._id && m.to === myUserId)
+        (m.from === chat._id && m.to === myUserId),
     );
   }, [messages, chat._id, myUserId]);
 
   /* ======================================================
      SEND MESSAGE
   ====================================================== */
-  const handleSend = async() => {
+  const handleSend = async () => {
     if (!text.trim()) return;
 
     const messageId = uuidv4();
     const createdAt = Date.now();
 
-    // 1️⃣ Optimistic UI update
+    // Optimistic UI
     setMessages((prev) => [
       ...prev,
       {
@@ -51,20 +52,19 @@ function ChatBox({ chat, onBack }) {
       },
     ]);
 
+    // Save to IndexedDB / backend
+    saveMessage({
+      type: "chat_message",
+      message: {
+        messageId,
+        from: myUserId,
+        to: chat._id,
+        text,
+        createdAt,
+      },
+    });
 
-         saveMessage({        
-          type: "chat_message",
-          message: {
-            messageId,
-            from: myUserId,
-            to: chat._id,
-            text,
-            createdAt,
-          },
-        })  
-      
-
-    // 2️⃣ Send via WebSocket
+    // Send via WebSocket
     sendSignal({
       type: "chat_message",
       messageId,
@@ -76,19 +76,19 @@ function ChatBox({ chat, onBack }) {
     setText("");
   };
 
-
+  /* ======================================================
+     LOAD FROM INDEXED DB
+  ====================================================== */
   useEffect(() => {
     if (!chat?._id) return;
 
     const loadFromIndexedDB = async () => {
       const cachedMessages = await getChatMessages(myUserId, chat._id);
 
-      console.log("Loaded messages from IndexedDB:", cachedMessages);
-
       setMessages((prev) => {
-        const existingIds = new Set(prev.map((m) => m.messageId));
+        const existingIds = new Set(prev.map(normalizeMessageId));
         const newOnes = cachedMessages.filter(
-          (m) => !existingIds.has(m.messageId),
+          (m) => !existingIds.has(normalizeMessageId(m)),
         );
         return [...prev, ...newOnes];
       });
@@ -97,7 +97,9 @@ function ChatBox({ chat, onBack }) {
     loadFromIndexedDB();
   }, [chat._id, myUserId, setMessages]);
 
-
+  /* ======================================================
+     FETCH FROM BACKEND
+  ====================================================== */
   useEffect(() => {
     if (!chat?._id) return;
 
@@ -105,16 +107,14 @@ function ChatBox({ chat, onBack }) {
       try {
         const res = await fetch(
           `http://localhost:3000/api/chat/messages/${chat._id}`,
-          {
-            credentials: "include", // IMPORTANT (cookies)
-          }
+          { credentials: "include" },
         );
 
         const data = await res.json();
 
-        // Convert backend → frontend shape
+        // 🔥 USE messageId FROM BACKEND (NOT _id)
         const fetchedMessages = data.map((msg) => ({
-          messageId: msg._id,
+          messageId: msg.messageId,
           from: msg.senderId,
           to: msg.receiverId,
           text: msg.text,
@@ -122,11 +122,10 @@ function ChatBox({ chat, onBack }) {
           createdAt: new Date(msg.createdAt).getTime(),
         }));
 
-        // Merge without duplicates
         setMessages((prev) => {
-          const existingIds = new Set(prev.map((m) => m.messageId));
+          const existingIds = new Set(prev.map(normalizeMessageId));
           const newOnes = fetchedMessages.filter(
-            (m) => !existingIds.has(m.messageId)
+            (m) => !existingIds.has(normalizeMessageId(m)),
           );
           return [...prev, ...newOnes];
         });
@@ -137,7 +136,6 @@ function ChatBox({ chat, onBack }) {
 
     fetchMessages();
   }, [chat._id, setMessages]);
-
 
   return (
     <>
@@ -150,7 +148,6 @@ function ChatBox({ chat, onBack }) {
           <ArrowLeft size={20} />
         </button>
 
-        {/* Avatar */}
         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
           {chat.profilePicture ? (
             <img
@@ -165,7 +162,6 @@ function ChatBox({ chat, onBack }) {
           )}
         </div>
 
-        {/* Username */}
         <h3 className="font-semibold text-lg">{chat.username}</h3>
       </div>
 
@@ -182,45 +178,30 @@ function ChatBox({ chat, onBack }) {
 
           return (
             <div
-              key={msg.messageId}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              key={normalizeMessageId(msg)}
+              className={`flex items-end gap-2 ${
+                isMe ? "justify-end" : "justify-start"
+              }`}
             >
+              {!isMe && (
+                <div className="w-6 h-6 rounded-full bg-neutral-600 flex items-center justify-center text-xs font-semibold text-white">
+                  {chat.username?.[0]?.toUpperCase() || "U"}
+                </div>
+              )}
+
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm text-white
-                  ${isMe ? "bg-indigo-600" : "bg-white/20"}
-                `}
+                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm text-white ${
+                  isMe ? "bg-indigo-600" : "bg-white/20"
+                }`}
               >
                 <p>{msg.text}</p>
-
-                {isMe && (
-                  <div className="mt-1 flex justify-end">
-                    <div className="flex items-center gap-[1px]">
-                      {/* First tick */}
-                      <svg
-                        className={`
-                            w-2.5 h-2.5 sm:w-3 sm:h-3
-                            ${msg.status === "delivered" ? "text-blue-400" : "text-white/60"}
-                          `}
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M9 16.2l-3.5-3.5L4 14.2l5 5L20 8.2l-1.4-1.4z" />
-                      </svg>
-
-                      {/* Second tick (only for delivered) */}
-                      {msg.status === "sent" && (
-                        <svg
-                          className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400 -ml-1"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M9 16.2l-3.5-3.5L4 14.2l5 5L20 8.2l-1.4-1.4z" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {isMe && (
+                <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white">
+                  {user.username?.[0]?.toUpperCase() || "Y"}
+                </div>
+              )}
             </div>
           );
         })}

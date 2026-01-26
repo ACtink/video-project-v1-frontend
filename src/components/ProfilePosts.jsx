@@ -1,29 +1,38 @@
 import { useEffect, useState } from "react";
+import PostModal from "./PostModal";
 
 function ProfilePosts({ userId }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+const [selectedPost, setSelectedPost] = useState(null);
+
+
+   const fetchPosts = async () => {
+     try {
+       const res = await fetch(
+         `http://localhost:3000/api/posts/user/${userId}`,
+         { credentials: "include" },
+       );
+       const data = await res.json();
+       setPosts(data);
+     } catch (err) {
+       console.error("Failed to fetch posts", err);
+     } finally {
+       setLoading(false);
+     }
+   };
+
 
   useEffect(() => {
     if (!userId) return;
+       fetchPosts();
 
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:3000/api/posts/user/${userId}`,
-          { credentials: "include" },
-        );
-        const data = await res.json();
-        setPosts(data);
-      } catch (err) {
-        console.error("Failed to fetch posts", err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchPosts();
+   
   }, [userId]);
+
+
+
 
   if (loading) {
     return <div className="mt-8 text-center text-white/60">Loading posts…</div>;
@@ -38,7 +47,8 @@ function ProfilePosts({ userId }) {
       {posts.map((post) => (
         <div
           key={post._id}
-          className="aspect-square bg-white/10 overflow-hidden"
+          onClick={() => setSelectedPost(post)}
+          className="aspect-square bg-white/10 overflow-hidden cursor-pointer"
         >
           <img
             src={post.imageUrl}
@@ -47,8 +57,13 @@ function ProfilePosts({ userId }) {
           />
         </div>
       ))}
+
+      {selectedPost && (
+        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   );
+  
 }
 
 export default ProfilePosts;

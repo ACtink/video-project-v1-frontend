@@ -34,11 +34,11 @@ function Loader({ uiState, allGoodAndConnected }) {
           >
             <p
               className="
-                text-sm sm:text-base lg:text-lg
-                text-cyan-300
-                font-medium
-                tracking-wide
-              "
+    text-sm sm:text-base lg:text-lg
+    text-slate-400
+    font-medium
+    tracking-wide
+  "
             >
               Connecting you to a stranger…
             </p>
