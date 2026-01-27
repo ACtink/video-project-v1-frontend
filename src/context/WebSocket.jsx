@@ -15,7 +15,8 @@ export const WebSocketProvider = ({ children }) => {
     const [messages, setMessages] = React.useState([]);
 
       const { user } = useAuth(); // ✅ current logged-in user
-    
+    const sendQueueRef = useRef([]);
+
 
 
 const { setVideoCallLoader, cleanupFull, cleanupRemotePeer } =
@@ -69,45 +70,24 @@ function handleAck({ messageId, status }) {
     }
 
 
-    // const url =
-    //   window.MODE === "development" || !window.MODE
-    //     ? "ws://localhost:3000"
-    //     : "wss://service.weblinkup.online/";
 
 
-    const url =
-      window.MODE === "development" || !window.MODE
-        ? "wss://service.weblinkup.online"
-        : "wss://service.weblinkup.online";
+   const WS_URL = import.meta.env.VITE_WS_URL;
 
-    // const url = "wss://boomless-plushed-paisley.ngrok-free.dev";
-
-    socketRef.current =  new WebSocket(url);
-
-    socketRef.current.onopen = (event) => {
+   socketRef.current = new WebSocket(WS_URL);
 
 
-  // socketRef.current.send(
-  //   JSON.stringify({
-  //     type: "chat_auth",
-  //     token,
-  //   })
-  // );
-  console.log("WebSocket connected");
+   socketRef.current.onopen = () => {
+     console.log("WebSocket is connected");
+     setWsConnected(true);
 
-   pingInterval = setInterval(() => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ type: "ping" }));
-    }
-  }, 300000);
+     // 🔥 flush queued messages
+     sendQueueRef.current.forEach((msg) => {
+       socketRef.current.send(JSON.stringify(msg));
+     });
+     sendQueueRef.current = [];
+   };
 
-
-      setWsConnected(true);
-
-
-
-  
-};
 
 
    socketRef.current.onerror = (event) => {
@@ -238,18 +218,21 @@ function handleAck({ messageId, status }) {
     handlersRef.current = handlers;
   };
 
+const sendSignal = (msg) => {
+  console.log("sending message to server", msg);
 
-   const sendSignal = (msg) => {
-    console.log("sending message to server", msg)
-      if (!socketRef.current) return;
+  if (!socketRef.current) return;
 
-      if (socketRef.current.readyState !== WebSocket.OPEN) {
-        console.warn("WebSocket not ready, dropped:", msg);
-        return;
-      }
+  if (socketRef.current.readyState !== WebSocket.OPEN) {
+    console.warn("WebSocket not ready, queued:", msg);
+    sendQueueRef.current.push(msg); // 👈 ONLY CHANGE
+    return;
+  }
 
-      socketRef.current.send(JSON.stringify(msg));
-    };
+  console.log("WebSocket sending:", msg);
+  socketRef.current.send(JSON.stringify(msg));
+};
+
 
   return (
     <websocketContext.Provider

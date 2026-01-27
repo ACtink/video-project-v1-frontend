@@ -108,11 +108,33 @@ export const WebRTCProvider = ({ children }) => {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-    pcRef.current.ontrack = (event) => {
-      remoteVideoRef.current.srcObject = event.streams[0];
-      console.log("REMOTE STREAM is being received");
-      setRemoteStreamReady(true);
-    };
+   pcRef.current.ontrack = (event) => {
+     if (!remoteVideoRef.current) return;
+
+     const video = remoteVideoRef.current;
+
+     if (!video.srcObject) {
+       video.srcObject = event.streams[0];
+     }
+
+     console.log("Remote audio tracks:", video.srcObject.getAudioTracks());
+
+     video.muted = false; // MUST
+     video.volume = 1.0; // MUST
+     video.playsInline = true;
+
+     if (!video._playing) {
+       video._playing = true;
+       video.play().catch((err) => {
+               console.warn("Autoplay blocked, waiting for user gesture", err);
+
+       });
+     }
+
+
+     setRemoteStreamReady(true);
+   };
+
 
     remoteVideoRef.current.onplaying = () => {
       setVideoPlayingReady(true);

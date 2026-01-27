@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import fetchData from "../utils/fetchData";
 
 function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-
   const navigate = useNavigate();
-
 
   useEffect(() => {
     if (!open) return;
@@ -21,15 +20,12 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
       try {
         setLoading(true);
 
-        const res = await fetch(
-          "https://service.weblinkup.online/api/users/by-ids",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ ids }),
-          },
-        );
+        const res = await fetchData("/api/users/by-ids", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids }),
+        });
 
         const data = await res.json();
         setUsers(data);

@@ -1,69 +1,60 @@
-import React from 'react'
+import React from "react";
 
 import { useContext, useEffect, useState } from "react";
-import { webRTCContext } from '../context/WebRTC';
-
+import { webRTCContext } from "../context/WebRTC";
+import fetchData from "../utils/fetchData";
 
 function AddFriend({ uiState }) {
+  const {
+    sendMessage,
+    pcRef,
+    dataChannelRef,
+    dataChannelReady,
+    dataChannel,
+    cleanVideoChatMessagesUI,
+    setCleanVideoChatMessagesUI,
+    sendJsonMessage,
+    strangerUserProfileData,
+    setstrangerUserProfileData,
+  } = useContext(webRTCContext);
 
+  const [isFollowing, setIsFollowing] = useState(false);
 
-     const {
-        sendMessage,
-        pcRef,
-        dataChannelRef,
-        dataChannelReady,
-        dataChannel,
-        cleanVideoChatMessagesUI,
-        setCleanVideoChatMessagesUI,
-        sendJsonMessage,
-        strangerUserProfileData,
-        setstrangerUserProfileData,
-      } = useContext(webRTCContext);
+  const handleFollowUser = async () => {
+    try {
+      const res = await fetchData(
+        `/api/users/${strangerUserProfileData?.data?.id}/follow`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
 
-      const [isFollowing, setIsFollowing] = useState(false);
+      if (res.ok) setIsFollowing(true);
+    } catch (err) {
+      console.error("Follow error:", err);
+    }
+  };
 
+  useEffect(() => {
+    if (!strangerUserProfileData?.data?.id) return;
 
+    const checkFollowStatus = async () => {
+      try {
+        const res = await fetchData(
+          `/api/users/${strangerUserProfileData.data.id}/is-following`,
+          { credentials: "include" },
+        );
+        const data = await res.json();
+        setIsFollowing(data.isFollowing);
+      } catch (err) {
+        console.error("Follow status error", err);
+      }
+    };
 
-
-
-      const handleFollowUser = async () => {
-        try {
-          const res = await fetch(
-            `https://service.weblinkup.online/api/users/${strangerUserProfileData?.data?.id}/follow`,
-            {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-
-          if (res.ok) setIsFollowing(true);
-        } catch (err) {
-          console.error("Follow error:", err);
-        }
-      };
-
-      useEffect(() => {
-        if (!strangerUserProfileData?.data?.id) return;
-
-        const checkFollowStatus = async () => {
-          try {
-            const res = await fetch(
-              `https://service.weblinkup.online/api/users/${strangerUserProfileData.data.id}/is-following`,
-              { credentials: "include" },
-            );
-            const data = await res.json();
-            setIsFollowing(data.isFollowing);
-          } catch (err) {
-            console.error("Follow status error", err);
-          }
-        };
-
-        checkFollowStatus();
-      }, [strangerUserProfileData]);
-
-
-
+    checkFollowStatus();
+  }, [strangerUserProfileData]);
 
   return (
     <div>
@@ -91,4 +82,4 @@ function AddFriend({ uiState }) {
   );
 }
 
-export default AddFriend
+export default AddFriend;

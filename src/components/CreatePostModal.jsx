@@ -1,4 +1,5 @@
 import { useState } from "react";
+import fetchData from "../utils/fetchData";
 
 function CreatePostModal({ open, onClose }) {
   const [caption, setCaption] = useState("");
@@ -22,14 +23,11 @@ function CreatePostModal({ open, onClose }) {
       formData.append("image", image);
       formData.append("caption", caption);
 
-      const response = await fetch(
-        `https://service.weblinkup.online/api/upload/post`,
-        {
-          method: "POST",
-          credentials: "include", // ✅ cookie-based auth
-          body: formData,
-        },
-      );
+      const response = await fetchData(`/api/upload/post`, {
+        method: "POST",
+        credentials: "include", // ✅ cookie-based auth
+        body: formData,
+      });
 
       if (!response.ok) {
         const err = await response.json();
@@ -41,17 +39,16 @@ function CreatePostModal({ open, onClose }) {
 
       // reset & close
       setCaption("");
-      setError("")
+      setError("");
       setImage(null);
       onClose();
       window.location.reload();
-
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
-      setError("")
+      setError("");
     }
   };
 
@@ -62,7 +59,10 @@ function CreatePostModal({ open, onClose }) {
         <div className="flex justify-between items-center px-4 py-3 border-b border-white/20">
           <h3 className="font-semibold text-white">Create post</h3>
           <button
-            onClick={() => { setError(""); onClose(); }}
+            onClick={() => {
+              setError("");
+              onClose();
+            }}
             className="text-white/60 hover:text-white text-lg"
           >
             ✕

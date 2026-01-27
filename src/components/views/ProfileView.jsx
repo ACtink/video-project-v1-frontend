@@ -1,13 +1,14 @@
 import { useAuth } from "../../hooks/useAuth";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfilePhotoModal from "../ProfilePhotoModal";
 import FollowersFollowingModal from "../FollowersFollowingModal";
 import CreatePostModal from "../CreatePostModal";
 import ProfilePosts from "../ProfilePosts";
+import fetchData from "../../utils/fetchData";
 
 function ProfileView({ user: profileUser }) {
-  const { user: authUser , setUser } = useAuth();
+  const { user: authUser, setUser } = useAuth();
   const navigate = useNavigate();
 
   // ✅ HOOKS MUST ALWAYS RUN
@@ -15,27 +16,30 @@ function ProfileView({ user: profileUser }) {
   const [listOpen, setListOpen] = useState(false);
   const [listType, setListType] = useState(null);
   const fileInputRef = useRef(null);
+  const [followed, setFollowed] = useState(false);
 
   console.log("ProfileView render:", { profileUser, authUser });
 
-  let user = profileUser || authUser;
+const [localProfileUser, setLocalProfileUser] = useState(profileUser);
 
-const [createOpen, setCreateOpen] = useState(false);
-
-
+useEffect(() => {
+  setLocalProfileUser(profileUser);
+}, [profileUser]);
 
   
+
+let user = localProfileUser || authUser;
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   // if (!user) return null; // ✅ SAFE NOW
 
   const isMe = user._id === authUser?._id;
 
-  const isFollowing =
-    !!authUser &&
-    !!profileUser &&
-    profileUser.followers?.some(
-      (id) => id.toString() === authUser._id.toString(),
-    );
+ const isFollowing =
+   !!authUser &&
+   !!user &&
+   user.followers?.some((id) => id.toString() === authUser._id.toString());
 
 
   // Open file picker
@@ -46,24 +50,41 @@ const [createOpen, setCreateOpen] = useState(false);
   };
 
 
-   const handleFollowUser = async () => {
-     try {
-       const res = await fetch(
-         `https://service.weblinkup.online/api/users/${profileUser?._id}/follow`,
-         {
-           method: "POST",
-           credentials: "include",
-           headers: { "Content-Type": "application/json" },
-         },
-       );
+  useEffect(() => {
+    if (followed) {
+      // Update local state to reflect the new follower
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+        return {
+          ...prevUser,
+          following: [...prevUser.following, profileUser._id],
+        };
+      });
+    }
+  }, [followed, profileUser, setUser]);
 
-     } catch (err) {
-       console.error("Follow error:", err);
-     }
-   };
+ const handleFollowUser = async () => {
+   if (!profileUser?._id || isFollowing) return;
+
+   try {
+     await fetchData(`/api/users/${profileUser._id}/follow`, {
+       method: "POST",
+       credentials: "include",
+       headers: { "Content-Type": "application/json" },
+     });
+
+     setLocalProfileUser((prev) => ({
+       ...prev,
+       followers: [...prev.followers, authUser._id.toString()],
+     }));
+   } catch (err) {
+     console.error("Follow error:", err);
+   }
+ };
+
 
   // Handle file selection
- const handleFileChange = async (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -81,14 +102,11 @@ const [createOpen, setCreateOpen] = useState(false);
       const formData = new FormData();
       formData.append("profilePicture", file);
 
-      const res = await fetch(
-        "https://service.weblinkup.online/api/upload/profile-picture",
-        {
-          method: "PUT",
-          credentials: "include",
-          body: formData,
-        }
-      );
+      const res = await fetchData("/api/upload/profile-picture", {
+        method: "PUT",
+        credentials: "include",
+        body: formData,
+      });
 
       if (!res.ok) throw new Error("Upload failed");
 
@@ -104,41 +122,37 @@ const [createOpen, setCreateOpen] = useState(false);
     } finally {
       e.target.value = "";
     }
-  }
+  };
   // Remove photo
- const handleRemovePhoto = async () => {
-   try {
-     console.log("Remove profile photo");
+  const handleRemovePhoto = async () => {
+    try {
+      console.log("Remove profile photo");
 
-     const res = await fetch(
-       "https://service.weblinkup.online/api/upload/profile-picture",
-       {
-         method: "DELETE",
-         credentials: "include",
-       },
-     );
+      const res = await fetchData("/api/upload/profile-picture", {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-     if (!res.ok) {
-       const err = await res.json();
-       throw new Error(err?.error || "Failed to remove photo");
-     }
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.error || "Failed to remove photo");
+      }
 
-     const data = await res.json();
-     console.log("Profile photo removed:", data);
+      const data = await res.json();
+      console.log("Profile photo removed:", data);
 
-     // ✅ optional: refresh UI
-     // 1) simplest (for now)
-     window.location.reload();
+      // ✅ optional: refresh UI
+      // 1) simplest (for now)
+      window.location.reload();
 
-     // 2) later you can update user state instead
+      // 2) later you can update user state instead
 
-     setOpen(false);
-   } catch (err) {
-     console.error(err);
-     alert(err.message || "Something went wrong");
-   }
- };
-
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Something went wrong");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center overflow-y-auto">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import ChatBox from "./ChatBox";
+import fetchData from "../../utils/fetchData";
 
 function ChatView() {
   const [activeChat, setActiveChat] = useState(null);
@@ -10,12 +11,9 @@ function ChatView() {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await fetch(
-          "https://service.weblinkup.online/api/chat/contacts",
-          {
-            credentials: "include",
-          },
-        );
+        const res = await fetchData("/api/chat/contacts", {
+          credentials: "include",
+        });
 
         const data = await res.json();
         setChats(data);
@@ -61,9 +59,7 @@ function ChatView() {
                 className="w-full text-left px-4 py-3 hover:bg-white/20 transition"
               >
                 <p className="text-white font-medium">{chat.username}</p>
-                <p className="text-white/60 text-sm truncate">
-                  Start Chatting
-                </p>
+                <p className="text-white/60 text-sm truncate">Start Chatting</p>
               </button>
             ))}
         </div>

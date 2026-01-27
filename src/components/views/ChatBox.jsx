@@ -6,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 import { getChatMessages } from "../../utils/getMessages";
 import { saveMessage } from "../../utils/saveMessage";
+import fetchData from "../../utils/fetchData";
 
 /* ======================================================
    CANONICAL MESSAGE ID NORMALIZER
@@ -105,10 +106,9 @@ function ChatBox({ chat, onBack }) {
 
     const fetchMessages = async () => {
       try {
-        const res = await fetch(
-          `https://service.weblinkup.online/api/chat/messages/${chat._id}`,
-          { credentials: "include" },
-        );
+        const res = await fetchData(`/api/chat/messages/${chat._id}`, {
+          credentials: "include",
+        });
 
         const data = await res.json();
 

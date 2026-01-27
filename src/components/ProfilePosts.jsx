@@ -1,38 +1,30 @@
 import { useEffect, useState } from "react";
 import PostModal from "./PostModal";
+import fetchData from "../utils/fetchData";
 
 function ProfilePosts({ userId }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
 
-
-   const fetchPosts = async () => {
-     try {
-       const res = await fetch(
-         `https://service.weblinkup.online/api/posts/user/${userId}`,
-         { credentials: "include" },
-       );
-       const data = await res.json();
-       setPosts(data);
-     } catch (err) {
-       console.error("Failed to fetch posts", err);
-     } finally {
-       setLoading(false);
-     }
-   };
-
+  const fetchPosts = async () => {
+    try {
+      const res = await fetchData(`/api/posts/user/${userId}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      setPosts(data);
+    } catch (err) {
+      console.error("Failed to fetch posts", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!userId) return;
-       fetchPosts();
-
-
-   
+    fetchPosts();
   }, [userId]);
-
-
-
 
   if (loading) {
     return <div className="mt-8 text-center text-white/60">Loading posts…</div>;
@@ -63,7 +55,6 @@ const [selectedPost, setSelectedPost] = useState(null);
       )}
     </div>
   );
-  
 }
 
 export default ProfilePosts;

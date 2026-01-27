@@ -4,6 +4,7 @@ import ProfileView from "./views/ProfileView";
 import AppShell from "./AppShell";
 import { Loader } from "lucide-react";
 import Header from "./Header";
+import fetchData from "../utils/fetchData";
 
 function UserProfile() {
   const { username } = useParams();
@@ -20,10 +21,9 @@ function UserProfile() {
         setNotFound(false);
         setUser(undefined); // trigger loading
 
-        const res = await fetch(
-          `https://service.weblinkup.online/api/users/profile/${username}`,
-          { credentials: "include" },
-        );
+        const res = await fetchData(`/api/users/profile/${username}`, {
+          credentials: "include",
+        });
 
         // ❌ User does not exist
         if (res.status === 404) {
