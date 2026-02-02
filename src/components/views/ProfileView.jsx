@@ -157,7 +157,7 @@ let user = localProfileUser || authUser;
   return (
     <div className="min-h-screen bg-black text-white flex justify-center overflow-y-auto">
       {/* CENTER COLUMN */}
-      <div className="w-full max-w-[935px] px-4 pt-10">
+      <div className="w-full max-w-[935px] overflow-y-auto px-4 pt-10">
         {/* GO BACK BUTTON */}
         {!isMe && (
           <div className="mb-4 flex items-center">

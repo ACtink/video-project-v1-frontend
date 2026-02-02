@@ -26,7 +26,7 @@ const { user, loading } = useAuth();
 
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 text-white flex flex-col">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 text-white flex flex-col overflow-y-auto">
       <Layout header={<Header />} showHeader={showHeader}>
         {loading ? (
           <div className="w-full h-full flex items-center justify-center">

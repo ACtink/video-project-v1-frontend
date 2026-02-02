@@ -305,9 +305,9 @@ function VideoView({ onUiStateChange }) {
           {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
 
           {/* ✅ AddFriend overlay */}
-          {showAddFriend && (
+          {showAddFriend &&  allGoodAndConnected && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-              <AddFriend uiState={uiState} />
+              <AddFriend uiState={uiState} allGoodAndConnected={allGoodAndConnected} />
             </div>
           )}
         </div>

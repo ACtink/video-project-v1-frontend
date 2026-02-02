@@ -79,7 +79,7 @@ function UserProfile() {
       ) : (
         // ❌ USER NOT FOUND
         <div className="flex-1 bg-black text-white flex justify-center">
-          <div className="w-full max-w-[935px] px-4 pt-10">
+          <div className="w-full max-w-[935px] px-4 pt-10 pb-36 overflow-y-auto">
             {/* GO BACK BUTTON */}
             <div className="mb-6 flex items-center">
               <button

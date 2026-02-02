@@ -52,14 +52,14 @@ useEffect(() => {
   return (
     <div className="h-full w-full relative flex flex-col bg-black">
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto mb-20 md:mb-30">
+      {/* <div className="flex-1 overflow-hidden mb-20 md:mb-30"> */}
         <WebRTCProvider>
           <WebSocketProvider>
             <RTCBridge />
             {renderView()}
           </WebSocketProvider>
         </WebRTCProvider>
-      </div>
+      {/* </div> */}
 
       {/* Bottom feature bar */}
       <div className="fixed bottom-0 pt-4 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 left-1/2 -translate-x-1/2 w-full flex justify-center px-10">

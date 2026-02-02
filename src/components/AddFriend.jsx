@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { webRTCContext } from "../context/WebRTC";
 import fetchData from "../utils/fetchData";
 
-function AddFriend({ uiState }) {
+function AddFriend({ uiState  , allGoodAndConnected }) {
   const {
     sendMessage,
     pcRef,
@@ -61,7 +61,10 @@ function AddFriend({ uiState }) {
       {" "}
       {strangerUserProfileData && (
         <span
+        disabled={isFollowing || uiState !== "idle"}
+        onClick={handleFollowUser}
           className={`
+            ${isFollowing ? "cursor-not-allowed" : "cursor-pointer"}
     px-6 py-4
     text-base font-semibold
     tracking-wide
@@ -75,7 +78,9 @@ function AddFriend({ uiState }) {
     }
   `}
         >
-          {isFollowing ? "Friends 💕" : "Add Friend"}
+          {isFollowing && allGoodAndConnected && "Friends 💕"}
+          {!isFollowing && allGoodAndConnected && "Add Friend 🤝"}
+
         </span>
       )}
     </div>
