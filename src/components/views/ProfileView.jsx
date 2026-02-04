@@ -11,6 +11,8 @@ function ProfileView({ user: profileUser }) {
   const { user: authUser, setUser } = useAuth();
   const navigate = useNavigate();
 
+
+  console.log("user aaya hai in profile view:---------------->", profileUser);
   // ✅ HOOKS MUST ALWAYS RUN
   const [open, setOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
@@ -155,9 +157,15 @@ let user = localProfileUser || authUser;
   };
 
   return (
-    <div className=" bg-black text-white flex justify-center overflow-y-auto">
+    <div
+      className=" bg-black  
+  bg-black text-white overflow-y-auto
+  h-[calc(100vh-72px-56px)]
+  md:h-[calc(100vh-80px-56px)]
+  text-white flex justify-center overflow-y-auto"
+    >
       {/* CENTER COLUMN */}
-      <div className="w-full max-w-[935px] overflow-y-auto px-4 pt-10">
+      <div className="w-full max-w-[935px] min-[60%]: overflow-y-auto px-4 pt-10">
         {/* GO BACK BUTTON */}
         {!isMe && (
           <div className="mb-4 flex items-center">
@@ -288,7 +296,13 @@ let user = localProfileUser || authUser;
           </div>
         </div> */}
 
-        <ProfilePosts userId={user._id} />
+        {user.postsCount === 0 ? (
+          <div className="mt-8 flex justify-center items-center text-white/60 text-lg">
+            No posts yet
+          </div>
+        ) : (
+          <ProfilePosts userId={user._id} />
+        )}
 
         {/* 🔽 MODAL (MUST BE HERE) */}
         <ProfilePhotoModal

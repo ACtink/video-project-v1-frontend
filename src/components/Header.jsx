@@ -17,15 +17,23 @@ function Header() {
 
   if (loading) return null; // or spinner
   return (
-    <header className="flex bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white justify-between items-center px-6 md:px-10 py-5 md:py-6">
+    <header
+      className="
+  flex text-white justify-between items-center
+  px-6 md:px-10 py-5 md:py-6
+bg-gradient-to-br from-purple-700 via-fuchsia-800 to-rose-900
+"
+    >
       <h1 className="text-xl md:text-2xl font-bold tracking-wide">
-        <span className="cursor-pointer" onClick={() => { 
+        <span
+          className="cursor-pointer"
+          onClick={() => {
             localStorage.setItem("activeTab", "home");
             window.location.href = "/";
 
-          //  navigate("/")
-
-        }}>
+            //  navigate("/")
+          }}
+        >
           HelloStranger
         </span>
       </h1>
@@ -41,7 +49,17 @@ function Header() {
               Login
             </button>
             <button
-              className="px-3 md:px-4 py-2 rounded-md bg-cyan-500 text-slate-900 font-semibold hover:bg-cyan-400 transition text-sm md:text-base"
+              className="px-3 md:px-4 py-2 rounded-md  text-base 
+              md:text-lg 
+              font-semibold
+              text-white
+              bg-gradient-to-r from-purple-700 to-indigo-800
+              hover:scale-105
+              transition-all 
+              duration-300
+              shadow-xl
+              text-sm
+               md:text-base"
               onClick={() => navigate("/join")}
             >
               Join Now
@@ -49,8 +67,16 @@ function Header() {
           </div>
         ) : (
           <button
-            className="px-3 md:px-4 py-2 rounded-md bg-cyan-500 text-slate-900 font-semibold hover:bg-cyan-400 transition text-sm md:text-base"
             onClick={handleLogOut}
+            className="
+    px-3 md:px-4 py-2 rounded-md
+    text-sm md:text-base font-semibold
+    text-white
+    bg-gradient-to-r from-purple-700 to-indigo-800
+    hover:scale-105
+    transition-all duration-300
+    shadow-xl
+  "
           >
             Logout
           </button>

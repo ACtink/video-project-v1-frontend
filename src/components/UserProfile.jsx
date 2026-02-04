@@ -61,7 +61,7 @@ function UserProfile() {
   }, [username]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       {/* HEADER */}
       <div className="shrink-0">
         <Header />

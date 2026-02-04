@@ -3,26 +3,28 @@ import PostCard from "../PostCard";
 import LeftSidebar from "../LeftSidebar";
 import RightSidebar from "../RightSidebar";
 import fetchData from "../../utils/fetchData";
+import SkeletonPost from "../SkeletonPost";
 
 function HomeView() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData("/api/posts", {
-      credentials: "include",
-    })
+    const start = Date.now();
+
+    fetchData("/api/posts", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        setPosts(data);
-        setLoading(false);
+        const elapsed = Date.now() - start;
+        const delay = Math.max(900 - elapsed, 0); // minimum skeleton time
+
+        setTimeout(() => {
+          setPosts(data);
+          setLoading(false);
+        }, delay);
       })
       .catch(() => setLoading(false));
   }, []);
-
-  if (loading) {
-    return <div className="text-white text-center mt-10">Loading feed...</div>;
-  }
 
   return (
     <div className="h-screen overflow-y-auto text-white">
@@ -33,10 +35,13 @@ function HomeView() {
         </div>
 
         {/* FEED */}
-        <div className="lg:col-span-6 space-y-6">
-          {posts.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+        <div className="lg:col-span-6 space-y-6 transition-opacity duration-500">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => <SkeletonPost key={i} />)
+            : posts.map((post) => <PostCard key={post._id} post={post} />)}
+
+          {/* 🔥 bottom breathing space */}
+          {!loading && <div className="h-[20vh] bg-black" />}
         </div>
 
         {/* RIGHT SIDEBAR */}

@@ -3,19 +3,19 @@ function PostModal({ post, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
       <div
         className="
-        w-full max-w-5xl
-        h-[80vh] md:h-[78vh]
-        bg-black
-        rounded-xl
-        overflow-hidden
-        flex flex-col md:flex-row
-        relative
-      "
+          w-full max-w-5xl
+          h-[80vh] md:h-[78vh]
+          bg-black
+          rounded-xl
+          overflow-hidden
+          flex flex-col md:flex-row
+          relative
+        "
       >
         {/* CLOSE */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 text-white text-2xl z-10"
+          className="absolute top-3 right-4 text-white text-2xl z-20"
         >
           ✕
         </button>
@@ -23,11 +23,11 @@ function PostModal({ post, onClose }) {
         {/* IMAGE */}
         <div
           className="
-          w-full md:w-1/2
-          h-[45%] md:h-full
-          bg-black
-          flex items-center justify-center
-        "
+            w-full md:w-1/2
+            h-[45%] md:h-full
+            bg-black
+            flex items-center justify-center
+          "
         >
           <img
             src={post.imageUrl}
@@ -36,17 +36,31 @@ function PostModal({ post, onClose }) {
           />
         </div>
 
-        {/* COMMENTS */}
+        {/* COMMENTS SIDE */}
         <div
           className="
-          w-full md:w-1/2
-          border-t md:border-t-0 md:border-l border-white/10
-          flex flex-col
-          text-white
-        "
+            w-full md:w-1/2
+            border-t md:border-t-0 md:border-l border-white/10
+            flex flex-col
+            text-white
+          "
         >
-          {/* HEADER */}
-          <div className="p-4 border-b border-white/10 font-semibold">
+          {/* CAPTION */}
+          {post.caption && (
+            <div className="p-5 border-b border-white/10 bg-white/[0.03] backdrop-blur-md">
+              <p className="text-base md:text-lg leading-relaxed tracking-wide">
+                <span className="font-bold text-white mr-2">
+                  {post.user?.username} -
+                </span>
+                <span className="text-white/85 font-medium">
+                  {post.caption}
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* COMMENTS HEADER */}
+          <div className="p-4 border-b border-white/10 font-semibold text-white/80">
             Comments
           </div>
 
