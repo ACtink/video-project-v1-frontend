@@ -49,7 +49,7 @@ const { user, loading } = useAuth();
             </div>
           </div>
         ) : user ? (
-          <AppShell user={user} setShowHeader={setShowHeader} />
+          <AppShell user={user} setShowHeader={setShowHeader} loading={loading} />
         ) : (
           <LandingInfo />
         )}

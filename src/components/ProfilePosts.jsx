@@ -35,12 +35,12 @@ function ProfilePosts({ userId }) {
   }
 
   return (
-    <div className="mt-8 grid grid-cols-3  gap-1 sm:gap-3">
+    <div className=" min-h-52 mt-8 grid grid-cols-3  gap-1 sm:gap-3">
       {posts.map((post) => (
         <div
           key={post._id}
           onClick={() => setSelectedPost(post)}
-          className="aspect-square bg-white/10 overflow-hidden cursor-pointer"
+          className="aspect-square p-4 bg-white/10 overflow-hidden cursor-pointer"
         >
           <img
             src={post.imageUrl}

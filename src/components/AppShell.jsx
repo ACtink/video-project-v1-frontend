@@ -16,7 +16,7 @@ const tabs = [
   { id: "profile", icon: User },
 ];
 
-function AppShell({ user , setShowHeader }) {
+function AppShell({ user , setShowHeader   }) {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "home";
   });
@@ -53,37 +53,38 @@ useEffect(() => {
     <div className="h-full w-full relative flex flex-col bg-black">
       {/* Main content */}
       {/* <div className="flex-1 overflow-hidden mb-20 md:mb-30"> */}
-        <WebRTCProvider>
-          <WebSocketProvider>
-            <RTCBridge />
-            {renderView()}
-          </WebSocketProvider>
-        </WebRTCProvider>
+      <WebRTCProvider>
+        <WebSocketProvider>
+          <RTCBridge />
+          {renderView()}
+        </WebSocketProvider>
+      </WebRTCProvider>
       {/* </div> */}
 
       {/* Bottom feature bar */}
-      <div className="fixed bottom-0 pt-4 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 left-1/2 -translate-x-1/2 w-full flex justify-center px-10">
-        <div
-          className="
-            w-fit
-            flex justify-center
-            gap-4 sm:gap-6 lg:gap-8
-            px-6 sm:px-10 lg:px-16
-            py-3
-            bg-white/20 backdrop-blur-xl
-            border border-white/30
-            rounded-2xl
-            shadow-2xl
-          "
-        >
-          {tabs.map(({ id, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => {
-                if (isVideoLocked && id !== "video") return;
-                setActiveTab(id);
-              }}
-              className={`p-3 rounded-xl transition-all
+      {/* <div className="fixed bottom-0 pt-4 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 left-1/2 -translate-x-1/2 w-full flex justify-center px-10"> */}
+      <div
+        className="
+    w-fit
+    mx-auto
+    flex justify-center
+    gap-4 sm:gap-6 lg:gap-8
+    px-6 sm:px-10 lg:px-16
+    py-3
+    bg-white/20 backdrop-blur-xl
+    border border-white/30
+    rounded-2xl
+    shadow-2xl
+  "
+      >
+        {tabs.map(({ id, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => {
+              if (isVideoLocked && id !== "video") return;
+              setActiveTab(id);
+            }}
+            className={`p-3 rounded-xl transition-all
                 ${
                   activeTab === id
                     ? "bg-white text-indigo-600 scale-110"
@@ -91,13 +92,13 @@ useEffect(() => {
                       ? "text-white/40 cursor-not-allowed"
                       : "text-white hover:bg-white/20"
                 }`}
-            >
-              <Icon size={22} />
-            </button>
-          ))}
-        </div>
+          >
+            <Icon size={22} />
+          </button>
+        ))}
       </div>
     </div>
+    // </div>
   );
 }
 

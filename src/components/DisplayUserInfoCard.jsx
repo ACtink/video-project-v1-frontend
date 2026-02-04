@@ -16,6 +16,8 @@ function DisplayUserInfoCard({ strangerInfo = {} }) {
 
   if (!user || loading) return null;
 
+  console.log("Stranger info:$$$$$$$$$$$$$$$$$$$$$$$", strangerInfo);
+
   const countryCode = strangerInfo?.data?.country;
   const flag = countryCodeToFlag(countryCode);
 

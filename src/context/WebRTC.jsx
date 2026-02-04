@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { getCountryNameFromCode } from "../utils/countryName";
 
 export const webRTCContext = createContext(null);
 
@@ -83,7 +84,7 @@ export const WebRTCProvider = ({ children }) => {
         data: {
           id: user?._id,
           username: user?.username,
-          country: user?.country,
+          country: getCountryNameFromCode(user?.country),
         },
       });
 
@@ -108,37 +109,64 @@ export const WebRTCProvider = ({ children }) => {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-   pcRef.current.ontrack = (event) => {
-     if (!remoteVideoRef.current) return;
+  //  pcRef.current.ontrack = (event) => {
+  //    if (!remoteVideoRef.current) return;
 
-     const video = remoteVideoRef.current;
+  //    const video = remoteVideoRef.current;
 
-     if (!video.srcObject) {
-       video.srcObject = event.streams[0];
-     }
+  //    if (!video.srcObject) {
+  //      video.srcObject = event.streams[0];
+  //    }
 
-     console.log("Remote audio tracks:", video.srcObject.getAudioTracks());
+  //    console.log("Remote video tracks:*********************************************", video.srcObject.getVideoTracks());
+  //    console.log("Remote audio tracks:*********************************************", video.srcObject.getAudioTracks());
 
-     video.muted = false; // MUST
-     video.volume = 1.0; // MUST
-     video.playsInline = true;
+  //    video.muted = false; // MUST
+  //    video.volume = 1.0; // MUST
+  //    video.playsInline = true;
 
-     if (!video._playing) {
-       video._playing = true;
-       video.play().catch((err) => {
-               console.warn("Autoplay blocked, waiting for user gesture", err);
+  //   //  if (!video._playing) {
+  //   //    video._playing = true;
+  //   //    video.play().catch((err) => {
+  //   //            console.warn("Autoplay blocked, waiting for user gesture", err);
 
-       });
-     }
-
-
-     setRemoteStreamReady(true);
-   };
+  //   //    });
+  //   //  }
 
 
-    remoteVideoRef.current.onplaying = () => {
-      setVideoPlayingReady(true);
-    };
+  //    setRemoteStreamReady(true);
+  //  };
+pcRef.current.ontrack = (event) => {
+  const video = remoteVideoRef.current;
+  if (!video) return;
+
+  // 🔥 HARD RESET video element (CRITICAL FOR NEXT USER)
+  video.pause();
+  video.srcObject = null;
+  video.load();
+
+  // 🔥 ALWAYS attach new stream
+  video.srcObject = event.streams[0];
+
+  video.playsInline = true;
+  video.muted = false;
+  video.volume = 1.0;
+
+  video.onplaying = () => {
+    setVideoPlayingReady(true);
+  };
+
+  video.play().catch(() => {});
+
+  console.log("Remote video tracks:", video.srcObject.getVideoTracks());
+
+  setRemoteStreamReady(true);
+};
+
+
+    // remoteVideoRef.current.onplaying = () => {
+    //   setVideoPlayingReady(true);
+    // };
 
     pcRef.current.onicecandidate = (event) => {
       if (event.candidate) {
@@ -327,8 +355,11 @@ export const WebRTCProvider = ({ children }) => {
       localVideoRef.current.srcObject = null;
     }
 
+    // 2️⃣ Detach video PROPERLY
     if (remoteVideoRef.current) {
+      remoteVideoRef.current.pause();
       remoteVideoRef.current.srcObject = null;
+      remoteVideoRef.current.load(); // ⭐ REQUIRED
     }
 
     // 3️⃣ Close data channels
@@ -354,7 +385,7 @@ export const WebRTCProvider = ({ children }) => {
     setRemoteStreamReady(false);
     setVideoPlayingReady(false);
     setPcReady(false);
-  };
+  };;
 
   const cleanupRemotePeer = () => {
     // 1️⃣ Stop camera & mic
@@ -366,6 +397,13 @@ export const WebRTCProvider = ({ children }) => {
     //  if (localVideoRef.current) {
     //    localVideoRef.current.srcObject = null;
     //  }
+
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.pause();
+      remoteVideoRef.current.srcObject = null;
+      remoteVideoRef.current.load(); // ⭐ REQUIRED
+    }
+
 
     // 3️⃣ Close data channels
     dataChannelRef.current?.close();
@@ -390,27 +428,7 @@ export const WebRTCProvider = ({ children }) => {
     setVideoCallLoader(true);
   };
 
-  // const handlePeerDisconnected = () => {
-  //   console.log("Peer disconnected");
-
-  //   cleanupCallWhenCloseButtonIsPressed(); // stop streams, close pc
-
-  // }
-
-  // const handlePeerDisconnected = () => {
-  //   console.log("Peer disconnected");
-  //   setPeerDisconnected(true)
-  //             setPcReady(false);
-
-  //   if(pcRef.current!=null && localVideoRef.current != null ){
-
-  //     cleanupCallWhenNextButtonIsPressed(); // stop streams, close pc
-  //   }
-  // else{
-  //   cleanupCallWhenCloseButtonIsPressed()
-  // }
-
-  // };
+  
 
   const handleRemoteDisconnect = () => {
     cleanupRemotePeer(); // 🔥 partial reset
@@ -419,7 +437,7 @@ export const WebRTCProvider = ({ children }) => {
       // Do NOTHING here
       return;
     }
-    setSessionActive(true);
+    // setSessionActive(true);
   };
 
   return (
