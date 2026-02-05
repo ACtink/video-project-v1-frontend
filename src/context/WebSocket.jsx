@@ -19,7 +19,7 @@ export const WebSocketProvider = ({ children }) => {
 
 
 
-const { setVideoCallLoader, cleanupFull, cleanupRemotePeer } =
+const { setVideoCallLoader, cleanupFull, cleanupRemotePeer , manualCleanupRef } =
   useContext(webRTCContext);
 
   const [uiState , setUistate] = useState("idle")
@@ -127,16 +127,16 @@ function handleAck({ messageId, status }) {
              return;
            }
 
-         case "next_ack":
-           if (message.success == "ok") {
-             setUistate("successfully_done_next");
-             setVideoCallLoader(true);
+        //  case "next_ack":
+        //    if (message.success == "ok") {
+        //      setUistate("successfully_done_next");
+        //      setVideoCallLoader(true);
 
-             cleanupRemotePeer();
-             break;
-           } else {
-             return;
-           }
+        //      cleanupFull();
+        //      break;
+        //    } else {
+        //      return;
+        //    }
          case "close_ack":
            if (message.success == "ok") {
              setUistate("successfully_closed");
@@ -151,7 +151,9 @@ function handleAck({ messageId, status }) {
              );
              setUistate("successfully_skipped_and_searching");
              setVideoCallLoader(true);
+             manualCleanupRef.current = true; 
              cleanupRemotePeer();
+            // cleanupFull();
              break;
            } else {
              return;
@@ -176,6 +178,9 @@ function handleAck({ messageId, status }) {
 
 
 
+       if(message.type=="matched_ack"){
+        console.log("matched ackownledgment aya hai")
+       }
 
 
        handlersRef.current[message.type]?.(message);

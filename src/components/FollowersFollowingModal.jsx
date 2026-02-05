@@ -5,8 +5,18 @@ import fetchData from "../utils/fetchData";
 function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
 
   const navigate = useNavigate();
+
+  // Smooth mount animation trigger
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => setShow(true), 10);
+    } else {
+      setShow(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -42,9 +52,19 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
+    <div
+      className={`fixed inset-0 z-50 flex justify-center items-center transition-all duration-300
+    px-4 sm:px-6
+    ${show ? "bg-black/70 backdrop-blur-sm" : "bg-black/0"}
+  `}
+    >
       {/* MODAL */}
-      <div className="w-full max-w-md bg-black border border-white/20 rounded-xl overflow-hidden shadow-xl transition-opacity duration-150">
+      <div
+        className={`w-full max-w-md bg-black border border-white/20 rounded-xl overflow-hidden shadow-2xl
+          transform transition-all duration-300
+          ${show ? "scale-100 opacity-100" : "scale-95 opacity-0"}
+        `}
+      >
         {/* HEADER */}
         <div className="flex justify-between items-center px-4 py-3 border-b border-white/20">
           <h3 className="font-semibold text-white">{title}</h3>
@@ -58,51 +78,61 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
 
         {/* BODY */}
         <div className="max-h-[60vh] overflow-y-auto">
-          {!loading && (
-            <>
-              {users.length === 0 ? (
-                <p className="text-center text-white/60 py-6 text-sm">
-                  No users found
-                </p>
-              ) : (
-                users.map((u) => (
-                  <div
-                    key={u._id}
-                    onClick={() => {
-                      onClose(); // close modal
-                      navigate(`/profile/${u.username}`);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 transition"
-                  >
-                    {/* Avatar */}
-                    {u.profilePicture ? (
-                      <img
-                        src={u.profilePicture}
-                        alt={u.username}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
-                        {u.username?.[0]?.toUpperCase() || "U"}
-                      </div>
-                    )}
-
-                    {/* User info */}
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-white">
-                        {u.username}
-                      </span>
-                      {u.fullName && (
-                        <span className="text-xs text-white/60">
-                          {u.fullName}
-                        </span>
-                      )}
-                    </div>
+          {loading && (
+            <div className="p-4 space-y-4 animate-pulse">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/10" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-32 bg-white/10 rounded" />
+                    <div className="h-3 w-20 bg-white/10 rounded" />
                   </div>
-                ))
-              )}
-            </>
+                </div>
+              ))}
+            </div>
           )}
+
+          {!loading && users.length === 0 && (
+            <p className="text-center text-white/60 py-6 text-sm">
+              No users found
+            </p>
+          )}
+
+          {!loading &&
+            users.map((u, index) => (
+              <div
+                key={u._id}
+                onClick={() => {
+                  onClose();
+                  navigate(`/profile/${u.username}`);
+                }}
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer
+                  hover:bg-white/10 transition-all duration-300
+                  opacity-0 translate-y-2 animate-fadeInUp"
+                style={{ animationDelay: `${index * 40}ms` }}
+              >
+                {u.profilePicture ? (
+                  <img
+                    src={u.profilePicture}
+                    alt={u.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
+                    {u.username?.[0]?.toUpperCase() || "U"}
+                  </div>
+                )}
+
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-white">
+                    {u.username}
+                  </span>
+                  {u.fullName && (
+                    <span className="text-xs text-white/60">{u.fullName}</span>
+                  )}
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>

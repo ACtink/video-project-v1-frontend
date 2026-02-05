@@ -212,7 +212,7 @@ function VideoView({ onUiStateChange }) {
     sendSignal({ type: "end-call" });
 
     // cleanupFull();
-    setSessionActive(false);
+    // setSessionActive(false);
   };
 
   // useEffect(() => {

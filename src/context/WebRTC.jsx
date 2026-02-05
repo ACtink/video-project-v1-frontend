@@ -13,6 +13,8 @@ export const WebRTCProvider = ({ children }) => {
     useState(false);
   const [showUserCard, setShowUserCard] = useState(false);
   const [strangerUserProfileData, setStrangerUserProfileData] = useState(null); // cached profile
+const pendingCandidatesRef = useRef([]);
+const manualCleanupRef = useRef(false);
 
   const { user } = useAuth();
 
@@ -105,10 +107,17 @@ export const WebRTCProvider = ({ children }) => {
   const createPeerConnection = (sendSignal) => {
     console.log("createPeerConnection function is running ");
 
+    if (pcRef.current) {
+      console.log("PC already exists, skipping create");
+      return;
+    }
+
+
     pcRef.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
+    console.log("pc object ban gaya hai ", pcRef.current);
   //  pcRef.current.ontrack = (event) => {
   //    if (!remoteVideoRef.current) return;
 
@@ -170,6 +179,7 @@ pcRef.current.ontrack = (event) => {
 
     pcRef.current.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log("ice candidate gather kar raha hu , fir bhejunga ek ek karke", event.candidate);
         sendSignal({ type: "ice-candidate", candidate: event.candidate });
       }
     };
@@ -178,7 +188,7 @@ pcRef.current.ontrack = (event) => {
       setPcState(pcRef.current.connectionState);
       const state = pcRef.current.connectionState;
 
-      console.log("PC state:", state);
+      console.log("PC ki connection state hai ye----------------->:", state);
 
       if (state === "connected") {
         // ✅ Peer connection fully established
@@ -189,16 +199,20 @@ pcRef.current.ontrack = (event) => {
         setPcReady(true);
         console.log("Peers are connected via webrtc");
 
+
+      
+
+
         return;
       }
 
-      if (
-        state === "disconnected" ||
-        state === "failed" ||
-        state === "closed"
-      ) {
-        handleRemoteDisconnect();
-      }
+      if (state === "disconnected" || state === "failed" || state === "closed") {
+  console.log("pc closed by webrtc, ignoring");
+   console.log("connection nahi ban paya , peer connect nahi hue , state disconnected/failed/closed hai" );
+}
+
+       
+      
     };
 
     pcRef.current.oniceconnectionstatechange = async () => {
@@ -243,7 +257,12 @@ pcRef.current.ontrack = (event) => {
   };
 
   const startWebRTC = async (messagetype, userRole, sendSignal) => {
-    console.log("startwebrtc function is running ");
+    console.log("startwebrtc function is running------------------------------------>STARTING OF FRESH CONNECTION ESTABLISHMENT");
+
+    setRemoteStreamReady(false);
+    setVideoPlayingReady(false);
+    setPcReady(false);
+
     await createPeerConnection(sendSignal);
 
     console.log("SIGNALING:", pcRef.current.signalingState);
@@ -269,6 +288,8 @@ pcRef.current.ontrack = (event) => {
         handleRemoteDisconnect();
       };
 
+
+
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
 
@@ -277,7 +298,13 @@ pcRef.current.ontrack = (event) => {
   };
 
   const handleOffer = async (messageType, offer, sendSignal) => {
+
+    setRemoteStreamReady(false);
+    setVideoPlayingReady(false);
+    setPcReady(false);
+
     if (messageType === "offer") {
+      
       createPeerConnection(sendSignal);
 
       localStreamRef.current.getTracks().forEach((track) => {
@@ -286,6 +313,12 @@ pcRef.current.ontrack = (event) => {
 
       await pcRef.current.setRemoteDescription(offer);
       console.log("SIGNALING:", pcRef.current.signalingState);
+
+      for (const c of pendingCandidatesRef.current) {
+        await pcRef.current.addIceCandidate(c);
+      }
+      pendingCandidatesRef.current = [];
+
 
       const answer = await pcRef.current.createAnswer();
       await pcRef.current.setLocalDescription(answer);
@@ -300,15 +333,26 @@ pcRef.current.ontrack = (event) => {
     if (messageType === "answer") {
       await pcRef.current.setRemoteDescription(answer);
 
+      for (const c of pendingCandidatesRef.current) {
+        await pcRef.current.addIceCandidate(c);
+      }
+      pendingCandidatesRef.current = [];
+
+
       console.log("SIGNALING:", pcRef.current.signalingState);
     }
   };
 
   const addIceCandidate = async (candidate) => {
-    if (pcRef.current) {
+    if (!pcRef.current) return;
+
+    if (pcRef.current.remoteDescription) {
       await pcRef.current.addIceCandidate(candidate);
+    } else {
+      pendingCandidatesRef.current.push(candidate);
     }
   };
+
 
   const sendMessage = (text) => {
     if (dataChannelRef.current?.readyState !== "open") return;
@@ -367,7 +411,13 @@ pcRef.current.ontrack = (event) => {
     dataChannelForJsonRef.current?.close();
 
     // 4️⃣ Close peer connection
-    pcRef.current?.close();
+    // 4️⃣ HARD STOP transceivers BEFORE closing (CRITICAL)
+    if (pcRef.current) {
+      pcRef.current.getTransceivers().forEach((t) => t.stop());
+      pcRef.current.close();
+    }
+
+    pendingCandidatesRef.current = [];
 
     // 5️⃣ Reset refs
     localStreamRef.current = null;
@@ -385,7 +435,7 @@ pcRef.current.ontrack = (event) => {
     setRemoteStreamReady(false);
     setVideoPlayingReady(false);
     setPcReady(false);
-  };;
+  };
 
   const cleanupRemotePeer = () => {
     // 1️⃣ Stop camera & mic
@@ -398,19 +448,29 @@ pcRef.current.ontrack = (event) => {
     //    localVideoRef.current.srcObject = null;
     //  }
 
+    if (!manualCleanupRef.current) {
+      console.log("Ignoring cleanupRemotePeer from WebRTC event");
+      return;
+    }
+    manualCleanupRef.current = false;
+
+
     if (remoteVideoRef.current) {
       remoteVideoRef.current.pause();
       remoteVideoRef.current.srcObject = null;
       remoteVideoRef.current.load(); // ⭐ REQUIRED
     }
 
-
     // 3️⃣ Close data channels
     dataChannelRef.current?.close();
     dataChannelForJsonRef.current?.close();
 
     // 4️⃣ Close peer connection
-    pcRef.current?.close();
+    // 4️⃣ HARD STOP transceivers BEFORE closing (CRITICAL)
+    if (pcRef.current) {
+      pcRef.current.getTransceivers().forEach((t) => t.stop());
+      pcRef.current.close();
+    }
 
     // 5️⃣ Reset refs
     //  localStreamRef.current = null;
@@ -432,12 +492,7 @@ pcRef.current.ontrack = (event) => {
 
   const handleRemoteDisconnect = () => {
     cleanupRemotePeer(); // 🔥 partial reset
-    if (endedByMe) {
-      // I caused this (Close or Next)
-      // Do NOTHING here
-      return;
-    }
-    // setSessionActive(true);
+   
   };
 
   return (
@@ -478,6 +533,8 @@ pcRef.current.ontrack = (event) => {
         setMatchedUser,
         strangerUserProfileData,
         setStrangerUserProfileData,
+        manualCleanupRef,
+        
 
         pcState, // "new" | "connecting" | "connected"
       }}

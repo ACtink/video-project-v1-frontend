@@ -69,47 +69,68 @@ useEffect(() => {
       {/* Bottom feature bar */}
       {/* <div className="fixed bottom-0 pt-4 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 left-1/2 -translate-x-1/2 w-full flex justify-center px-10"> */}
 
-      <div
-        className="bg-gradient-to-br from-purple-700 via-fuchsia-800 to-rose-900
-"
-      >
+      <div className="bg-gradient-to-br from-purple-700 via-fuchsia-800 to-rose-900">
         <div
           className="
-    w-fit mx-auto
-    flex justify-center
-    gap-4 sm:gap-6 lg:gap-8
-    px-6 sm:px-10 lg:px-16
-    py-3
+      w-fit mx-auto
+      flex items-center gap-3
+      px-6 sm:px-10 lg:px-16
+      py-3
 
-    bg-black/40
-    backdrop-blur-2xl
+      rounded-2xl
+      bg-black/40
+      backdrop-blur-2xl
 
-    border border-white/20
-    ring-1 ring-white/10
-
-    rounded-2xl
-    shadow-2xl
-  "
+      border border-white/20
+      shadow-[0_10px_40px_rgba(0,0,0,0.35)]
+    "
         >
-          {tabs.map(({ id, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => {
-                if (isVideoLocked && id !== "video") return;
-                setActiveTab(id);
-              }}
-              className={`p-3 rounded-xl transition-all
-                ${
-                  activeTab === id
-                    ? "bg-white text-fuchsia-700 scale-110"
-                    : isVideoLocked && id !== "video"
-                      ? "text-white/40 cursor-not-allowed"
-                      : "text-white hover:bg-white/20"
-                }`}
-            >
-              <Icon size={22} />
-            </button>
-          ))}
+          {tabs.map(({ id, icon: Icon }) => {
+            const isActive = activeTab === id;
+            const isLocked = isVideoLocked && id !== "video";
+
+            return (
+              <button
+                key={id}
+                onClick={() => {
+                  if (isLocked) return;
+                  setActiveTab(id);
+                }}
+                className={`
+            relative p-3 rounded-xl
+            transition-all duration-300 ease-out
+
+            ${
+              isActive
+                ? `
+                  text-fuchsia-700
+                  bg-white
+                  shadow-lg
+                  ring-1 ring-black/10
+                `
+                : isLocked
+                  ? "text-white/30 cursor-not-allowed"
+                  : `
+                  text-white/80
+                  hover:text-white
+                  hover:bg-white/10
+                  hover:shadow-md
+                `
+            }
+          `}
+              >
+                {/* Soft glow behind active tab */}
+                {isActive && (
+                  <span className="absolute inset-0 rounded-xl bg-white/40 blur-md -z-10" />
+                )}
+
+                {/* Optical centering wrapper */}
+                <span className="flex items-center justify-center translate-x-[1px] translate-y-[1px]">
+                  <Icon size={22} />
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
