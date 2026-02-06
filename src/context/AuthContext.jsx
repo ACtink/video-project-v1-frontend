@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
       console.log("Logout response:", data);
 
       setUser(null);
+      localStorage.removeItem("activeTab");
     } catch (error) {
       console.error("Error during logout:", error);
     }
