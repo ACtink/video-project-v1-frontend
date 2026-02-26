@@ -48,7 +48,7 @@ function ProfilePosts({ userId }) {
 
       {/* GRID OR SKELETON */}
       {(loading || posts.length > 0) && (
-        <div className="min-h-52 mt-8 grid grid-cols-3 gap-1 sm:gap-3">
+        <div className="min-h-52 mt-8 grid grid-cols-3 gap-1 sm:gap-3 pb-14">
           {loading
             ? Array.from({ length: 9 }).map((_, i) => (
                 <ProfilePostSkeleton key={i} />

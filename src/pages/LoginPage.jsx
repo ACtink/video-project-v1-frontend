@@ -42,15 +42,15 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white flex flex-col relative overflow-hidden">
-      <Header />
+    <div>
+      {/* <Header /> */}
 
       {/* Soft glow behind card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[500px] h-[500px] bg-purple-600/20 blur-[120px] rounded-full" />
       </div>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-6 sm:px-0 sm:py-0 relative z-10">
+      <main className="flex-1 mt-16 flex items-center justify-center px-4 py-6 sm:px-0 sm:py-0 relative z-10">
         <div
           className="
             w-full max-w-md

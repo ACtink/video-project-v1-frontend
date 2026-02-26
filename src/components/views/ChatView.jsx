@@ -28,7 +28,17 @@ function ChatView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden flex">
+    <div
+      className="
+      w-full
+      flex
+      bg-white/10
+      backdrop-blur-xl
+      border border-white/20
+      overflow-hidden
+      h-[calc(100vh-72px-56px)]
+    "
+    >
       {/* CHAT LIST */}
       <div
         className={`

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PostModal from "./PostModal";
 
-function PostCard({ post }) {
+function PostCard({ post}) {
   console.log("Rendering PostCard for post:", post);
 const [selectedPost, setSelectedPost] = useState(null);
 

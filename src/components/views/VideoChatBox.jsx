@@ -119,7 +119,7 @@ function VideoChatBox({ wsConnected, uiState }) {
       </div>
 
       {/* INPUT BAR (unchanged) */}
-      <div className="shrink-0 px-3 py-3 border-t border-white/20 bg-black/10">
+      <div className="shrink-0 px-3 py-3 border-t mb-2 border-white/20 bg-black/10">
         <div className="flex items-center gap-2">
           <input
             type="text"

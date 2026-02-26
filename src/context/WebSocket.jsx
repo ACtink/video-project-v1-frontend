@@ -208,6 +208,9 @@ function handleAck({ messageId, status }) {
 
 
     useEffect(() => {
+      // ✅ DO NOT CONNECT if user not logged in
+      if (!user?._id) return;
+
       const ws = connectToWebSocketServer();
 
       return () => {
@@ -215,7 +218,7 @@ function handleAck({ messageId, status }) {
           ws.close();
         }
       };
-    }, []);
+    }, [user]);
 
  
 

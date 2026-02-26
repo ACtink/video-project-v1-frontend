@@ -138,8 +138,7 @@ function ChatBox({ chat, onBack }) {
   }, [chat._id, setMessages]);
 
   return (
-    <>
-      {/* HEADER */}
+<div className="flex flex-col h-full w-full">      {/* HEADER */}
       <div className="px-4 py-4 border-b border-white/20 flex items-center gap-3 text-white">
         <button
           onClick={onBack}
@@ -208,7 +207,7 @@ function ChatBox({ chat, onBack }) {
       </div>
 
       {/* INPUT */}
-      <div className="px-4 py-4 border-t border-white/20">
+      <div className="px-4 py-4 border-t border-white/20 mb-5">
         <div className="flex gap-3">
           <input
             type="text"
@@ -226,7 +225,7 @@ function ChatBox({ chat, onBack }) {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

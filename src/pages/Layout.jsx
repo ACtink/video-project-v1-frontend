@@ -1,0 +1,50 @@
+import Header from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
+import { Outlet, useLocation } from "react-router-dom";
+
+import { WebRTCProvider } from "../context/WebRTC.jsx";
+import { WebSocketProvider } from "../context/WebSocket.jsx";
+import { RTCBridge } from "../context/RTCBridge.jsx";
+
+import { useAuth } from "../hooks/useAuth";
+
+function Layout() {
+  const location = useLocation();
+
+  const { user } = useAuth();
+
+  const hideHeader = location.pathname === "/video";
+
+  const hideFooter =
+    location.pathname === "/join" ||
+    location.pathname === "/login" ||
+    (location.pathname === "/" && !user);
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 text-white flex flex-col">
+      {/* Header */}
+      {!hideHeader && <Header />}
+
+      <WebRTCProvider>
+        <WebSocketProvider>
+          <RTCBridge />
+
+          {/* ✅ Animation wrapper added */}
+          <main className="flex-1 overflow-hidden relative">
+            <div
+              key={location.pathname}
+              className="absolute inset-0 animate-page overflow-y-auto"
+            >
+              <Outlet />
+            </div>
+          </main>
+        </WebSocketProvider>
+      </WebRTCProvider>
+
+      {/* Footer */}
+      {!hideFooter && <Footer />}
+    </div>
+  );
+}
+
+export default Layout;

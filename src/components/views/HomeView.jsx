@@ -5,7 +5,7 @@ import RightSidebar from "../RightSidebar";
 import fetchData from "../../utils/fetchData";
 import SkeletonPost from "../SkeletonPost";
 
-function HomeView() {
+function HomeView({openProfile}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ function HomeView() {
         <div className="lg:col-span-6 space-y-6 transition-opacity duration-500">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonPost key={i} />)
-            : posts.map((post) => <PostCard key={post._id} post={post} />)}
+            : posts.map((post) => <PostCard key={post._id} post={post} openProfile={openProfile} />)}
 
           {/* 🔥 bottom breathing space */}
           {!loading && <div className="h-[20vh] bg-black" />}

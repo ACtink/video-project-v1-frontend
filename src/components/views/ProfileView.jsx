@@ -6,13 +6,15 @@ import FollowersFollowingModal from "../FollowersFollowingModal";
 import CreatePostModal from "../CreatePostModal";
 import ProfilePosts from "../ProfilePosts";
 import fetchData from "../../utils/fetchData";
+import { useParams } from "react-router-dom";
+import ProfileSkeleton from "../ProfileSkeleton";
 
-function ProfileView({ user: profileUser }) {
+function ProfileView() {
   const { user: authUser, setUser } = useAuth();
+  const { username } = useParams();
   const navigate = useNavigate();
 
 
-  console.log("user aaya hai in profile view:---------------->", profileUser);
   // ✅ HOOKS MUST ALWAYS RUN
   const [open, setOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
@@ -20,23 +22,45 @@ function ProfileView({ user: profileUser }) {
   const fileInputRef = useRef(null);
   const [followed, setFollowed] = useState(false);
 
-  console.log("ProfileView render:", { profileUser, authUser });
+const [loadingProfile, setLoadingProfile] = useState(true);
 
-const [localProfileUser, setLocalProfileUser] = useState(profileUser);
+const [user, setProfileUser] = useState(null);
 
 useEffect(() => {
-  setLocalProfileUser(profileUser);
-}, [profileUser]);
+  setLoadingProfile(true);
 
-  
+  if (username) {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetchData(`/api/users/profile/${username}`, {
+          credentials: "include",
+        });
 
-let user = localProfileUser || authUser;
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+
+        setProfileUser(data);
+      } catch {
+        setProfileUser(null);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  } else {
+    setProfileUser(authUser);
+
+    setLoadingProfile(false);
+  }
+}, [username, authUser]);
 
   const [createOpen, setCreateOpen] = useState(false);
 
   // if (!user) return null; // ✅ SAFE NOW
 
-  const isMe = user._id === authUser?._id;
+  const isMe = user?._id === authUser?._id;
 
  const isFollowing =
    !!authUser &&
@@ -59,23 +83,23 @@ let user = localProfileUser || authUser;
         if (!prevUser) return prevUser;
         return {
           ...prevUser,
-          following: [...prevUser.following, profileUser._id],
+          following: [...prevUser.following, user._id],
         };
       });
     }
-  }, [followed, profileUser, setUser]);
+  }, [followed, user, setUser]);
 
  const handleFollowUser = async () => {
-   if (!profileUser?._id || isFollowing) return;
+   if (!user?._id || isFollowing) return;
 
    try {
-     await fetchData(`/api/users/${profileUser._id}/follow`, {
+     await fetchData(`/api/users/${user._id}/follow`, {
        method: "POST",
        credentials: "include",
        headers: { "Content-Type": "application/json" },
      });
 
-     setLocalProfileUser((prev) => ({
+     setProfileUser((prev) => ({
        ...prev,
        followers: [...prev.followers, authUser._id.toString()],
      }));
@@ -156,6 +180,12 @@ let user = localProfileUser || authUser;
     }
   };
 
+
+  if (loadingProfile || !user) {
+    return (
+      <ProfileSkeleton/>
+    );
+  }else{
   return (
     <div
       className=" bg-black  
@@ -179,6 +209,17 @@ let user = localProfileUser || authUser;
           </div>
         )}
 
+          {isMe && (  <div className="mb-4 flex items-center">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-white/80 hover:text-white text-sm sm:text-base px-2 py-1 rounded-lg hover:bg-white/10 transition"
+            >
+              <span className="text-lg sm:text-xl">Home</span>
+              {/* <span className="hidden sm:inline">Go back</span> */}
+            </button>
+          </div>)}
+        
+
         {/* PROFILE HEADER */}
         <div className="flex flex-col justify-between sm:flex-row sm:items-start gap-8">
           {/* AVATAR */}
@@ -189,15 +230,15 @@ let user = localProfileUser || authUser;
             }`}
           >
             <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full overflow-hidden  bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center">
-              {user.profilePicture ? (
+              {user?.profilePicture ? (
                 <img
-                  src={user.profilePicture}
+                  src={user?.profilePicture}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-3xl sm:text-4xl font-semibold">
-                  {user.username?.[0]?.toUpperCase() || "U"}
+                  {user?.username?.[0]?.toUpperCase() || "U"}
                 </span>
               )}
             </div>
@@ -208,7 +249,7 @@ let user = localProfileUser || authUser;
             {/* STATS */}
             <div className="flex justify-around sm:justify-start gap-6 text-sm">
               <div className="text-center sm:text-left">
-                <span className="font-semibold">{user.postsCount || 0}</span>
+                <span className="font-semibold">{user?.postsCount || 0}</span>
                 <div className="text-white/70">posts</div>
               </div>
 
@@ -219,7 +260,7 @@ let user = localProfileUser || authUser;
                   setListOpen(true);
                 }}
               >
-                <span className="font-semibold">{user.followers.length}</span>
+                <span className="font-semibold">{user?.followers?.length}</span>
                 <div className="text-white/70">followers</div>
               </div>
 
@@ -230,16 +271,16 @@ let user = localProfileUser || authUser;
                   setListOpen(true);
                 }}
               >
-                <span className="font-semibold">{user.following.length}</span>
+                <span className="font-semibold">{user?.following?.length}</span>
                 <div className="text-white/70">following</div>
               </div>
             </div>
 
             {/* USERNAME + BIO */}
             <div className="text-sm leading-snug">
-              <p className="font-semibold">{user.fullName || user.username}</p>
+              <p className="font-semibold">{user?.fullName || user?.username}</p>
               <p className="text-white/80">
-                {user.bio || "Welcome to my profile ✨"}
+                {user?.bio || "Welcome to my profile ✨"}
               </p>
             </div>
 
@@ -296,12 +337,12 @@ let user = localProfileUser || authUser;
           </div>
         </div> */}
 
-        {user.postsCount === 0 ? (
+        {user?.postsCount === 0 ? (
           <div className="mt-8 flex justify-center items-center text-white/60 text-lg">
             No posts yet
           </div>
         ) : (
-          <ProfilePosts userId={user._id} />
+          <ProfilePosts userId={user?._id} />
         )}
 
         {/* 🔽 MODAL (MUST BE HERE) */}
@@ -328,10 +369,11 @@ let user = localProfileUser || authUser;
         open={listOpen}
         onClose={() => setListOpen(false)}
         title={listType === "followers" ? "Followers" : "Following"}
-        ids={listType === "followers" ? user.followers : user.following}
+        ids={listType === "followers" ? user?.followers : user?.following}
       />
     </div>
   );
+}
 }
 
 export default ProfileView;

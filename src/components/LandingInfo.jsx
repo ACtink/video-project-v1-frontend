@@ -5,7 +5,7 @@ function LandingInfo() {
   const navigate = useNavigate();
 
   return (
-    <main className="flex-1 flex items-center justify-center">
+    <main className="min-h-full flex items-center justify-center">
       <div className="px-6 md:px-10 max-w-3xl text-center fade-up">
         {/* HEADLINE */}
         <h2 className="text-3xl md:text-5xl font-extrabold mb-6 leading-tight bg-gradient-to-r from-purple-300 via-indigo-300 to-slate-200 bg-clip-text text-transparent">
@@ -22,7 +22,6 @@ function LandingInfo() {
 
         {/* BUTTONS */}
         <div className="flex flex-col sm:flex-row gap-5 justify-center">
-          {/* JOIN */}
           <button
             onClick={() => navigate("/join")}
             className="
@@ -38,7 +37,6 @@ function LandingInfo() {
             Join Now
           </button>
 
-          {/* LOGIN */}
           <button
             onClick={() => navigate("/login")}
             className="

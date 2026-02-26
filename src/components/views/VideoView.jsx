@@ -74,9 +74,9 @@ function VideoView({ onUiStateChange }) {
 
   console.log("value of allGoodAndConnected--------->", allGoodAndConnected);
 
-  useEffect(() => {
-    onUiStateChange(uiState);
-  }, [uiState]);
+  // useEffect(() => {
+  //   onUiStateChange(uiState);
+  // }, [uiState]);
 
   /* -------------------- CONNECT TO WS -------------------- */
 
@@ -234,7 +234,7 @@ function VideoView({ onUiStateChange }) {
     <div
       className="
     w-full
-    h-[90vh]
+    h-[93vh]
     overflow-hidden
     flex
     flex-col
@@ -243,7 +243,6 @@ function VideoView({ onUiStateChange }) {
     from-[#0f172a]
     via-[#020617]
     to-[#020617]
-    rounded-xl
     border
     border-white/10
     backdrop-blur-xl
