@@ -99,40 +99,103 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
           )}
 
           {!loading &&
-            users.map((u, index) => (
-              <div
-                key={u._id}
-                onClick={() => {
-                  onClose();
-                  navigate(`/profile/${u.username}`);
-                }}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer
-                  hover:bg-white/10 transition-all duration-300
-                  opacity-0 translate-y-2 animate-fadeInUp"
-                style={{ animationDelay: `${index * 40}ms` }}
-              >
-                {u.profilePicture ? (
-                  <img
-                    src={u.profilePicture}
-                    alt={u.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
-                    {u.username?.[0]?.toUpperCase() || "U"}
-                  </div>
-                )}
+            users.map((u, index) => {
+              const isFollowing = u.isFollowing; // backend should send this
 
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-white">
-                    {u.username}
-                  </span>
-                  {u.fullName && (
-                    <span className="text-xs text-white/60">{u.fullName}</span>
+              return (
+                <div
+                  key={u._id}
+                  className="flex items-center justify-between px-4 py-3
+          hover:bg-white/10 transition-all duration-300
+          opacity-0 translate-y-2 animate-fadeInUp"
+                  style={{ animationDelay: `${index * 40}ms` }}
+                >
+                  {/* LEFT SIDE — Avatar + Name */}
+                  <div
+                    onClick={() => {
+                      onClose();
+                      navigate(`/profile/${u.username}`);
+                    }}
+                    className="flex items-center gap-3 cursor-pointer flex-1"
+                  >
+                    {u.profilePicture ? (
+                      <img
+                        src={u.profilePicture}
+                        alt={u.username}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-semibold text-white">
+                        {u.username?.[0]?.toUpperCase() || "U"}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-white">
+                        {u.username}
+                      </span>
+                      {u.fullName && (
+                        <span className="text-xs text-white/60">
+                          {u.fullName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RIGHT SIDE — Follow / Message button */}
+                  {isFollowing ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetchData(
+                            `/api/chat/start/${u._id}`,
+                            {
+                              method: "POST",
+                              credentials: "include",
+                            },
+                          );
+
+                          const data = await res.json();
+
+                          navigate(
+                            `/chat?conversation=${data.conversation._id}`,
+                          );
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="px-3 py-1 text-xs font-semibold rounded-lg
+  border border-white/30 text-white hover:bg-white/10 transition"
+                    >
+                      Message
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await fetchData(`/api/users/${u._id}/follow`, {
+                            method: "POST",
+                            credentials: "include",
+                          });
+
+                          setUsers((prev) =>
+                            prev.map((x) =>
+                              x._id === u._id ? { ...x, isFollowing: true } : x,
+                            ),
+                          );
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="px-3 py-1 text-xs font-semibold rounded-lg
+              bg-indigo-600 hover:bg-indigo-700 text-white transition"
+                    >
+                      Follow
+                    </button>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     </div>

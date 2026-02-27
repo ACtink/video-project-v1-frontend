@@ -198,7 +198,8 @@ useEffect(() => {
       <div className="w-full max-w-[935px] min-[60%]: overflow-y-auto px-4 pt-10">
         {/* GO BACK BUTTON */}
         {!isMe && (
-          <div className="mb-4 flex items-center">
+          <div className="mb-4 flex items-center gap-2">
+            {/* Back button */}
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-2 text-white/80 hover:text-white text-sm sm:text-base px-2 py-1 rounded-lg hover:bg-white/10 transition"
@@ -206,19 +207,29 @@ useEffect(() => {
               <span className="text-lg sm:text-xl">←</span>
               <span className="hidden sm:inline">Go back</span>
             </button>
-          </div>
-        )}
 
-          {isMe && (  <div className="mb-4 flex items-center">
+            {/* Home button */}
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-2 text-white/80 hover:text-white text-sm sm:text-base px-2 py-1 rounded-lg hover:bg-white/10 transition"
             >
-              <span className="text-lg sm:text-xl">Home</span>
-              {/* <span className="hidden sm:inline">Go back</span> */}
+              <span className="text-lg sm:text-xl">🏠</span>
+              <span className="hidden sm:inline">Home</span>
             </button>
-          </div>)}
-        
+          </div>
+        )}
+
+        {isMe && (
+          <div className="mb-4 flex items-center">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-white/80 hover:text-white text-sm sm:text-base px-2 py-1 rounded-lg hover:bg-white/10 transition"
+            >
+              <span className="text-lg sm:text-xl">🏠</span>
+              <span className="hidden sm:inline">Home</span>
+            </button>
+          </div>
+        )}
 
         {/* PROFILE HEADER */}
         <div className="flex flex-col justify-between sm:flex-row sm:items-start gap-8">
@@ -278,7 +289,9 @@ useEffect(() => {
 
             {/* USERNAME + BIO */}
             <div className="text-sm leading-snug">
-              <p className="font-semibold">{user?.fullName || user?.username}</p>
+              <p className="font-semibold">
+                {user?.fullName || user?.username}
+              </p>
               <p className="text-white/80">
                 {user?.bio || "Welcome to my profile ✨"}
               </p>
