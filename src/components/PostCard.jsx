@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PostModal from "./PostModal";
 
-function PostCard({ post}) {
+function PostCard({ post , openProfile, onDelete}) {
   console.log("Rendering PostCard for post:", post);
 const [selectedPost, setSelectedPost] = useState(null);
 
@@ -84,7 +84,7 @@ const [selectedPost, setSelectedPost] = useState(null);
         />
       </div>
       {selectedPost && (
-        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} onDelete={onDelete} />
       )}
     </div>
   );

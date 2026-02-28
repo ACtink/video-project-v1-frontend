@@ -70,7 +70,10 @@ function ProfilePosts({ userId }) {
       )}
 
       {selectedPost && (
-        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+        <PostModal post={selectedPost}
+        
+        onClose={() => setSelectedPost(null)} 
+        onDeleteProfilePost={() => setPosts(posts.filter(p => p._id !== selectedPost._id))} />
       )}
     </>
   );

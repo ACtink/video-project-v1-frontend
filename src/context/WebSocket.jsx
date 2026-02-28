@@ -392,17 +392,17 @@ export const WebSocketProvider = ({ children }) => {
 
       // ✅ Send auth (IMPORTANT)
 
-      socket.send(
+      // socket.send(
 
-        JSON.stringify({
+      //   JSON.stringify({
 
-          type: "auth",
+      //     type: "chat_auth",
 
-          userId: user._id,
+      //     userId: user._id,
 
-        })
+      //   })
 
-      );
+      // );
 
 
       // ✅ Flush queued messages

@@ -1,33 +1,154 @@
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
+// import PostCard from "../PostCard";
+// import LeftSidebar from "../LeftSidebar";
+// import RightSidebar from "../RightSidebar";
+// import fetchData from "../../utils/fetchData";
+// import SkeletonPost from "../SkeletonPost";
+
+// /* ✅ CACHE (added) */
+// let cachedPosts = null;
+
+// function HomeView({ openProfile }) {
+//   /* ✅ use cache if exists (added) */
+//   const [posts, setPosts] = useState(cachedPosts || []);
+//   const [loading, setLoading] = useState(!cachedPosts);
+
+//   useEffect(() => {
+//     /* ✅ prevent refetch if cached (added) */
+//     if (cachedPosts) {
+//       setLoading(false);
+//       return;
+//     }
+
+//     const start = Date.now();
+
+//     fetchData("/api/posts", { credentials: "include" })
+//       .then((res) => res.json())
+//       .then((data) => {
+//         const elapsed = Date.now() - start;
+//         const delay = Math.max(900 - elapsed, 0);
+
+//         setTimeout(() => {
+//           cachedPosts = data; /* ✅ save cache (added) */
+
+//           setPosts(data);
+//           setLoading(false);
+//         }, delay);
+//       })
+//       .catch(() => setLoading(false));
+//   }, []);
+
+//   return (
+//     <div className="h-screen overflow-y-auto text-white">
+//       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+//         {/* LEFT SIDEBAR */}
+//         <div className="hidden lg:block lg:col-span-3 sticky top-6 h-[calc(100vh-3rem)]">
+//           <LeftSidebar />
+//         </div>
+
+//         {/* FEED */}
+//         <div className="lg:col-span-6 space-y-6 transition-opacity duration-500">
+//           {loading
+//             ? Array.from({ length: 6 }).map((_, i) => <SkeletonPost key={i} />)
+//             : posts.map((post) => (
+//                 <PostCard
+//                   key={post._id}
+//                   post={post}
+//                   openProfile={openProfile}
+//                   onDelete={() => {
+//                     const updated = posts.filter((p) => p._id !== post._id);
+//                     setPosts(updated);
+
+//                     cachedPosts =
+//                       updated; /* ✅ update cache on delete (added) */
+//                   }}
+//                 />
+//               ))}
+
+//           {/* 🔥 bottom breathing space */}
+//           {!loading && <div className="h-[20vh] bg-black" />}
+//         </div>
+
+//         {/* RIGHT SIDEBAR */}
+//         <div className="hidden lg:block lg:col-span-3 sticky top-6 h-[calc(100vh-3rem)]">
+//           <RightSidebar />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default HomeView;
+
+
+
+import { useEffect, useState, useRef } from "react";
 import PostCard from "../PostCard";
 import LeftSidebar from "../LeftSidebar";
 import RightSidebar from "../RightSidebar";
 import fetchData from "../../utils/fetchData";
 import SkeletonPost from "../SkeletonPost";
 
-function HomeView({openProfile}) {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+/* CACHE */
+let cachedPosts = null;
+
+/* SCROLL CACHE */
+let cachedScrollY = 0;
+
+function HomeView({ openProfile }) {
+  const containerRef = useRef(null);
+
+  const [posts, setPosts] = useState(cachedPosts || []);
+  const [loading, setLoading] = useState(!cachedPosts);
 
   useEffect(() => {
+    if (cachedPosts) {
+      setLoading(false);
+
+      /* ✅ restore scroll AFTER render */
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = cachedScrollY;
+          }
+        });
+      });
+
+      return;
+    }
+
     const start = Date.now();
 
     fetchData("/api/posts", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         const elapsed = Date.now() - start;
-        const delay = Math.max(900 - elapsed, 0); // minimum skeleton time
+        const delay = Math.max(900 - elapsed, 0);
 
         setTimeout(() => {
+          cachedPosts = data;
+
           setPosts(data);
+
           setLoading(false);
         }, delay);
       })
       .catch(() => setLoading(false));
   }, []);
 
+  /* SAVE SCROLL ON SCROLL */
+  const handleScroll = () => {
+    if (containerRef.current) {
+      cachedScrollY = containerRef.current.scrollTop;
+    }
+  };
+
   return (
-    <div className="h-screen overflow-y-auto text-white">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="h-screen overflow-y-auto text-white"
+    >
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT SIDEBAR */}
         <div className="hidden lg:block lg:col-span-3 sticky top-6 h-[calc(100vh-3rem)]">
@@ -38,9 +159,21 @@ function HomeView({openProfile}) {
         <div className="lg:col-span-6 space-y-6 transition-opacity duration-500">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonPost key={i} />)
-            : posts.map((post) => <PostCard key={post._id} post={post} openProfile={openProfile} />)}
+            : posts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  openProfile={openProfile}
+                  onDelete={() => {
+                    const updated = posts.filter((p) => p._id !== post._id);
 
-          {/* 🔥 bottom breathing space */}
+                    setPosts(updated);
+
+                    cachedPosts = updated;
+                  }}
+                />
+              ))}
+
           {!loading && <div className="h-[20vh] bg-black" />}
         </div>
 

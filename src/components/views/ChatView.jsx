@@ -209,7 +209,13 @@ function ChatView() {
           {!loading &&
             chats.map((chat) => {
               const otherUser = chat.participants.find(
-                (p) => p._id !== chat.myUserId,
+                (p) => {  
+                  console.log("chat", chat)
+                  console.log("chat.participants", chat.participants) 
+                  console.log("chat.myUserId", chat.requesterId)
+                  console.log("p._id", p._id)
+                  return p._id !== chat.requesterId;
+                } 
               );
 
               return (
