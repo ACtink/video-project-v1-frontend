@@ -38,6 +38,7 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
         });
 
         const data = await res.json();
+        console.log("Fetched users for modal:", data);
         setUsers(data);
       } catch (err) {
         console.error("Failed to load users", err);
@@ -156,9 +157,10 @@ function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
                           );
 
                           const data = await res.json();
+                          console.log("Started chat with user:", data);
 
                           navigate(
-                            `/chat?conversation=${data.conversation._id}`,
+                            `/chat?conversation=${data._id}`,
                           );
                         } catch (err) {
                           console.error(err);

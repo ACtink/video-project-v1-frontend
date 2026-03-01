@@ -125,6 +125,7 @@ import { MessageCircle } from "lucide-react";
 import ChatBox from "./ChatBox";
 import fetchData from "../../utils/fetchData";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 function ChatView() {
   const [activeChat, setActiveChat] = useState(null);
@@ -134,6 +135,11 @@ function ChatView() {
   const [loading, setLoading] = useState(true);
 
   const location = useLocation();
+
+    const { user } = useAuth();
+  
+
+      const myUserId = user?._id;
 
   const queryParams = new URLSearchParams(location.search);
 
@@ -212,9 +218,9 @@ function ChatView() {
                 (p) => {  
                   console.log("chat", chat)
                   console.log("chat.participants", chat.participants) 
-                  console.log("chat.myUserId", chat.requesterId)
+                  console.log("chat.myUserId", myUserId)
                   console.log("p._id", p._id)
-                  return p._id !== chat.requesterId;
+                  return p._id !== myUserId;
                 } 
               );
 

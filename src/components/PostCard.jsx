@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PostModal from "./PostModal";
 
 function PostCard({ post , openProfile, onDelete}) {
-  console.log("Rendering PostCard for post:", post);
+  
 const [selectedPost, setSelectedPost] = useState(null);
 
 
