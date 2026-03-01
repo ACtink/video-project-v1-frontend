@@ -10,7 +10,7 @@ const [selectedPost, setSelectedPost] = useState(null);
 
   const navigate = useNavigate();
   return (
-    <div className="bg-black border border-white/10 rounded-lg overflow-hidden shadow max-w-md mx-auto">
+    <div className="bg-black border border-white/10  overflow-hidden shadow max-w-md mx-auto">
       {/* Header */}
       <div
         onClick={() => navigate(`/profile/${post.user.username}`)}

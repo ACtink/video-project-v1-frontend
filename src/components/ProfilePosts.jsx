@@ -57,7 +57,7 @@ function ProfilePosts({ userId }) {
                 <div
                   key={post._id}
                   onClick={() => setSelectedPost(post)}
-                  className="aspect-square p-2 bg-white/10 overflow-hidden cursor-pointer"
+                  className="aspect-square p-2 bg-white/5 hover:bg-white/10 overflow-hidden cursor-pointer rounded-sm border border-white/10 hover:border-white/20 transition-all duration-200 backdrop-blur-sm"
                 >
                   <img
                     src={post.imageUrl}
@@ -70,10 +70,13 @@ function ProfilePosts({ userId }) {
       )}
 
       {selectedPost && (
-        <PostModal post={selectedPost}
-        
-        onClose={() => setSelectedPost(null)} 
-        onDeleteProfilePost={() => setPosts(posts.filter(p => p._id !== selectedPost._id))} />
+        <PostModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          onDeleteProfilePost={() =>
+            setPosts(posts.filter((p) => p._id !== selectedPost._id))
+          }
+        />
       )}
     </>
   );

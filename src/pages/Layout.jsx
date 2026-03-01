@@ -21,7 +21,7 @@ function Layout() {
     (location.pathname === "/" && !user);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 text-white flex flex-col">
+    <div className="min-h-screen w-full bg-black text-white flex flex-col">
       {/* Header */}
       {!hideHeader && <Header />}
 

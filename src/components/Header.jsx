@@ -21,7 +21,8 @@ function Header() {
       className="
   flex text-white justify-between items-center
   px-6 md:px-10 py-5 md:py-6
-bg-gradient-to-br from-purple-700 via-fuchsia-800 to-rose-900
+bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]
+
 "
     >
       <h1 className="text-xl md:text-2xl font-bold tracking-wide">

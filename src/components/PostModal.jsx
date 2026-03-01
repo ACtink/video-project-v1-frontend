@@ -251,7 +251,6 @@ function PostModal({ post, onClose , onDelete  , onDeleteProfilePost}) {
           w-full max-w-5xl
           h-full md:h-[76vh]
           bg-black
-          rounded-xl
           overflow-hidden
           flex flex-col md:flex-row
           relative

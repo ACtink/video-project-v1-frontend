@@ -14,14 +14,14 @@ function Footer() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 w-full z-50
-                    bg-gradient-to-br from-purple-700 via-fuchsia-800 to-rose-900"
+      className="fixed bottom-0 left-0 w-full z-50 bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]
+                    "
     >
       <div
         className="
         w-full flex justify-around px-2 py-3 bg-black/40
 
-        sm:w-fit sm:mx-auto sm:gap-3 sm:px-6 sm:rounded-2xl sm:justify-center
+        sm:w-fit sm:mx-auto sm:gap-3 sm:px-6 sm:rounded-2xl xl:gap-6 sm:justify-center
       "
       >
         {tabs.map(({ path, icon: Icon }) => {

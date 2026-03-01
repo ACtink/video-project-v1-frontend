@@ -149,7 +149,7 @@ function HomeView({ openProfile }) {
       onScroll={handleScroll}
       className="h-screen overflow-y-auto text-white"
     >
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto pt-5 pb-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT SIDEBAR */}
         <div className="hidden lg:block lg:col-span-3 sticky top-6 h-[calc(100vh-3rem)]">
           <LeftSidebar />
