@@ -528,6 +528,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { getChatMessages } from "../../utils/getMessages";
 import { saveMessage } from "../../utils/saveMessage";
 import fetchData from "../../utils/fetchData";
+import MessageBubble from "../MessageBubble";
 
 const normalizeMessageId = (m) => m.messageId;
 
@@ -540,13 +541,13 @@ function ChatBox({ chat, onBack }) {
 
   const myUserId = user._id;
 
-  console.log("user from auth", user);
+  // console.log("user from auth", user);
 
   // ✅ FIX: Always use string
   const conversationId = chat._id.toString();
 
-  console.log("chat prop", chat);
 
+  
   // ✅ Safe find
   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
 
@@ -559,8 +560,8 @@ function ChatBox({ chat, onBack }) {
      FILTER MESSAGES
   =============================== */
 
-  console.log("these are messages", messages);
-  console.log("conversationId", conversationId);
+  // console.log("these are messages", messages);
+  // console.log("conversationId", conversationId);
 
   // const chatMessages = useMemo(() => {
   //   return messages.filter(
@@ -776,7 +777,7 @@ function ChatBox({ chat, onBack }) {
             Start a conversation with {otherUser.username}
           </div>
         )}
-        {(messages[conversationId] || []).map((msg) => {
+        {/* {(messages[conversationId] || []).map((msg) => {
           const isMe = msg.from === myUserId;
 
           return (
@@ -806,6 +807,20 @@ function ChatBox({ chat, onBack }) {
                 </div>
               )}
             </div>
+          );
+        })} */}
+
+        {(messages[conversationId] || []).map((msg) => {
+          const isMe = msg.from === myUserId;
+
+          return (
+            <MessageBubble
+              key={msg.messageId}
+              msg={msg}
+              isMe={isMe}
+              otherUser={otherUser}
+              user={user}
+            />
           );
         })}
       </div>
