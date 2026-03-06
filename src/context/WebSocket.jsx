@@ -609,6 +609,8 @@ export const WebSocketProvider = ({ children }) => {
 
   const { user } = useAuth();
 
+  const reconnectTimeoutRef = useRef(null);
+
   const {
     setVideoCallLoader,
     cleanupFull,
@@ -781,6 +783,13 @@ export const WebSocketProvider = ({ children }) => {
       clearInterval(pingIntervalRef.current);
 
       setWsConnected(false);
+
+      // ✅ auto reconnect after 2 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (user?._id) {
+          connectToWebSocketServer();
+        }
+      }, 2000);
     };
 
     return socket;
@@ -799,6 +808,29 @@ export const WebSocketProvider = ({ children }) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
+    };
+  }, [user]);
+
+
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        if (
+          !socketRef.current ||
+          socketRef.current.readyState !== WebSocket.OPEN
+        ) {
+          console.log("Reconnecting websocket after tab focus");
+
+          connectToWebSocketServer();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [user]);
 

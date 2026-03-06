@@ -11,6 +11,7 @@ import Layout from './pages/Layout.jsx';
 import VideoView from './components/views/VideoView.jsx';
 import ChatView from './components/views/ChatView.jsx';
 import ProfileView from './components/views/ProfileView.jsx';
+import EditProfile from './pages/EditProfile.jsx';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/join" element={<JoinPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/test" element={<TestPage />} />
+          {/* <Route path="/test" element={<TestPage />} /> */}
 
           <Route path="/video" element={<VideoView />} />
 
@@ -29,6 +30,8 @@ function App() {
           <Route path="/profile" element={<ProfileView />} />
 
           <Route path="/profile/:username" element={<ProfileView />} />
+
+          <Route path="/edit-profile" element={<EditProfile />} />
         </Route>
       </Routes>
     </BrowserRouter>

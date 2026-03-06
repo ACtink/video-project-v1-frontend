@@ -56,6 +56,9 @@ function VideoView({ onUiStateChange }) {
 
   const allGoodAndConnected = pcReady && remoteStreamReady && videoPlayingReady;
 
+
+  const [swapVideos, setSwapVideos] = useState(false);
+  
   // const allGoodAndConnected =
   // //   pcReady && remoteStreamReady && videoPlayingReady;
   // const startButtonStage = !pcReady && uiState == "idle";
@@ -251,13 +254,23 @@ function VideoView({ onUiStateChange }) {
       {/* ===================== TOP : VIDEO AREA (70% on xl) ===================== */}
       <div className="flex-1 flex flex-col xl:flex-row overflow-hidden">
         {/* LOCAL VIDEO */}
-        <div className="xl:flex-1 h-[45vh] xl:h-full bg-black overflow-hidden">
+        <div
+          onClick={() => setSwapVideos(!swapVideos)}
+          className={`
+    ${
+      swapVideos
+        ? "absolute bottom-4 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl"
+        : "xl:flex-1 h-[45vh] xl:h-full"
+    }
+    bg-black overflow-hidden
+  `}
+        >
           <video
-            ref={localVideoRef}
+            ref={swapVideos ? remoteVideoRef : localVideoRef}
             autoPlay
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-pointer"
           />
         </div>
 
@@ -281,14 +294,25 @@ function VideoView({ onUiStateChange }) {
         {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
       </div> */}
 
-        <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
+        <div
+          onClick={() => setSwapVideos(!swapVideos)}
+          className={`
+    relative
+    ${
+      swapVideos
+        ? "xl:flex-1 h-[45vh] xl:h-full"
+        : "absolute bottom-4 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl"
+    }
+    bg-black overflow-hidden xl:border-l xl:border-white/10
+  `}
+        >
           <video
-            ref={remoteVideoRef}
+            ref={swapVideos ? localVideoRef : remoteVideoRef}
             autoPlay
             muted
             playsInline
             className={`
-      w-full h-full object-cover
+      w-full h-full object-cover cursor-pointer
       transition-opacity duration-300
       ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
     `}
@@ -304,9 +328,12 @@ function VideoView({ onUiStateChange }) {
           {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
 
           {/* ✅ AddFriend overlay */}
-          {showAddFriend &&  allGoodAndConnected && (
+          {showAddFriend && allGoodAndConnected && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-              <AddFriend uiState={uiState} allGoodAndConnected={allGoodAndConnected} />
+              <AddFriend
+                uiState={uiState}
+                allGoodAndConnected={allGoodAndConnected}
+              />
             </div>
           )}
         </div>

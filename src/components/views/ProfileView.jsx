@@ -307,7 +307,10 @@ useEffect(() => {
                   >
                     Create post
                   </button>
-                  <button className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10">
+                  <button
+                    onClick={() => navigate("/edit-profile")}
+                    className="flex-1 px-4 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10"
+                  >
                     Edit profile
                   </button>
                 </>
