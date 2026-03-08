@@ -5,7 +5,9 @@ function CountrySelect({ value, onChange, countries }) {
   const [query, setQuery] = useState("");
   const wrapperRef = useRef(null);
 
+
   const selectedCountry = countries.find((c) => c.code === value);
+  
 
   const filtered = countries.filter((c) =>
     c.name.toLowerCase().includes(query.toLowerCase())
@@ -32,7 +34,10 @@ function CountrySelect({ value, onChange, countries }) {
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setQuery("");
+          setOpen(true);
+        }}
         placeholder="Select your country"
         className="
           mt-1 w-full px-4 py-3 rounded-xl

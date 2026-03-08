@@ -13,7 +13,7 @@ function ProfileView() {
   const { user: authUser, setUser } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
-
+ console.log("authUser in ProfileView:", authUser);
 
   // ✅ HOOKS MUST ALWAYS RUN
   const [open, setOpen] = useState(false);
@@ -40,6 +40,7 @@ useEffect(() => {
 
         const data = await res.json();
 
+        console.log("Fetched profile data:", data);
         setProfileUser(data);
       } catch {
         setProfileUser(null);
@@ -288,11 +289,30 @@ useEffect(() => {
             </div>
 
             {/* USERNAME + BIO */}
-            <div className="text-sm leading-snug">
-              <p className="font-semibold">
-                {user?.fullName || user?.username}
-              </p>
-              <p className="text-white/80">
+            {/* USERNAME + FULLNAME + BIO */}
+            <div className="leading-snug space-y-1">
+              {/* USERNAME */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="
+        text-lg font-semibold tracking-wide
+        text-transparent bg-clip-text
+        bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400
+      "
+                >
+                  @{user?.username}
+                </span>
+              </div>
+
+              {/* FULL NAME */}
+              {user?.fullName && (
+                <p className="text-sm text-white font-medium">
+                  {user.fullName}
+                </p>
+              )}
+
+              {/* BIO */}
+              <p className="text-sm text-white/80">
                 {user?.bio || "Welcome to my profile ✨"}
               </p>
             </div>

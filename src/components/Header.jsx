@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { useContext } from 'react'
 
 import {useNavigate} from 'react-router-dom' 
 import { useAuth } from '../hooks/useAuth';
+import { websocketContext } from '../context/WebSocket';
 
 function Header() {
   const navigate = useNavigate();
 
   const { user, loading, logout } = useAuth();
 
+  const { wsConnected } =
+    useContext(websocketContext);
 
   
     const handleLogOut =() => {
@@ -67,6 +70,9 @@ bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]
             </button>
           </div>
         ) : (
+
+          <>
+            <p>{wsConnected ? "Connected" : "Disconnected"} {user.username}</p>
           <button
             onClick={handleLogOut}
             className="
@@ -81,6 +87,7 @@ bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]
           >
             Logout
           </button>
+          </>
         )}
       </div>
     </header>

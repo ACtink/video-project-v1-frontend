@@ -198,8 +198,12 @@ let cachedPosts = null;
 /* SCROLL CACHE */
 let cachedScrollY = 0;
 
+
+
 function HomeView({ openProfile }) {
+
   const containerRef = useRef(null);
+  const scrollThrottleRef = useRef(false);
 
   const [posts, setPosts] = useState(cachedPosts || []);
   const [loading, setLoading] = useState(!cachedPosts);
@@ -296,11 +300,22 @@ function HomeView({ openProfile }) {
         return;
       }
 
-      setPosts((prev) => {
-        const updated = [...prev, ...data];
-        cachedPosts = updated;
-        return updated;
-      });
+     setPosts((prev) => {
+       const existingIds = new Set(prev.map((p) => p._id));
+
+       const newPosts = data.filter((p) => !existingIds.has(p._id));
+
+       if (!newPosts.length) {
+         setHasMore(false);
+         return prev;
+       }
+
+       const updated = [...prev, ...newPosts];
+
+       cachedPosts = updated;
+
+       return updated;
+     });
 
       setPage((prev) => prev + 1);
 
@@ -315,6 +330,14 @@ function HomeView({ openProfile }) {
   };
 
   const handleScroll = () => {
+    if (scrollThrottleRef.current) return;
+
+    scrollThrottleRef.current = true;
+
+    setTimeout(() => {
+      scrollThrottleRef.current = false;
+    }, 200);
+
     if (!containerRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;

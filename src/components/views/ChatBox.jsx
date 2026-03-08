@@ -487,7 +487,7 @@
 // export default ChatBox;
 
 import { ArrowLeft } from "lucide-react";
-import { useContext, useState, useMemo, useEffect } from "react";
+import { useContext, useState, useMemo, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { websocketContext } from "../../context/WebSocket";
 import { useAuth } from "../../hooks/useAuth";
@@ -511,6 +511,8 @@ function ChatBox({ chat, onBack }) {
 
   const myUserId = user._id;
 
+const messagesContainerRef = useRef(null);
+const shouldAutoScrollRef = useRef(true);
   const conversationId = chat._id.toString();
 
   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
@@ -611,6 +613,25 @@ function ChatBox({ chat, onBack }) {
     setLoadingMore(false);
   };
 
+
+  useEffect(() => {
+  const el = messagesContainerRef.current;
+  if (!el) return;
+
+  const handleScroll = () => {
+    const threshold = 150;
+
+    const isNearBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+    shouldAutoScrollRef.current = isNearBottom;
+  };
+
+  el.addEventListener("scroll", handleScroll);
+
+  return () => el.removeEventListener("scroll", handleScroll);
+}, []);
+
   useEffect(() => {
     if (!conversationId) return;
 
@@ -662,6 +683,16 @@ function ChatBox({ chat, onBack }) {
     fetchMessages();
   }, [conversationId]);
 
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+
+    if (!el) return;
+
+    if (shouldAutoScrollRef.current) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messages[conversationId]]);
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* HEADER */}
@@ -674,7 +705,7 @@ function ChatBox({ chat, onBack }) {
           <ArrowLeft size={20} />
         </button>
 
-        <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
+        <div className="w-4 h-4 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
           {otherUser.profilePicture ? (
             <img
               src={otherUser.profilePicture}
@@ -693,25 +724,28 @@ function ChatBox({ chat, onBack }) {
 
       {/* MESSAGES */}
 
-      <div className="flex-1 w-screen sm:w-full overflow-y-auto px-4 py-4 space-y-3">
-        {hasMore && messages[conversationId] && messages[conversationId].length > 0 && (
-          <div className="flex justify-center mb-2">
-            <button
-              onClick={loadOlderMessages}
-              className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
-            >
-              {loadingMore ? "Loading..." : "Load older messages"}
-            </button>
-          </div>
-        )}
-
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 w-screen sm:w-full overflow-y-auto px-4 py-4 space-y-3"
+      >
+        {hasMore &&
+          messages[conversationId] &&
+          messages[conversationId].length > 0 && (
+            <div className="flex justify-center mb-2">
+              <button
+                onClick={loadOlderMessages}
+                className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+              >
+                {loadingMore ? "Loading..." : "Load older messages"}
+              </button>
+            </div>
+          )}
         {(!messages[conversationId] ||
           messages[conversationId].length === 0) && (
           <div className="text-center text-white/60 text-sm">
             Start a conversation with {otherUser.username}
           </div>
         )}
-
         {(messages[conversationId] || []).map((msg) => {
           const isMe = msg.from === myUserId;
 

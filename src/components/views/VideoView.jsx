@@ -59,14 +59,7 @@ function VideoView({ onUiStateChange }) {
 
   const [swapVideos, setSwapVideos] = useState(false);
   
-  // const allGoodAndConnected =
-  // //   pcReady && remoteStreamReady && videoPlayingReady;
-  // const startButtonStage = !pcReady && uiState == "idle";
-  //   const exitButtonStage = !pcReady && uiState == "started" && localVideoRef!=null && localStreamRef!=null
-  // const nextButtonStage = pcReady && remoteStreamReady && videoPlayingReady;
 
-  // const allGoodAndConnected =
-  //   pcReady && remoteStreamReady && videoPlayingReady;
 
   console.log("value of pcReady", pcReady);
   console.log("value of remoteStreamReady", remoteStreamReady);
@@ -77,68 +70,8 @@ function VideoView({ onUiStateChange }) {
 
   console.log("value of allGoodAndConnected--------->", allGoodAndConnected);
 
-  // useEffect(() => {
-  //   onUiStateChange(uiState);
-  // }, [uiState]);
+  
 
-  /* -------------------- CONNECT TO WS -------------------- */
-
-  // useEffect(() => {
-  // const ws =  connectToWebSocketServer();
-
-  //  return () => {
-  //    if (ws && ws.readyState === WebSocket.OPEN) {
-  //      ws.close();
-  //    }
-  //  };
-
-  // }, []);
-
-  /* -------------------- HANDLE USER INFO -------------------- */
-
-  // useEffect(() => {
-
-  //   console.log("in the video viws useeffect")
-
-  //       console.log("data channel for json  ",dataChannelForJsonRef.current);
-
-  //   if (!dataChannelForJsonRef.current) return;
-
-  //   let timer;
-
-  //   const handleJsonMessage = (e) => {
-  //     console.log("handle json message is running ")
-  //     let msg;
-  //     try {
-  //       msg = JSON.parse(e.data);
-  //       console.log("user info", msg)
-  //     } catch {
-  //       return;
-  //     }
-
-  //     if (msg.type === "userInfo") {
-  //       setVideoCallLoader(false)
-  //       setShowUserCard(true);
-
-  //       timer = setTimeout(() => {
-  //         setShowUserCard(false);
-  //       }, 5000);
-  //     }
-  //   };
-
-  //           dataChannelForJsonRef.current.addEventListener(
-  //             "message",
-  //             handleJsonMessage
-  //           );
-
-  //   return () => {
-  //     clearTimeout(timer);
-  //     dataChannelForJsonMessages.current.removeEventListener(
-  //       "message",
-  //       handleJsonMessage
-  //     );
-  //   };
-  // }, [dataChannelForJsonMessages]);
 
   useEffect(() => {
     let timer;
@@ -177,24 +110,7 @@ function VideoView({ onUiStateChange }) {
     setVideoCallLoader(true);
   };
 
-  //  const handleExit = () => {
-  //      setUiState("idle");
-
-  //    // cleanup logic (close pc, stop tracks, etc.)
-
-  //       cleanupCallWhenCloseButtonIsPressed();
-
-  //  };
-
-  //  const handleStart = () => {
-  //    setUiState("searching");
-  //    // start matchmaking / webrtc
-  //  };
-
-  //  const handleConnected = () => {
-  //    setUiState("connected");
-  //    // call this when peer is connected
-  //  };
+  
 
   const handleNext = () => {
     //  setUiState("started");
@@ -208,30 +124,13 @@ function VideoView({ onUiStateChange }) {
   };
 
   const handleClose = () => {
-    //  setUiState("idle");
-    //  setStarted(false)
-    //  cleanupCallWhenCloseButtonIsPressed
-    // setEndedByMe(true); // 🔥 I am leaving system
+   
     sendSignal({ type: "end-call" });
 
-    // cleanupFull();
-    // setSessionActive(false);
+    
   };
 
-  // useEffect(() => {
-  //   const allReady =
-  //     ready.pc &&
-  //     ready.remoteStream &&
-  //     ready.videoPlaying &&
-  //     ready.dataChannel;
-
-  //   if (allReady && uiState !== "connected") {
-  //     setUiState("connected");
-  //   }
-  // }, [ready, uiState]);
-
-  //        bg-white/10 backdrop-blur-xl
-
+  
   /* -------------------- UI -------------------- */
   return (
     <div
@@ -257,13 +156,13 @@ function VideoView({ onUiStateChange }) {
         <div
           onClick={() => setSwapVideos(!swapVideos)}
           className={`
-    ${
-      swapVideos
-        ? "absolute bottom-4 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl"
-        : "xl:flex-1 h-[45vh] xl:h-full"
-    }
-    bg-black overflow-hidden
-  `}
+  ${
+    swapVideos
+      ? "absolute bottom-8 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl xl:relative xl:w-auto xl:h-auto xl:flex-1"
+      : "absolute bottom-8 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl xl:relative xl:flex-1 xl:h-full"
+  }
+  bg-black overflow-hidden
+`}
         >
           <video
             ref={swapVideos ? remoteVideoRef : localVideoRef}
@@ -274,37 +173,17 @@ function VideoView({ onUiStateChange }) {
           />
         </div>
 
-        {/* REMOTE VIDEO */}
-        {/* <div className="relative xl:flex-1 h-[25vh] xl:h-full bg-black overflow-hidden xl:border-l xl:border-white/10">
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          muted
-          playsInline
-          className={`
-            w-full h-full object-cover
-            transition-opacity duration-300
-            ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
-          `}
-        />
-
-        {videoCallLoader && uiState !== "idle" && (
-          <Loader uiState={uiState} allGoodAndConnected={allGoodAndConnected} />
-        )}
-        {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
-      </div> */}
-
         <div
           onClick={() => setSwapVideos(!swapVideos)}
           className={`
-    relative
-    ${
-      swapVideos
-        ? "xl:flex-1 h-[45vh] xl:h-full"
-        : "absolute bottom-4 right-4 z-20 w-[110px] h-[160px] rounded-lg border border-white/20 shadow-xl"
-    }
-    bg-black overflow-hidden xl:border-l xl:border-white/10
-  `}
+  relative
+  ${
+    swapVideos
+      ? "w-full h-full xl:flex-1 xl:h-full"
+      : "w-full h-full xl:flex-1 xl:h-full"
+  }
+  bg-black overflow-hidden xl:border-l xl:border-white/10
+`}
         >
           <video
             ref={swapVideos ? localVideoRef : remoteVideoRef}
@@ -312,10 +191,10 @@ function VideoView({ onUiStateChange }) {
             muted
             playsInline
             className={`
-      w-full h-full object-cover cursor-pointer
-      transition-opacity duration-300
-      ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
-    `}
+    w-full h-full object-cover cursor-pointer
+    transition-opacity duration-300
+    ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
+  `}
           />
 
           {videoCallLoader && uiState !== "idle" && (
@@ -410,26 +289,6 @@ function VideoView({ onUiStateChange }) {
                 >
                   Stop
                 </button>
-
-                {/* COUNTRY CARD */}
-                {/* <div
-                className="
-                  w-[45%]
-                  sm:w-[220px]
-                  xl:w-[240px]
-                  h-[64px] sm:h-[72px] xl:h-full
-                  flex items-center justify-center
-                  text-base sm:text-lg xl:text-xl
-                  font-semibold
-                  rounded-xl
-                  bg-white/10
-                  border border-white/20
-                  backdrop-blur-md
-                  shadow-lg
-                "
-              >
-                🌍 {matchedUser?.country || "Unknown"}
-              </div> */}
               </>
             )}
 
@@ -484,26 +343,6 @@ function VideoView({ onUiStateChange }) {
                 >
                   Stop
                 </button>
-
-                {/* COUNTRY CARD */}
-                {/* <div
-                className="
-                  w-[30%]
-                  sm:w-[200px]
-                  xl:w-[220px]
-                  h-[64px] sm:h-[72px] xl:h-full
-                  flex items-center justify-center
-                  text-base sm:text-lg xl:text-xl
-                  font-semibold
-                  rounded-xl
-                  bg-white/10
-                  border border-white/20
-                  backdrop-blur-md
-                  shadow-lg
-                "
-              >
-                🌍 {matchedUser?.country || "Unknown"}
-              </div> */}
               </>
             )}
           </div>

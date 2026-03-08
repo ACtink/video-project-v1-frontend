@@ -1,8 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import fetchData from "../utils/fetchData";
+import { COUNTRIES } from "../data/countries";
+import CountrySelect from "../components/CountrySelect";
 
 function EditProfile() {
   const { user, setUser } = useAuth();
@@ -10,7 +11,23 @@ function EditProfile() {
 
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [bio, setBio] = useState(user?.bio || "");
-  const [country, setCountry] = useState(user?.country || "");
+
+  const countriesList = Object.values(COUNTRIES);
+
+  // Convert country name -> code (for CountrySelect)
+  const getCountryCode = (name) => {
+    const c = countriesList.find((c) => c.name === name);
+    return c ? c.code : "";
+  };
+
+  // Convert code -> name (for backend storage)
+  const getCountryName = (code) => {
+    const c = countriesList.find((c) => c.code === code);
+    return c ? c.name : "";
+  };
+
+  const [country, setCountry] = useState(getCountryCode(user?.country));
+
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -26,7 +43,7 @@ function EditProfile() {
         body: JSON.stringify({
           fullName,
           bio,
-          country,
+          country: getCountryName(country), // store name in DB
         }),
       });
 
@@ -34,10 +51,9 @@ function EditProfile() {
 
       const updatedUser = await res.json();
 
-      // update auth context
       setUser(updatedUser);
 
-      navigate(`/${updatedUser.username}`);
+      navigate(`/profile`);
     } catch (err) {
       console.error(err);
       alert("Failed to update profile");
@@ -51,7 +67,7 @@ function EditProfile() {
       <div className="w-full max-w-xl px-6 py-10 space-y-6">
         <h1 className="text-xl font-semibold">Edit Profile</h1>
 
-        {/* USERNAME (read only) */}
+        {/* USERNAME */}
         <div className="flex flex-col gap-1">
           <label className="text-sm text-white/60">Username</label>
           <input
@@ -87,10 +103,11 @@ function EditProfile() {
         {/* COUNTRY */}
         <div className="flex flex-col gap-1">
           <label className="text-sm text-white/60">Country</label>
-          <input
+
+          <CountrySelect
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-white/30"
+            onChange={setCountry}
+            countries={countriesList}
           />
         </div>
 

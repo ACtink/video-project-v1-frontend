@@ -23,11 +23,11 @@ function Layout() {
   return (
     <div className="min-h-screen w-full bg-black text-white flex flex-col">
       {/* Header */}
-      {!hideHeader && <Header />}
 
       <WebRTCProvider>
         <WebSocketProvider>
           <RTCBridge />
+          {!hideHeader && <Header />}
 
           {/* ✅ Animation wrapper added */}
           <main className="flex-1 overflow-hidden relative">
