@@ -38,11 +38,11 @@ function Layout() {
               <Outlet />
             </div>
           </main>
+          {!hideFooter && <Footer />}
         </WebSocketProvider>
       </WebRTCProvider>
 
       {/* Footer */}
-      {!hideFooter && <Footer />}
     </div>
   );
 }

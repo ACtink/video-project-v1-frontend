@@ -486,12 +486,1920 @@
 
 // export default ChatBox;
 
-import { ArrowLeft } from "lucide-react";
-import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { ArrowLeft } from "lucide-react";
+// import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+
+//   const [text, setText] = useState("");
+
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+
+//   const myUserId = user._id;
+
+// const messagesContainerRef = useRef(null);
+// const shouldAutoScrollRef = useRef(true);
+//   const conversationId = chat._id.toString();
+
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+
+//   const [hasMore, setHasMore] = useState(true);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+
+//     setText("");
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+
+//     setLoadingMore(true);
+
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+
+//       const data = await res.json();
+
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+
+//       if (messagesArray.length < 50) {
+//         setHasMore(false);
+//       }
+
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+
+//         const ids = new Set(existing.map((m) => m.messageId));
+
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+
+//         return {
+//           ...prev,
+//           [conversationId]: [...newMessages, ...existing],
+//         };
+//       });
+
+//       if (messagesArray.length > 0) {
+//         setCursor(messagesArray[0].createdAt);
+//       }
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//   const el = messagesContainerRef.current;
+//   if (!el) return;
+
+//   const handleScroll = () => {
+//     const threshold = 150;
+
+//     const isNearBottom =
+//       el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+//     shouldAutoScrollRef.current = isNearBottom;
+//   };
+
+//   el.addEventListener("scroll", handleScroll);
+
+//   return () => el.removeEventListener("scroll", handleScroll);
+// }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+
+//         const data = await res.json();
+
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+
+//         if (messagesArray.length < 50) {
+//           setHasMore(false);
+//         }
+
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+
+//         if (messagesArray.length > 0) {
+//           setCursor(messagesArray[0].createdAt);
+//         }
+
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+
+//           const ids = new Set(existing.map((m) => m.messageId));
+
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       }
+//     };
+
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+
+//     if (!el) return;
+
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div className="flex flex-col h-full w-full">
+//       {/* HEADER */}
+
+//       <div className="px-4 py-4 border-b border-white/20 flex items-center gap-3 text-white">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-lg hover:bg-white/20 transition"
+//         >
+//           <ArrowLeft size={20} />
+//         </button>
+
+//         <div className="w-4 h-4 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-lg">{otherUser.username}</h3>
+//       </div>
+
+//       {/* MESSAGES */}
+
+//       <div
+//         ref={messagesContainerRef}
+//         className="flex-1 w-screen sm:w-full overflow-y-auto px-4 py-4 space-y-3"
+//       >
+//         {hasMore &&
+//           messages[conversationId] &&
+//           messages[conversationId].length > 0 && (
+//             <div className="flex justify-center mb-2">
+//               <button
+//                 onClick={loadOlderMessages}
+//                 className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+//               >
+//                 {loadingMore ? "Loading..." : "Load older messages"}
+//               </button>
+//             </div>
+//           )}
+//         {(!messages[conversationId] ||
+//           messages[conversationId].length === 0) && (
+//           <div className="text-center text-white/60 text-sm">
+//             Start a conversation with {otherUser.username}
+//           </div>
+//         )}
+//         {(messages[conversationId] || []).map((msg) => {
+//           const isMe = msg.from === myUserId;
+
+//           return (
+//             <MessageBubble
+//               key={msg.messageId}
+//               msg={msg}
+//               isMe={isMe}
+//               otherUser={otherUser}
+//               user={user}
+//             />
+//           );
+//         })}
+//       </div>
+
+//       {/* INPUT */}
+
+//       <div className="px-4 py-4 border-t border-white/20 mb-5">
+//         <div className="flex gap-3">
+//           <input
+//             type="text"
+//             value={text}
+//             onChange={(e) => setText(e.target.value)}
+//             onKeyDown={(e) => e.key === "Enter" && handleSend()}
+//             placeholder="Type a message..."
+//             className="flex-1 px-4 py-3 rounded-xl bg-white/70 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             className="px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+//           >
+//             Send
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+// import { ArrowLeft, Send } from "lucide-react";
+// import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+
+//     setText("");
+
+//     // reset textarea height after send
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return {
+//           ...prev,
+//           [conversationId]: [...newMessages, ...existing],
+//         };
+//       });
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div
+//       className="flex flex-col w-full"
+//       style={{ height: "100%", maxHeight: "100%", overflow: "hidden" }}
+//     >
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-sm text-white truncate">
+//           {otherUser.username}
+//         </h3>
+//       </div>
+
+//       {/* MESSAGES */}
+//       <div
+//         ref={messagesContainerRef}
+//         className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//         style={{
+//           overscrollBehavior: "contain",
+//           WebkitOverflowScrolling: "touch",
+//         }}
+//       >
+//         {hasMore &&
+//           messages[conversationId] &&
+//           messages[conversationId].length > 0 && (
+//             <div className="flex justify-center mb-2">
+//               <button
+//                 onClick={loadOlderMessages}
+//                 className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+//               >
+//                 {loadingMore ? "Loading..." : "Load older messages"}
+//               </button>
+//             </div>
+//           )}
+
+//         {(!messages[conversationId] ||
+//           messages[conversationId].length === 0) && (
+//           <div className="text-center text-white/60 text-sm">
+//             Start a conversation with {otherUser.username}
+//           </div>
+//         )}
+
+//         {(messages[conversationId] || []).map((msg) => {
+//           const isMe = msg.from === myUserId;
+//           return (
+//             <MessageBubble
+//               key={msg.messageId}
+//               msg={msg}
+//               isMe={isMe}
+//               otherUser={otherUser}
+//               user={user}
+//             />
+//           );
+//         })}
+//       </div>
+
+//       {/* INPUT */}
+//       {/* INPUT */}
+//       {/* INPUT */}
+//       <div
+//         className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm"
+//         style={{
+//           paddingBottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
+//         }}
+//       >
+//         <div className="flex items-end gap-2">
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="
+//               flex-1 resize-none overflow-y-auto
+//               px-4 py-3
+//               rounded-2xl
+//               bg-white/10 text-white text-sm
+//               placeholder-white/30
+//               focus:outline-none focus:ring-1 focus:ring-white/20
+//               leading-relaxed
+//               min-h-[44px]
+//             "
+//             style={{ maxHeight: "112px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="
+//               flex-shrink-0 w-11 h-11 mb-0.5
+//               rounded-full
+//               bg-indigo-600 hover:bg-indigo-500
+//               flex items-center justify-center
+//               transition active:scale-90
+//               disabled:opacity-30 disabled:cursor-not-allowed
+//             "
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//         <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+//           Enter to send · Shift+Enter for new line
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+// import { ArrowLeft, Send } from "lucide-react";
+// import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+//     setText("");
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return {
+//           ...prev,
+//           [conversationId]: [...newMessages, ...existing],
+//         };
+//       });
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div
+//       className="flex flex-col w-full"
+//       style={{ height: "100%", maxHeight: "100%", overflow: "hidden" }}
+//     >
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-sm text-white truncate">
+//           {otherUser.username}
+//         </h3>
+//       </div>
+
+//       {/* MESSAGES */}
+//       <div
+//         ref={messagesContainerRef}
+//         className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//         style={{
+//           overscrollBehavior: "contain",
+//           WebkitOverflowScrolling: "touch",
+//         }}
+//       >
+//         {hasMore &&
+//           messages[conversationId] &&
+//           messages[conversationId].length > 0 && (
+//             <div className="flex justify-center mb-2">
+//               <button
+//                 onClick={loadOlderMessages}
+//                 className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+//               >
+//                 {loadingMore ? "Loading..." : "Load older messages"}
+//               </button>
+//             </div>
+//           )}
+
+//         {(!messages[conversationId] ||
+//           messages[conversationId].length === 0) && (
+//           <div className="text-center text-white/60 text-sm">
+//             Start a conversation with {otherUser.username}
+//           </div>
+//         )}
+
+//         {(messages[conversationId] || []).map((msg) => {
+//           const isMe = msg.from === myUserId;
+//           return (
+//             <MessageBubble
+//               key={msg.messageId}
+//               msg={msg}
+//               isMe={isMe}
+//               otherUser={otherUser}
+//               user={user}
+//             />
+//           );
+//         })}
+
+//         {/* ── FOOTER SPACER — keeps last message above the fixed footer ── */}
+//         <div
+//           style={{ height: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+//         />
+//       </div>
+
+//       {/* INPUT */}
+//       <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+//         <div className="flex items-end gap-2">
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="
+//               flex-1 resize-none overflow-y-auto
+//               px-4 py-3
+//               rounded-2xl
+//               bg-white/10 text-white text-sm
+//               placeholder-white/30
+//               focus:outline-none focus:ring-1 focus:ring-white/20
+//               leading-relaxed
+//               min-h-[44px]
+//             "
+//             style={{ maxHeight: "112px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="
+//               flex-shrink-0 w-11 h-11 mb-0.5
+//               rounded-full
+//               bg-indigo-600 hover:bg-indigo-500
+//               flex items-center justify-center
+//               transition active:scale-90
+//               disabled:opacity-30 disabled:cursor-not-allowed
+//             "
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//         <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+//           Enter to send · Shift+Enter for new line
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+// import { ArrowLeft, Send } from "lucide-react";
+// import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+//     setText("");
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return {
+//           ...prev,
+//           [conversationId]: [...newMessages, ...existing],
+//         };
+//       });
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div
+//       className="flex flex-col w-full"
+//       style={{ height: "100%", maxHeight: "100%", overflow: "hidden" }}
+//     >
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-sm text-white truncate">
+//           {otherUser.username}
+//         </h3>
+//       </div>
+
+//       {/* MESSAGES */}
+//       <div
+//         ref={messagesContainerRef}
+//         className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//         style={{
+//           overscrollBehavior: "contain",
+//           WebkitOverflowScrolling: "touch",
+//         }}
+//       >
+//         {hasMore &&
+//           messages[conversationId] &&
+//           messages[conversationId].length > 0 && (
+//             <div className="flex justify-center mb-2">
+//               <button
+//                 onClick={loadOlderMessages}
+//                 className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+//               >
+//                 {loadingMore ? "Loading..." : "Load older messages"}
+//               </button>
+//             </div>
+//           )}
+
+//         {(!messages[conversationId] ||
+//           messages[conversationId].length === 0) && (
+//           <div className="text-center text-white/60 text-sm">
+//             Start a conversation with {otherUser.username}
+//           </div>
+//         )}
+
+//         {(messages[conversationId] || []).map((msg) => {
+//           const isMe = msg.from === myUserId;
+//           return (
+//             <MessageBubble
+//               key={msg.messageId}
+//               msg={msg}
+//               isMe={isMe}
+//               otherUser={otherUser}
+//               user={user}
+//             />
+//           );
+//         })}
+
+//         {/* spacer so last message isn't hidden behind input bar */}
+//         <div className="h-10" />
+//       </div>
+
+//       {/* INPUT */}
+//       <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+//         <div className="flex items-end gap-2">
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="
+//               flex-1 resize-none overflow-y-auto
+//               px-4 py-3
+//               rounded-2xl
+//               bg-white/10 text-white text-sm
+//               placeholder-white/30
+//               focus:outline-none focus:ring-1 focus:ring-white/20
+//               leading-relaxed
+//               min-h-[44px]
+//             "
+//             style={{ maxHeight: "112px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="
+//               flex-shrink-0 w-11 h-11 mb-0.5
+//               rounded-full
+//               bg-indigo-600 hover:bg-indigo-500
+//               flex items-center justify-center
+//               transition active:scale-90
+//               disabled:opacity-30 disabled:cursor-not-allowed
+//             "
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//         <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+//           Enter to send · Shift+Enter for new line
+//         </p>
+
+//         {/* ── FOOTER SPACER — pushes input bar above fixed footer ── */}
+//         <div
+//           style={{ height: "calc(20vh + env(safe-area-inset-bottom, 0px))" }}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+// import { ArrowLeft, Send } from "lucide-react";
+// import { useContext, useState, useMemo, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const [visible, setVisible] = useState(false); // ← fade trigger
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   // ── reset on conversation change + trigger fade-in ──
+// useEffect(() => {
+//   setHasMore(true);
+//   setCursor(null);
+//   setVisible(false);
+//   requestAnimationFrame(() => {
+//     requestAnimationFrame(() => setVisible(true));
+//   });
+// }, [conversationId]);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+//     setText("");
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return {
+//           ...prev,
+//           [conversationId]: [...newMessages, ...existing],
+//         };
+//       });
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div
+//       className="flex flex-col w-full"
+//       style={{
+//         height: "100%",
+//         maxHeight: "100%",
+//         overflow: "hidden",
+//         opacity: visible ? 1 : 0,
+//         transform: visible ? "translateY(0)" : "translateY(8px)",
+//         transition: "opacity 0.25s ease, transform 0.25s ease",
+//       }}
+//     >
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-sm text-white truncate">
+//           {otherUser.username}
+//         </h3>
+//       </div>
+
+//       {/* MESSAGES */}
+//       <div
+//         ref={messagesContainerRef}
+//         className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//         style={{
+//           overscrollBehavior: "contain",
+//           WebkitOverflowScrolling: "touch",
+//           opacity: visible ? 1 : 0,
+//           transition: "opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+//         }}
+//       >
+//         {hasMore &&
+//           messages[conversationId] &&
+//           messages[conversationId].length > 0 && (
+//             <div className="flex justify-center mb-2">
+//               <button
+//                 onClick={loadOlderMessages}
+//                 className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
+//               >
+//                 {loadingMore ? "Loading..." : "Load older messages"}
+//               </button>
+//             </div>
+//           )}
+
+//         {(!messages[conversationId] ||
+//           messages[conversationId].length === 0) && (
+//           <div className="text-center text-white/60 text-sm">
+//             Start a conversation with {otherUser.username}
+//           </div>
+//         )}
+
+//         {(messages[conversationId] || []).map((msg) => {
+//           const isMe = msg.from === myUserId;
+//           return (
+//             <MessageBubble
+//               key={msg.messageId}
+//               msg={msg}
+//               isMe={isMe}
+//               otherUser={otherUser}
+//               user={user}
+//             />
+//           );
+//         })}
+
+//         {/* spacer so last message isn't hidden behind input bar */}
+//         <div className="h-10" />
+//       </div>
+
+//       {/* INPUT */}
+//       <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+//         <div className="flex items-end gap-2">
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="
+//               flex-1 resize-none overflow-y-auto
+//               px-4 py-3
+//               rounded-2xl
+//               bg-white/10 text-white text-sm
+//               placeholder-white/30
+//               focus:outline-none focus:ring-1 focus:ring-white/20
+//               leading-relaxed
+//               min-h-[44px]
+//             "
+//             style={{ maxHeight: "112px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="
+//               flex-shrink-0 w-11 h-11 mb-0.5
+//               rounded-full
+//               bg-indigo-600 hover:bg-indigo-500
+//               flex items-center justify-center
+//               transition active:scale-90
+//               disabled:opacity-30 disabled:cursor-not-allowed
+//             "
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//         <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+//           Enter to send · Shift+Enter for new line
+//         </p>
+
+//         {/* ── FOOTER SPACER ── */}
+//         <div
+//           style={{ height: "calc(20vh + env(safe-area-inset-bottom, 0px))" }}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+// import { ArrowLeft, Send } from "lucide-react";
+// import { useContext, useState, useEffect, useRef } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+// import { getChatMessages } from "../../utils/getMessages";
+// import { saveMessage } from "../../utils/saveMessage";
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// function MessageSkeleton() {
+//   return (
+//     <div className="flex flex-col gap-3 px-4 py-4 animate-pulse">
+//       {/* incoming */}
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-48 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       {/* outgoing */}
+//       <div className="flex justify-end">
+//         <div className="h-9 w-36 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       {/* incoming */}
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-14 w-56 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       {/* outgoing */}
+//       <div className="flex justify-end">
+//         <div className="h-9 w-44 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       {/* incoming */}
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-32 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       {/* outgoing */}
+//       <div className="flex justify-end">
+//         <div className="h-14 w-52 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       {/* incoming */}
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-40 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       {/* outgoing */}
+//       <div className="flex justify-end">
+//         <div className="h-9 w-28 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//     </div>
+//   );
+// }
+
+// function ChatBox({ chat, onBack }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const [fetchingMessages, setFetchingMessages] = useState(true); // ← skeleton
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const isLoadingMoreRef = useRef(false); // ← add this ref
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   // reset on every conversation switch
+//   useEffect(() => {
+//     setHasMore(true);
+//     setCursor(null);
+//     setFetchingMessages(true);
+//   }, [conversationId]);
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text,
+//       createdAt,
+//     });
+//     setText("");
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+
+//     const el = messagesContainerRef.current;
+//     const scrollHeightBefore = el ? el.scrollHeight : 0;
+
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+
+//       shouldAutoScrollRef.current = false; // ← block auto-scroll
+
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return { ...prev, [conversationId]: [...newMessages, ...existing] };
+//       });
+
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+
+//       setTimeout(() => {
+//         if (el) el.scrollTop = el.scrollHeight - scrollHeightBefore;
+//       }, 50);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return {
+//             ...prev,
+//             [conversationId]: [...existing, ...newMessages],
+//           };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       } finally {
+//         setFetchingMessages(false); // ← done loading
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+// useEffect(() => {
+//   const el = messagesContainerRef.current;
+//   if (!el) return;
+//   if (shouldAutoScrollRef.current) {
+//     el.scrollTop = el.scrollHeight;
+//   }
+// }, [messages[conversationId]]);
+
+//   return (
+//     <div
+//       className="flex flex-col w-full"
+//       style={{ height: "100%", maxHeight: "100%", overflow: "hidden" }}
+//     >
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+
+//         <h3 className="font-semibold text-sm text-white truncate">
+//           {otherUser.username}
+//         </h3>
+//       </div>
+
+//       {/* MESSAGES — skeleton while fetching, real messages after */}
+//       {fetchingMessages ? (
+//         <div className="flex-1 overflow-hidden">
+//           <MessageSkeleton />
+//         </div>
+//       ) : (
+//         <div
+//           ref={messagesContainerRef}
+//           className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//           style={{
+//             overscrollBehavior: "contain",
+//             WebkitOverflowScrolling: "touch",
+//             animation: "fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+//           }}
+//         >
+//           {hasMore &&
+//             messages[conversationId] &&
+//             messages[conversationId].length > 0 && (
+//               <div className="flex justify-center mb-2">
+//                 <button
+//                   onClick={loadOlderMessages}
+//                   className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
+//                 >
+//                   {loadingMore ? "Loading..." : "Load older messages"}
+//                 </button>
+//               </div>
+//             )}
+
+//           {(!messages[conversationId] ||
+//             messages[conversationId].length === 0) && (
+//             <div className="text-center text-white/60 text-sm">
+//               Start a conversation with {otherUser.username}
+//             </div>
+//           )}
+
+//           {(messages[conversationId] || []).map((msg) => {
+//             const isMe = msg.from === myUserId;
+//             return (
+//               <MessageBubble
+//                 key={msg.messageId}
+//                 msg={msg}
+//                 isMe={isMe}
+//                 otherUser={otherUser}
+//                 user={user}
+//               />
+//             );
+//           })}
+
+//           <div className="h-10" />
+//         </div>
+//       )}
+
+//       {/* INPUT */}
+//       <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+//         <div className="flex items-end gap-2">
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="
+//               flex-1 resize-none overflow-y-auto
+//               px-4 py-3
+//               rounded-2xl
+//               bg-white/10 text-white text-sm
+//               placeholder-white/30
+//               focus:outline-none focus:ring-1 focus:ring-white/20
+//               leading-relaxed
+//               min-h-[44px]
+//             "
+//             style={{ maxHeight: "112px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="
+//               flex-shrink-0 w-11 h-11 mb-0.5
+//               rounded-full
+//               bg-indigo-600 hover:bg-indigo-500
+//               flex items-center justify-center
+//               transition active:scale-90
+//               disabled:opacity-30 disabled:cursor-not-allowed
+//             "
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//         <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+//           Enter to send · Shift+Enter for new line
+//         </p>
+//         <div
+//           style={{ height: "calc(20vh + env(safe-area-inset-bottom, 0px))" }}
+//         />
+//       </div>
+
+//       {/* keyframe for fade-in-up */}
+//       <style>{`
+//         @keyframes fadeInUp {
+//           from { opacity: 0; transform: translateY(10px); }
+//           to   { opacity: 1; transform: translateY(0);    }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
+import { ArrowLeft, Send, Smile } from "lucide-react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { websocketContext } from "../../context/WebSocket";
 import { useAuth } from "../../hooks/useAuth";
-
 import { getChatMessages } from "../../utils/getMessages";
 import { saveMessage } from "../../utils/saveMessage";
 import fetchData from "../../utils/fetchData";
@@ -499,39 +2407,163 @@ import MessageBubble from "../MessageBubble";
 
 const normalizeMessageId = (m) => m.messageId;
 
+const EMOJI_LIST = [
+  "😀",
+  "😂",
+  "😍",
+  "🥰",
+  "😎",
+  "🤔",
+  "😭",
+  "😡",
+  "🥺",
+  "😴",
+  "👍",
+  "👎",
+  "❤️",
+  "🔥",
+  "✨",
+  "🎉",
+  "🙏",
+  "💯",
+  "😊",
+  "🤣",
+  "😘",
+  "🥳",
+  "😤",
+  "🤯",
+  "😇",
+  "🤗",
+  "😏",
+  "🙄",
+  "😬",
+  "🤝",
+  "👀",
+  "💀",
+  "🫡",
+  "🫠",
+  "🥹",
+  "😮",
+  "😱",
+  "🤌",
+  "💪",
+  "👏",
+  "🍕",
+  "🎮",
+  "🎵",
+  "⚡",
+  "🌙",
+  "☀️",
+  "🌈",
+  "💫",
+  "🚀",
+  "🎯",
+];
+
+function MessageSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 px-4 py-4 animate-pulse">
+      <div className="flex items-end gap-2">
+        <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+        <div className="h-9 w-48 rounded-2xl rounded-bl-sm bg-white/8" />
+      </div>
+      <div className="flex justify-end">
+        <div className="h-9 w-36 rounded-2xl rounded-br-sm bg-white/8" />
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+        <div className="h-14 w-56 rounded-2xl rounded-bl-sm bg-white/8" />
+      </div>
+      <div className="flex justify-end">
+        <div className="h-9 w-44 rounded-2xl rounded-br-sm bg-white/8" />
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+        <div className="h-9 w-32 rounded-2xl rounded-bl-sm bg-white/8" />
+      </div>
+      <div className="flex justify-end">
+        <div className="h-14 w-52 rounded-2xl rounded-br-sm bg-white/8" />
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+        <div className="h-9 w-40 rounded-2xl rounded-bl-sm bg-white/8" />
+      </div>
+      <div className="flex justify-end">
+        <div className="h-9 w-28 rounded-2xl rounded-br-sm bg-white/8" />
+      </div>
+    </div>
+  );
+}
+
 function ChatBox({ chat, onBack }) {
   const { user } = useAuth();
-
   const { sendSignal, messages, setMessages } = useContext(websocketContext);
-
   const [text, setText] = useState("");
-
   const [cursor, setCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
-
+  const [fetchingMessages, setFetchingMessages] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // ← emoji picker state
   const myUserId = user._id;
-
-const messagesContainerRef = useRef(null);
-const shouldAutoScrollRef = useRef(true);
+  const messagesContainerRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
+  const textareaRef = useRef(null);
+  const emojiPickerRef = useRef(null);
   const conversationId = chat._id.toString();
-
   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
 
   if (!otherUser) return null;
 
   const receiverId = otherUser._id;
-
   const [hasMore, setHasMore] = useState(true);
+
+  // close emoji picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // reset on every conversation switch
+  useEffect(() => {
+    setHasMore(true);
+    setCursor(null);
+    setFetchingMessages(true);
+    setShowEmojiPicker(false);
+  }, [conversationId]);
+
+  const insertEmoji = (emoji) => {
+    const ta = textareaRef.current;
+    if (!ta) {
+      setText((prev) => prev + emoji);
+      return;
+    }
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const newText = text.slice(0, start) + emoji + text.slice(end);
+    setText(newText);
+    // restore cursor after emoji
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.selectionStart = start + emoji.length;
+      ta.selectionEnd = start + emoji.length;
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 112) + "px";
+    });
+  };
 
   const handleSend = async () => {
     if (!text.trim()) return;
-
     const messageId = uuidv4();
     const createdAt = Date.now();
-
     setMessages((prev) => {
       const existing = prev[conversationId] || [];
-
       return {
         ...prev,
         [conversationId]: [
@@ -548,7 +2580,6 @@ const shouldAutoScrollRef = useRef(true);
         ],
       };
     });
-
     sendSignal({
       type: "chat_message",
       messageId,
@@ -557,29 +2588,26 @@ const shouldAutoScrollRef = useRef(true);
       text,
       createdAt,
     });
-
     setText("");
+    setShowEmojiPicker(false);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
   };
 
   const loadOlderMessages = async () => {
     if (!cursor || loadingMore) return;
-
     setLoadingMore(true);
-
+    const el = messagesContainerRef.current;
+    const scrollHeightBefore = el ? el.scrollHeight : 0;
     try {
       const res = await fetchData(
         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
         { credentials: "include" },
       );
-
       const data = await res.json();
-
       const messagesArray = Array.isArray(data) ? data : data.messages || [];
-
-      if (messagesArray.length < 50) {
-        setHasMore(false);
-      }
-
+      if (messagesArray.length < 50) setHasMore(false);
       const formatted = messagesArray.map((msg) => ({
         messageId: msg.messageId,
         conversationId,
@@ -589,66 +2617,46 @@ const shouldAutoScrollRef = useRef(true);
         status: msg.status || "sent",
         createdAt: new Date(msg.createdAt).getTime(),
       }));
-
+      shouldAutoScrollRef.current = false;
       setMessages((prev) => {
         const existing = prev[conversationId] || [];
-
         const ids = new Set(existing.map((m) => m.messageId));
-
         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
-
-        return {
-          ...prev,
-          [conversationId]: [...newMessages, ...existing],
-        };
+        return { ...prev, [conversationId]: [...newMessages, ...existing] };
       });
-
-      if (messagesArray.length > 0) {
-        setCursor(messagesArray[0].createdAt);
-      }
+      if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+      setTimeout(() => {
+        if (el) el.scrollTop = el.scrollHeight - scrollHeightBefore;
+      }, 50);
     } catch (err) {
       console.error("Failed loading older messages", err);
     }
-
     setLoadingMore(false);
   };
 
-
   useEffect(() => {
-  const el = messagesContainerRef.current;
-  if (!el) return;
-
-  const handleScroll = () => {
-    const threshold = 150;
-
-    const isNearBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
-
-    shouldAutoScrollRef.current = isNearBottom;
-  };
-
-  el.addEventListener("scroll", handleScroll);
-
-  return () => el.removeEventListener("scroll", handleScroll);
-}, []);
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const threshold = 150;
+      const isNearBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+      shouldAutoScrollRef.current = isNearBottom;
+    };
+    el.addEventListener("scroll", handleScroll);
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!conversationId) return;
-
     const fetchMessages = async () => {
       try {
         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
           credentials: "include",
         });
-
         const data = await res.json();
-
         const messagesArray = Array.isArray(data) ? data : data.messages || [];
-
-        if (messagesArray.length < 50) {
-          setHasMore(false);
-        }
-
+        if (messagesArray.length < 50) setHasMore(false);
         const formatted = messagesArray.map((msg) => ({
           messageId: msg.messageId,
           conversationId,
@@ -658,54 +2666,44 @@ const shouldAutoScrollRef = useRef(true);
           status: msg.status || "sent",
           createdAt: new Date(msg.createdAt).getTime(),
         }));
-
-        if (messagesArray.length > 0) {
-          setCursor(messagesArray[0].createdAt);
-        }
-
+        if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
         setMessages((prev) => {
           const existing = prev[conversationId] || [];
-
           const ids = new Set(existing.map((m) => m.messageId));
-
           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
-
-          return {
-            ...prev,
-            [conversationId]: [...existing, ...newMessages],
-          };
+          return { ...prev, [conversationId]: [...existing, ...newMessages] };
         });
       } catch (err) {
         console.error("Failed to fetch messages", err);
+      } finally {
+        setFetchingMessages(false);
       }
     };
-
     fetchMessages();
   }, [conversationId]);
 
   useEffect(() => {
     const el = messagesContainerRef.current;
-
     if (!el) return;
-
     if (shouldAutoScrollRef.current) {
       el.scrollTop = el.scrollHeight;
     }
   }, [messages[conversationId]]);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div
+      className="flex flex-col w-full"
+      style={{ height: "100%", maxHeight: "100%", overflow: "hidden" }}
+    >
       {/* HEADER */}
-
-      <div className="px-4 py-4 border-b border-white/20 flex items-center gap-3 text-white">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
         <button
           onClick={onBack}
-          className="sm:hidden p-2 rounded-lg hover:bg-white/20 transition"
+          className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </button>
-
-        <div className="w-4 h-4 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
           {otherUser.profilePicture ? (
             <img
               src={otherUser.profilePicture}
@@ -713,74 +2711,168 @@ const shouldAutoScrollRef = useRef(true);
               className="w-full h-full object-cover"
             />
           ) : (
-            <span className="text-sm font-semibold">
+            <span className="text-sm font-semibold text-white">
               {otherUser.username?.[0]?.toUpperCase()}
             </span>
           )}
         </div>
-
-        <h3 className="font-semibold text-lg">{otherUser.username}</h3>
+        <h3 className="font-semibold text-sm text-white truncate">
+          {otherUser.username}
+        </h3>
       </div>
 
       {/* MESSAGES */}
+      {fetchingMessages ? (
+        <div className="flex-1 overflow-hidden">
+          <MessageSkeleton />
+        </div>
+      ) : (
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+          style={{
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
+            animation: "fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+          }}
+        >
+          {hasMore &&
+            messages[conversationId] &&
+            messages[conversationId].length > 0 && (
+              <div className="flex justify-center mb-2">
+                <button
+                  onClick={loadOlderMessages}
+                  className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
+                >
+                  {loadingMore ? "Loading..." : "Load older messages"}
+                </button>
+              </div>
+            )}
 
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 w-screen sm:w-full overflow-y-auto px-4 py-4 space-y-3"
-      >
-        {hasMore &&
-          messages[conversationId] &&
-          messages[conversationId].length > 0 && (
-            <div className="flex justify-center mb-2">
-              <button
-                onClick={loadOlderMessages}
-                className="px-3 py-1 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
-              >
-                {loadingMore ? "Loading..." : "Load older messages"}
-              </button>
+          {(!messages[conversationId] ||
+            messages[conversationId].length === 0) && (
+            <div className="text-center text-white/60 text-sm">
+              Start a conversation with {otherUser.username}
             </div>
           )}
-        {(!messages[conversationId] ||
-          messages[conversationId].length === 0) && (
-          <div className="text-center text-white/60 text-sm">
-            Start a conversation with {otherUser.username}
-          </div>
-        )}
-        {(messages[conversationId] || []).map((msg) => {
-          const isMe = msg.from === myUserId;
 
-          return (
-            <MessageBubble
-              key={msg.messageId}
-              msg={msg}
-              isMe={isMe}
-              otherUser={otherUser}
-              user={user}
-            />
-          );
-        })}
-      </div>
+          {(messages[conversationId] || []).map((msg) => {
+            const isMe = msg.from === myUserId;
+            return (
+              <MessageBubble
+                key={msg.messageId}
+                msg={msg}
+                isMe={isMe}
+                otherUser={otherUser}
+                user={user}
+              />
+            );
+          })}
+
+          <div className="h-10" />
+        </div>
+      )}
 
       {/* INPUT */}
+      <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm relative">
+        {/* ── EMOJI PICKER — floats above, doesn't affect layout ── */}
+        {showEmojiPicker && (
+          <div
+            ref={emojiPickerRef}
+            className="
+      absolute bottom-full left-0 mx-3 mb-2
+      w-80 max-w-[calc(100%-24px)]
+      p-3 rounded-2xl
+      bg-[#1a1a1a] border border-white/10
+      shadow-2xl z-10
+    "
+          >
+            <div className="grid grid-cols-10 gap-1">
+              {EMOJI_LIST.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => insertEmoji(emoji)}
+                  className="
+            w-8 h-8 flex items-center justify-center
+            text-[18px] rounded-lg
+            hover:bg-white/10 active:scale-90
+            transition-all duration-100
+          "
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-end gap-2">
+          {/* emoji toggle */}
+          <button
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            className={`
+        flex-shrink-0 w-10 h-10 mb-0.5
+        rounded-full flex items-center justify-center
+        border transition-all duration-150 active:scale-90
+        ${
+          showEmojiPicker
+            ? "bg-indigo-600 border-indigo-500 text-white"
+            : "bg-white/8 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/12"
+        }
+      `}
+          >
+            <Smile size={17} />
+          </button>
 
-      <div className="px-4 py-4 border-t border-white/20 mb-5">
-        <div className="flex gap-3">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onChange={(e) => {
+              setText(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height =
+                Math.min(e.target.scrollHeight, 112) + "px";
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-3 rounded-xl bg-white/70 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="
+        flex-1 resize-none overflow-y-auto
+        px-4 py-3 rounded-2xl
+        bg-white/10 text-white text-sm
+        placeholder-white/30
+        focus:outline-none focus:ring-1 focus:ring-white/20
+        leading-relaxed min-h-[44px]
+      "
+            style={{ maxHeight: "112px" }}
           />
 
           <button
             onClick={handleSend}
-            className="px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+            disabled={!text.trim()}
+            className="
+        flex-shrink-0 w-11 h-11 mb-0.5
+        rounded-full
+        bg-indigo-600 hover:bg-indigo-500
+        flex items-center justify-center
+        transition active:scale-90
+        disabled:opacity-30 disabled:cursor-not-allowed
+      "
           >
-            Send
+            <Send size={16} className="text-white ml-0.5" />
           </button>
         </div>
+
+        <p className="text-[10px] text-white/20 mt-1.5 pl-1">
+          Enter to send · Shift+Enter for new line
+        </p>
+        <div
+          style={{ height: "calc(20vh + env(safe-area-inset-bottom, 0px))" }}
+        />
       </div>
     </div>
   );
