@@ -783,6 +783,7 @@ import ProfilePosts from "../ProfilePosts";
 import fetchData from "../../utils/fetchData";
 import { useParams } from "react-router-dom";
 import ProfileSkeleton from "../ProfileSkeleton";
+import { Home } from "lucide-react";
 
 function ProfileView() {
   const { user: authUser, setUser } = useAuth();
@@ -959,7 +960,7 @@ function ProfileView() {
               onClick={() => navigate("/")}
               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
             >
-              <span className="text-base leading-none">🏠</span>
+              <Home size={18} />
               <span className="hidden sm:inline tracking-wide">Home</span>
             </button>
           </div>
@@ -971,7 +972,7 @@ function ProfileView() {
               onClick={() => navigate("/")}
               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
             >
-              <span className="text-base leading-none">🏠</span>
+              <Home size={18} />{" "}
               <span className="hidden sm:inline tracking-wide">Home</span>
             </button>
           </div>

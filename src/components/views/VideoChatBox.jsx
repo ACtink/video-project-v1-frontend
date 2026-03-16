@@ -106,10 +106,10 @@ function VideoChatBox({ wsConnected, uiState }) {
     ${msg.from === "self" ? "bg-cyan-400 text-black" : "bg-white/80 text-black"}
   `}
             >
-              <p className="text-[10px] font-semibold opacity-60 mb-0.5">
+              <p className="text-[9px] font-semibold opacity-60 mb-0.5">
                 {msg.from === "self" ? "You" : "Stranger"}
               </p>
-              <p className="text-xs">{msg.text}</p>
+              <p className="text-[11px]">{msg.text}</p>
             </div>
           </div>
         ))}

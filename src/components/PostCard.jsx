@@ -662,58 +662,284 @@
 
 // export default PostCard;
 
+// import { useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import PostModal from "./PostModal";
+// import CommentsBottomSheet from "./CommentsBottomSheet";
 
-import { useState } from "react";
+// function PostCard({ post, onDelete }) {
+//   const [selectedPost, setSelectedPost] = useState(null);
+//   const [showMobileComments, setShowMobileComments] = useState(false);
+//   const [liked, setLiked] = useState(false);
+//   const [comment, setComment] = useState("");
+//   const navigate = useNavigate();
+
+//   const handleImageClick = () => {
+//     if (window.innerWidth >= 768) {
+//       setSelectedPost(post);
+//     }
+//   };
+
+//   return (
+//     <div className="bg-[#0a0a0a] border border-white/[0.08] max-w-[470px] mx-auto mb-6 overflow-hidden">
+//       {/* Header */}
+//       <div
+//         onClick={() => navigate(`/profile/${post.user.username}`)}
+//         className="flex items-center gap-2.5 px-3.5 py-2.5 cursor-pointer"
+//       >
+//         {post.user.profilePicture ? (
+//           <img
+//             src={post.user.profilePicture}
+//             alt=""
+//             className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0"
+//           />
+//         ) : (
+//           <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+//             {post.user.username?.charAt(0).toUpperCase()}
+//           </div>
+//         )}
+//         <span className="flex-1 font-semibold text-[13.5px] text-neutral-100 tracking-wide">
+//           {post.user.username}
+//         </span>
+//         <svg
+//           width="16"
+//           height="16"
+//           viewBox="0 0 24 24"
+//           fill="none"
+//           stroke="rgba(255,255,255,0.25)"
+//           strokeWidth="2"
+//         >
+//           <circle cx="5" cy="12" r="1" />
+//           <circle cx="12" cy="12" r="1" />
+//           <circle cx="19" cy="12" r="1" />
+//         </svg>
+//       </div>
+
+//       {/* Image */}
+//       <img
+//         onClick={handleImageClick}
+//         src={post.imageUrl}
+//         alt=""
+//         className="w-full max-h-[950px] object-cover block md:cursor-pointer"
+//       />
+
+//       {/* Actions */}
+//       <div className="px-3.5 pt-2.5 pb-4">
+//         <div className="flex items-center gap-1 mb-2">
+//           {/* Like */}
+//           <button
+//             onClick={() => setLiked(!liked)}
+//             className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer"
+//           >
+//             <svg
+//               width="22"
+//               height="22"
+//               viewBox="0 0 24 24"
+//               fill={liked ? "#ef4444" : "none"}
+//               stroke={liked ? "#ef4444" : "rgba(255,255,255,0.85)"}
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+//             </svg>
+//           </button>
+
+//           {/* Comment */}
+//           <button
+//             onClick={() => {
+//               if (window.innerWidth < 768) {
+//                 setShowMobileComments(true);
+//               } else {
+//                 setSelectedPost(post);
+//               }
+//             }}
+//             className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer"
+//           >
+//             <svg
+//               width="22"
+//               height="22"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="rgba(255,255,255,0.85)"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10a9.954 9.954 0 0 1-1.515 5.31L22 22l-4.69-1.515A9.954 9.954 0 0 1 12 22z" />
+//             </svg>
+//           </button>
+
+//           {/* Share */}
+//           <button
+//             onClick={async () => {
+//               if (navigator.share) {
+//                 try {
+//                   await navigator.share({
+//                     title: `${post.user.username}'s post`,
+//                     text: post.caption || "Check out this post",
+//                     url: `${window.location.origin}/post/${post._id}`,
+//                   });
+//                 } catch (err) {
+//                   // user cancelled
+//                 }
+//               }
+//             }}
+//             className="md:hidden p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer ml-auto"
+//           >
+//             <svg
+//               width="22"
+//               height="22"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="rgba(255,255,255,0.85)"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <line x1="22" y1="2" x2="11" y2="13" />
+//               <polygon points="22 2 15 22 11 13 2 9 22 2" />
+//             </svg>
+//           </button>
+//         </div>
+
+//         <p className="text-[13.5px] font-semibold text-neutral-100 mb-1 tracking-wide">
+//           {post.likesCount.toLocaleString()} likes
+//         </p>
+
+//         {post.caption && (
+//           <p className="text-[13.5px] leading-relaxed text-white/75 mb-1.5">
+//             <span className="font-semibold text-neutral-100 mr-1.5">
+//               {post.user.username}
+//             </span>
+//             {post.caption}
+//           </p>
+//         )}
+
+//         <p
+//           onClick={() => {
+//             if (window.innerWidth < 768) {
+//               setShowMobileComments(true);
+//             } else {
+//               setSelectedPost(post);
+//             }
+//           }}
+//           className="text-[13px] text-white/35 cursor-pointer mb-2 tracking-wide"
+//         >
+//           View all {post.commentsCount} comments
+//         </p>
+
+//         <p className="text-[11px] text-white/25 mb-2.5 uppercase tracking-widest">
+//           {new Date(post.createdAt).toLocaleDateString("en-US", {
+//             month: "long",
+//             day: "numeric",
+//           })}
+//         </p>
+//       </div>
+
+//       {selectedPost && (
+//         <PostModal
+//           post={selectedPost}
+//           onClose={() => setSelectedPost(null)}
+//           onDelete={onDelete}
+//         />
+//       )}
+
+//       {showMobileComments && (
+//         <CommentsBottomSheet
+//           post={post}
+//           onClose={() => setShowMobileComments(false)}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+// export default PostCard;
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PostModal from "./PostModal";
 import CommentsBottomSheet from "./CommentsBottomSheet";
+import PostOptionsSheet from "./PostOptionsSheet";
+import PostOptionsPopup from "./PostOptionsPopup";
+import { useAuth } from "../hooks/useAuth";
 
 function PostCard({ post, onDelete }) {
+  const { user } = useAuth();
+  const isOwner = String(user?._id) === String(post.user?._id);
   const [selectedPost, setSelectedPost] = useState(null);
   const [showMobileComments, setShowMobileComments] = useState(false);
+  const [showMobileOptions, setShowMobileOptions] = useState(false);
+  const [showDesktopOptions, setShowDesktopOptions] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [comment, setComment] = useState("");
+  const optionsRef = useRef(null);
   const navigate = useNavigate();
 
   const handleImageClick = () => {
-    if (window.innerWidth >= 768) {
-      setSelectedPost(post);
-    }
+    if (window.innerWidth >= 768) setSelectedPost(post);
   };
 
   return (
     <div className="bg-[#0a0a0a] border border-white/[0.08] max-w-[470px] mx-auto mb-6 overflow-hidden">
       {/* Header */}
-      <div
-        onClick={() => navigate(`/profile/${post.user.username}`)}
-        className="flex items-center gap-2.5 px-3.5 py-2.5 cursor-pointer"
-      >
-        {post.user.profilePicture ? (
-          <img
-            src={post.user.profilePicture}
-            alt=""
-            className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {post.user.username?.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <span className="flex-1 font-semibold text-[13.5px] text-neutral-100 tracking-wide">
-          {post.user.username}
-        </span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          strokeWidth="2"
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5">
+        {/* Avatar + username — navigates to profile */}
+        <div
+          onClick={() => navigate(`/profile/${post.user.username}`)}
+          className="flex items-center gap-2.5 flex-1 cursor-pointer min-w-0"
         >
-          <circle cx="5" cy="12" r="1" />
-          <circle cx="12" cy="12" r="1" />
-          <circle cx="19" cy="12" r="1" />
-        </svg>
+          {post.user.profilePicture ? (
+            <img
+              src={post.user.profilePicture}
+              alt=""
+              className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              {post.user.username?.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <span className="font-semibold text-[13.5px] text-neutral-100 tracking-wide truncate">
+            {post.user.username}
+          </span>
+        </div>
+
+        {/* Three dots */}
+        <div ref={optionsRef} className="relative flex-shrink-0">
+          <button
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                setShowMobileOptions(true);
+              } else {
+                setShowDesktopOptions((v) => !v);
+              }
+            }}
+            className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth="2"
+            >
+              <circle cx="5" cy="12" r="1" />
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="19" cy="12" r="1" />
+            </svg>
+          </button>
+
+          {showDesktopOptions && (
+            <PostOptionsPopup
+              post={post}
+              isOwner={isOwner}
+              onClose={() => setShowDesktopOptions(false)}
+              anchorRef={optionsRef}
+            />
+          )}
+        </div>
       </div>
 
       {/* Image */}
@@ -721,12 +947,13 @@ function PostCard({ post, onDelete }) {
         onClick={handleImageClick}
         src={post.imageUrl}
         alt=""
-        className="w-full max-h-[700px] object-contain block md:cursor-pointer"
+        className="w-full max-h-[950px] object-cover block md:cursor-pointer"
       />
 
       {/* Actions */}
       <div className="px-3.5 pt-2.5 pb-4">
         <div className="flex items-center gap-1 mb-2">
+          {/* Like */}
           <button
             onClick={() => setLiked(!liked)}
             className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer"
@@ -737,7 +964,7 @@ function PostCard({ post, onDelete }) {
               viewBox="0 0 24 24"
               fill={liked ? "#ef4444" : "none"}
               stroke={liked ? "#ef4444" : "rgba(255,255,255,0.85)"}
-              strokeWidth="2"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -745,13 +972,11 @@ function PostCard({ post, onDelete }) {
             </svg>
           </button>
 
+          {/* Comment */}
           <button
             onClick={() => {
-              if (window.innerWidth < 768) {
-                setShowMobileComments(true);
-              } else {
-                setSelectedPost(post);
-              }
+              if (window.innerWidth < 768) setShowMobileComments(true);
+              else setSelectedPost(post);
             }}
             className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer"
           >
@@ -761,27 +986,41 @@ function PostCard({ post, onDelete }) {
               viewBox="0 0 24 24"
               fill="none"
               stroke="rgba(255,255,255,0.85)"
-              strokeWidth="2"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10a9.954 9.954 0 0 1-1.515 5.31L22 22l-4.69-1.515A9.954 9.954 0 0 1 12 22z" />
             </svg>
           </button>
 
-          <button className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer ml-auto">
+          {/* Share — mobile only */}
+          <button
+            onClick={async () => {
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: `${post.user.username}'s post`,
+                    text: post.caption || "Check out this post",
+                    url: `${window.location.origin}/post/${post._id}`,
+                  });
+                } catch (err) {}
+              }
+            }}
+            className="md:hidden p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer ml-auto"
+          >
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
               stroke="rgba(255,255,255,0.85)"
-              strokeWidth="2"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polygon points="22 3 2 10 22 21 22 3" />
-              <line x1="12" y1="12" x2="22" y2="3" />
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
           </button>
         </div>
@@ -801,11 +1040,8 @@ function PostCard({ post, onDelete }) {
 
         <p
           onClick={() => {
-            if (window.innerWidth < 768) {
-              setShowMobileComments(true);
-            } else {
-              setSelectedPost(post);
-            }
+            if (window.innerWidth < 768) setShowMobileComments(true);
+            else setSelectedPost(post);
           }}
           className="text-[13px] text-white/35 cursor-pointer mb-2 tracking-wide"
         >
@@ -818,23 +1054,6 @@ function PostCard({ post, onDelete }) {
             day: "numeric",
           })}
         </p>
-
-        <div className="hidden md:flex items-center gap-2 border-t border-white/[0.07] pt-2.5">
-          <input
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a comment…"
-            className="flex-1 bg-transparent border-none outline-none text-[13px] text-white/70 placeholder-white/30 tracking-wide"
-          />
-          {comment.trim() && (
-            <button
-              onClick={() => setComment("")}
-              className="text-[12px] font-semibold text-blue-400 bg-transparent border-none cursor-pointer tracking-wide"
-            >
-              Post
-            </button>
-          )}
-        </div>
       </div>
 
       {selectedPost && (
@@ -849,6 +1068,14 @@ function PostCard({ post, onDelete }) {
         <CommentsBottomSheet
           post={post}
           onClose={() => setShowMobileComments(false)}
+        />
+      )}
+
+      {showMobileOptions && (
+        <PostOptionsSheet
+          post={post}
+          isOwner={isOwner}
+          onClose={() => setShowMobileOptions(false)}
         />
       )}
     </div>
