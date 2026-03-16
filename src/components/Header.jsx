@@ -1,6 +1,6 @@
 // import React, { useContext } from 'react'
 
-// import {useNavigate} from 'react-router-dom' 
+// import {useNavigate} from 'react-router-dom'
 // import { useAuth } from '../hooks/useAuth';
 // import { websocketContext } from '../context/WebSocket';
 
@@ -12,11 +12,10 @@
 //   const { wsConnected } =
 //     useContext(websocketContext);
 
-  
 //     const handleLogOut =() => {
 //       logout();
 //       navigate("/");
-//     } 
+//     }
 
 //   if (loading) return null; // or spinner
 //   return (
@@ -53,13 +52,13 @@
 //               Login
 //             </button>
 //             <button
-//               className="px-3 md:px-4 py-2 rounded-md  text-base 
-//               md:text-lg 
+//               className="px-3 md:px-4 py-2 rounded-md  text-base
+//               md:text-lg
 //               font-semibold
 //               text-white
 //               bg-gradient-to-r from-purple-700 to-indigo-800
 //               hover:scale-105
-//               transition-all 
+//               transition-all
 //               duration-300
 //               shadow-xl
 //               text-sm
@@ -92,9 +91,124 @@
 //       </div>
 //     </header>
 //   );
-// } 
+// }
 
 // export default Header
+
+// import React, { useContext } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { useAuth } from "../hooks/useAuth";
+// import { websocketContext } from "../context/WebSocket";
+// import { LogOut, Wifi, WifiOff } from "lucide-react";
+
+// function Header() {
+//   const navigate = useNavigate();
+//   const { user, loading, logout } = useAuth();
+//   const { wsConnected } = useContext(websocketContext);
+
+//   const handleLogOut = () => {
+//     logout();
+//     navigate("/");
+//   };
+
+//   if (loading) return null;
+
+//   return (
+//     <header className="
+//       sticky top-0 z-[998]
+//       w-full
+//       flex items-center justify-between
+//       px-4 sm:px-6 md:px-10
+//       py-3 md:py-4
+//       bg-black/80 backdrop-blur-xl
+//       border-b border-white/10
+//     ">
+
+//       {/* ── LOGO ── */}
+//       <div
+//         onClick={() => { window.location.href = "/"; }}
+//         className="flex items-center gap-2 cursor-pointer group"
+//       >
+//         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-200">
+//           <span className="text-white text-[11px] font-black tracking-tight">HS</span>
+//         </div>
+//         <span className="text-[15px] font-bold text-white tracking-tight hidden sm:block group-hover:text-white/80 transition-colors duration-200">
+//           HelloStranger
+//         </span>
+//       </div>
+
+//       {/* ── RIGHT SIDE ── */}
+//       <div className="flex items-center gap-2 sm:gap-3">
+//         {!user ? (
+//           <>
+//             <button
+//               onClick={() => navigate("/login")}
+//               className="
+//                 px-4 py-2 rounded-xl
+//                 text-[13px] font-semibold text-white/70 hover:text-white
+//                 border border-white/10 hover:bg-white/8
+//                 active:scale-95 transition-all duration-150 tracking-wide
+//               "
+//             >
+//               Login
+//             </button>
+//             <button
+//               onClick={() => navigate("/join")}
+//               className="
+//                 px-4 py-2 rounded-xl
+//                 text-[13px] font-semibold text-white
+//                 bg-indigo-600 hover:bg-indigo-500
+//                 active:scale-95 transition-all duration-150 tracking-wide
+//                 shadow-[0_0_20px_rgba(99,102,241,0.3)]
+//                 hover:shadow-[0_0_28px_rgba(99,102,241,0.45)]
+//               "
+//             >
+//               Join Now
+//             </button>
+//           </>
+//         ) : (
+//           <>
+//             {/* WS status + username */}
+//             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/8">
+//               {wsConnected ? (
+//                 <Wifi size={12} className="text-emerald-400 flex-shrink-0" />
+//               ) : (
+//                 <WifiOff size={12} className="text-white/25 flex-shrink-0" />
+//               )}
+//               <span className="text-[12px] text-white/50 font-medium tracking-wide truncate max-w-[100px]">
+//                 {user.username}
+//               </span>
+//             </div>
+
+//             {/* Mobile — just the dot indicator */}
+//             <div className="flex sm:hidden items-center gap-1.5">
+//               <div className={`w-1.5 h-1.5 rounded-full ${wsConnected ? "bg-emerald-400" : "bg-white/20"}`} />
+//               <span className="text-[12px] text-white/50 font-medium">{user.username}</span>
+//             </div>
+
+//             {/* Logout */}
+//             <button
+//               onClick={handleLogOut}
+//               className="
+//                 flex items-center gap-1.5
+//                 px-3 py-2 rounded-xl
+//                 text-[13px] font-semibold
+//                 text-white/60 hover:text-white
+//                 border border-white/10 hover:bg-white/8
+//                 active:scale-95 transition-all duration-150
+//               "
+//             >
+//               <LogOut size={14} />
+//               <span className="hidden sm:block tracking-wide">Logout</span>
+//             </button>
+//           </>
+//         )}
+//       </div>
+//     </header>
+//   );
+// }
+
+// export default Header;
 
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
@@ -115,7 +229,8 @@ function Header() {
   if (loading) return null;
 
   return (
-    <header className="
+    <header
+      className="
       sticky top-0 z-[998]
       w-full
       flex items-center justify-between
@@ -123,15 +238,20 @@ function Header() {
       py-3 md:py-4
       bg-black/80 backdrop-blur-xl
       border-b border-white/10
-    ">
-
+    "
+    >
       {/* ── LOGO ── */}
       <div
-        onClick={() => { window.location.href = "/"; }}
+        onClick={() => {
+          window.location.href = "/";
+        }}
         className="flex items-center gap-2 cursor-pointer group"
       >
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-200">
-          <span className="text-white text-[11px] font-black tracking-tight">HS</span>
+          {/* ✅ font-size kept at 11px here — this is a logo span, not an input, so no zoom risk */}
+          <span className="text-white text-[11px] font-black tracking-tight">
+            HS
+          </span>
         </div>
         <span className="text-[15px] font-bold text-white tracking-tight hidden sm:block group-hover:text-white/80 transition-colors duration-200">
           HelloStranger
@@ -146,10 +266,13 @@ function Header() {
               onClick={() => navigate("/login")}
               className="
                 px-4 py-2 rounded-xl
-                text-[13px] font-semibold text-white/70 hover:text-white
+                text-[16px] font-semibold text-white/70 hover:text-white
                 border border-white/10 hover:bg-white/8
                 active:scale-95 transition-all duration-150 tracking-wide
               "
+              // ✅ Changed from text-[13px] to text-[16px]
+              // Buttons are not inputs, but 13px can still feel tiny on mobile tap targets
+              // 16px also makes it look cleaner on mobile
             >
               Login
             </button>
@@ -157,12 +280,13 @@ function Header() {
               onClick={() => navigate("/join")}
               className="
                 px-4 py-2 rounded-xl
-                text-[13px] font-semibold text-white
+                text-[16px] font-semibold text-white
                 bg-indigo-600 hover:bg-indigo-500
                 active:scale-95 transition-all duration-150 tracking-wide
                 shadow-[0_0_20px_rgba(99,102,241,0.3)]
                 hover:shadow-[0_0_28px_rgba(99,102,241,0.45)]
               "
+              // ✅ Same — 13px → 16px
             >
               Join Now
             </button>
@@ -177,14 +301,19 @@ function Header() {
                 <WifiOff size={12} className="text-white/25 flex-shrink-0" />
               )}
               <span className="text-[12px] text-white/50 font-medium tracking-wide truncate max-w-[100px]">
+                {/* ✅ This is display text, not an input — 12px here is fine, no zoom risk */}
                 {user.username}
               </span>
             </div>
 
             {/* Mobile — just the dot indicator */}
             <div className="flex sm:hidden items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${wsConnected ? "bg-emerald-400" : "bg-white/20"}`} />
-              <span className="text-[12px] text-white/50 font-medium">{user.username}</span>
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${wsConnected ? "bg-emerald-400" : "bg-white/20"}`}
+              />
+              <span className="text-[12px] text-white/50 font-medium">
+                {user.username}
+              </span>
             </div>
 
             {/* Logout */}
@@ -193,11 +322,12 @@ function Header() {
               className="
                 flex items-center gap-1.5
                 px-3 py-2 rounded-xl
-                text-[13px] font-semibold
+                text-[16px] font-semibold
                 text-white/60 hover:text-white
                 border border-white/10 hover:bg-white/8
                 active:scale-95 transition-all duration-150
               "
+              // ✅ 13px → 16px
             >
               <LogOut size={14} />
               <span className="hidden sm:block tracking-wide">Logout</span>

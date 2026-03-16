@@ -129,8 +129,13 @@ select {
 }
 
 
-input,
-textarea,
-select {
-  @apply text-base;
+/* ✅ Prevents zoom on input focus on iOS/Android */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* ✅ Fallback for browsers that don't support dvh */
+.layout-root {
+  height: 100vh;
+  height: 100dvh;
 }
