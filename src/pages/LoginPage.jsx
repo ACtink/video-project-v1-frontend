@@ -171,6 +171,7 @@ const LoginPage = () => {
       await refreshUser();
       navigate("/");
     } catch (err) {
+      console.log("Login error:", err);
       setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);

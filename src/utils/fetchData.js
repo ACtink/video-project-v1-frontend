@@ -1,14 +1,15 @@
-
-
-
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 
 function fetchData(url, options = {}) {
   return fetch(`${BASE_URL}${url}`, options)
-    .then((response) => {
+    .then(async (response) => {
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        const errorMessage =
+          errorData?.message ||
+          errorData?.error ||
+          `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       return response;
     })
@@ -18,4 +19,4 @@ function fetchData(url, options = {}) {
     });
 }
 
-export default fetchData;   
+export default fetchData;

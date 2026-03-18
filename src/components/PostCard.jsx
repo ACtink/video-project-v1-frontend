@@ -887,7 +887,7 @@ function PostCard({ post, onDelete }) {
         {/* Avatar + username — navigates to profile */}
         <div
           onClick={() => navigate(`/profile/${post.user.username}`)}
-          className="flex items-center gap-2.5 flex-1 cursor-pointer min-w-0"
+          className="flex items-center gap-2.5 cursor-pointer min-w-0"
         >
           {post.user.profilePicture ? (
             <img
@@ -905,41 +905,47 @@ function PostCard({ post, onDelete }) {
           </span>
         </div>
 
-        {/* Three dots */}
-        <div ref={optionsRef} className="relative flex-shrink-0">
-          <button
-            onClick={() => {
-              if (window.innerWidth < 768) {
-                setShowMobileOptions(true);
-              } else {
-                setShowDesktopOptions((v) => !v);
-              }
-            }}
-            className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="2"
-            >
-              <circle cx="5" cy="12" r="1" />
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="19" cy="12" r="1" />
-            </svg>
-          </button>
+        {/* Spacer — pushes three dots to the right */}
+        <div className="flex-1" />
 
-          {showDesktopOptions && (
-            <PostOptionsPopup
-              post={post}
-              isOwner={isOwner}
-              onClose={() => setShowDesktopOptions(false)}
-              anchorRef={optionsRef}
-            />
-          )}
-        </div>
+        {/* Three dots */}
+        {/* Three dots */}
+        {!isOwner && (
+          <div ref={optionsRef} className="relative flex-shrink-0">
+            <button
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  setShowMobileOptions(true);
+                } else {
+                  setShowDesktopOptions((v) => !v);
+                }
+              }}
+              className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="2"
+              >
+                <circle cx="5" cy="12" r="1" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="19" cy="12" r="1" />
+              </svg>
+            </button>
+
+            {showDesktopOptions && (
+              <PostOptionsPopup
+                post={post}
+                isOwner={isOwner}
+                onClose={() => setShowDesktopOptions(false)}
+                anchorRef={optionsRef}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Image */}
