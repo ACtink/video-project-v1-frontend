@@ -583,6 +583,297 @@
 
 //};
 
+// import React, {
+//   createContext,
+//   useContext,
+//   useEffect,
+//   useRef,
+//   useState,
+// } from "react";
+
+// import { webRTCContext } from "./WebRTC";
+// import { useAuth } from "../hooks/useAuth";
+
+// export const websocketContext = createContext(null);
+
+// export const WebSocketProvider = ({ children }) => {
+//   const socketRef = useRef(null);
+//   const handlersRef = useRef({});
+//   const sendQueueRef = useRef([]);
+//   const pingIntervalRef = useRef(null);
+
+//   const [wsConnected, setWsConnected] = useState(false);
+
+//   // ✅ FIX: messages now stored per conversation
+//   const [messages, setMessages] = useState({});
+
+//   const { user } = useAuth();
+
+//   const reconnectTimeoutRef = useRef(null);
+
+//   const {
+//     setVideoCallLoader,
+//     cleanupFull,
+//     cleanupRemotePeer,
+//     manualCleanupRef,
+//   } = useContext(webRTCContext);
+
+//   const [uiState, setUistate] = useState("idle");
+
+//   /* ============================================
+//      HANDLE INCOMING MESSAGE (FIXED)
+//   ============================================ */
+
+//   function handleIncomingMessage(message) {
+//     const msg = message.message;
+
+//     const convId = msg.conversationId;
+
+//     setMessages((prev) => {
+//       const existing = prev[convId] || [];
+
+//       const exists = existing.some((m) => m.messageId === msg.messageId);
+
+//       if (exists) return prev;
+
+//       return {
+//         ...prev,
+
+//         [convId]: [
+//           ...existing,
+
+//           {
+//             messageId: msg.messageId,
+
+//             conversationId: convId,
+
+//             from: msg.from,
+
+//             to: user._id,
+
+//             text: msg.text,
+
+//             status: "delivered",
+
+//             createdAt: new Date(msg.createdAt).getTime(),
+//           },
+//         ],
+//       };
+//     });
+//   }
+
+//   /* ============================================
+//      HANDLE ACK (FIXED)
+//   ============================================ */
+
+//   function handleAck({ messageId, status }) {
+//     setMessages((prev) => {
+//       const updated = { ...prev };
+
+//       for (const convId in updated) {
+//         updated[convId] = updated[convId].map((msg) =>
+//           msg.messageId === messageId ? { ...msg, status } : msg,
+//         );
+//       }
+
+//       return updated;
+//     });
+//   }
+
+//   /* ============================================
+//      CONNECT FUNCTION
+//   ============================================ */
+
+//   function connectToWebSocketServer() {
+//     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+//       return socketRef.current;
+//     }
+
+//     const WS_URL = import.meta.env.VITE_WS_URL;
+
+//     const socket = new WebSocket(WS_URL);
+
+//     socketRef.current = socket;
+
+//     socket.onopen = () => {
+//       console.log("WebSocket connected");
+
+//       setWsConnected(true);
+
+//       sendQueueRef.current.forEach((msg) => {
+//         socket.send(JSON.stringify(msg));
+//       });
+
+//       sendQueueRef.current = [];
+//     };
+
+//     socket.onmessage = async (event) => {
+//       try {
+//         const message = JSON.parse(event.data);
+
+//         switch (message.type) {
+//           case "chat_deliver":
+//             handleIncomingMessage(message);
+
+//             // send delivered ack
+//             if (socketRef.current?.readyState === WebSocket.OPEN) {
+//               socketRef.current.send(
+//                 JSON.stringify({
+//                   type: "ack",
+//                   messageId: message.message.messageId,
+//                   status: "delivered",
+//                 }),
+//               );
+//             }
+
+//             break;
+
+//           case "ack":
+//             handleAck(message);
+
+//             break;
+
+//           case "queued_ack":
+//             if (message.success === "ok") setUistate("successfully_queued");
+
+//             break;
+
+//           case "matched_ack":
+//             if (message.success === "ok") setUistate("successfully_matched");
+
+//             break;
+
+//           case "close_ack":
+//             if (message.success === "ok") setUistate("successfully_closed");
+
+//             break;
+
+//           case "queued_and_searching_next_for_you":
+//             setUistate("successfully_skipped_and_searching");
+
+//             setVideoCallLoader(true);
+
+//             manualCleanupRef.current = true;
+
+//             cleanupRemotePeer();
+
+//             break;
+
+//           case "successfully_ended_call":
+//             setUistate("idle");
+
+//             cleanupFull();
+
+//             break;
+//         }
+
+//         handlersRef.current[message.type]?.(message);
+//       } catch {
+//         console.warn("Invalid WS message");
+//       }
+//     };
+
+//     socket.onerror = (error) => {
+//       console.error("WebSocket error:", error);
+//     };
+
+//     socket.onclose = (event) => {
+//       console.log("WebSocket closed:", event.code, event.reason);
+
+//       clearInterval(pingIntervalRef.current);
+
+//       setWsConnected(false);
+
+//       // ✅ auto reconnect after 2 seconds
+//       reconnectTimeoutRef.current = setTimeout(() => {
+//         if (user?._id) {
+//           connectToWebSocketServer();
+//         }
+//       }, 2000);
+//     };
+
+//     return socket;
+//   }
+
+//   /* ============================================
+//      CONNECT WHEN USER READY
+//   ============================================ */
+
+//   useEffect(() => {
+//     if (!user?._id) return;
+
+//     const socket = connectToWebSocketServer();
+
+//     return () => {
+//       if (socket && socket.readyState === WebSocket.OPEN) {
+//         socket.close();
+//       }
+//     };
+//   }, [user]);
+
+//   useEffect(() => {
+//     const handleVisibility = () => {
+//       if (!document.hidden) {
+//         if (
+//           !socketRef.current ||
+//           socketRef.current.readyState !== WebSocket.OPEN
+//         ) {
+//           console.log("Reconnecting websocket after tab focus");
+
+//           connectToWebSocketServer();
+//         }
+//       }
+//     };
+
+//     document.addEventListener("visibilitychange", handleVisibility);
+
+//     return () => {
+//       document.removeEventListener("visibilitychange", handleVisibility);
+//     };
+//   }, [user]);
+
+//   /* ============================================
+//      SEND SIGNAL
+//   ============================================ */
+
+//   const sendSignal = (msg) => {
+//     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+//       console.log("Queued message:", msg);
+
+//       sendQueueRef.current.push(msg);
+
+//       return;
+//     }
+
+//     socketRef.current.send(JSON.stringify(msg));
+//   };
+
+//   const registerHandlers = (handlers) => {
+//     handlersRef.current = handlers;
+//   };
+
+//   return (
+//     <websocketContext.Provider
+//       value={{
+//         sendSignal,
+
+//         registerHandlers,
+
+//         wsConnected,
+
+//         uiState,
+
+//         setUistate,
+
+//         messages, // now object
+//         setMessages, // still usable
+//       }}
+//     >
+//       {children}
+//     </websocketContext.Provider>
+//   );
+// };
+
 import React, {
   createContext,
   useContext,
@@ -601,15 +892,13 @@ export const WebSocketProvider = ({ children }) => {
   const handlersRef = useRef({});
   const sendQueueRef = useRef([]);
   const pingIntervalRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const isIntentionalClose = useRef(false);
 
   const [wsConnected, setWsConnected] = useState(false);
-
-  // ✅ FIX: messages now stored per conversation
   const [messages, setMessages] = useState({});
 
   const { user } = useAuth();
-
-  const reconnectTimeoutRef = useRef(null);
 
   const {
     setVideoCallLoader,
@@ -621,40 +910,28 @@ export const WebSocketProvider = ({ children }) => {
   const [uiState, setUistate] = useState("idle");
 
   /* ============================================
-     HANDLE INCOMING MESSAGE (FIXED)
+     HANDLE INCOMING MESSAGE
   ============================================ */
-
   function handleIncomingMessage(message) {
     const msg = message.message;
-
     const convId = msg.conversationId;
 
     setMessages((prev) => {
       const existing = prev[convId] || [];
-
       const exists = existing.some((m) => m.messageId === msg.messageId);
-
       if (exists) return prev;
 
       return {
         ...prev,
-
         [convId]: [
           ...existing,
-
           {
             messageId: msg.messageId,
-
             conversationId: convId,
-
             from: msg.from,
-
             to: user._id,
-
             text: msg.text,
-
             status: "delivered",
-
             createdAt: new Date(msg.createdAt).getTime(),
           },
         ],
@@ -663,48 +940,75 @@ export const WebSocketProvider = ({ children }) => {
   }
 
   /* ============================================
-     HANDLE ACK (FIXED)
+     HANDLE ACK
   ============================================ */
-
   function handleAck({ messageId, status }) {
     setMessages((prev) => {
       const updated = { ...prev };
-
       for (const convId in updated) {
         updated[convId] = updated[convId].map((msg) =>
           msg.messageId === messageId ? { ...msg, status } : msg,
         );
       }
-
       return updated;
     });
   }
 
   /* ============================================
+     SCHEDULE RECONNECT
+  ============================================ */
+  function scheduleReconnect() {
+    // Clear any existing reconnect timer before scheduling a new one
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+    reconnectTimeoutRef.current = setTimeout(() => {
+      if (user?._id && !isIntentionalClose.current) {
+        console.log("Attempting reconnect...");
+        connectToWebSocketServer();
+      }
+    }, 2000);
+  }
+
+  /* ============================================
      CONNECT FUNCTION
   ============================================ */
-
   function connectToWebSocketServer() {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    // Already open — do nothing
+    if (socketRef.current?.readyState === WebSocket.OPEN)
       return socketRef.current;
-    }
+
+    // Already connecting — do nothing
+    if (socketRef.current?.readyState === WebSocket.CONNECTING)
+      return socketRef.current;
+
+    isIntentionalClose.current = false;
 
     const WS_URL = import.meta.env.VITE_WS_URL;
-
     const socket = new WebSocket(WS_URL);
-
     socketRef.current = socket;
 
     socket.onopen = () => {
       console.log("WebSocket connected");
-
       setWsConnected(true);
 
-      sendQueueRef.current.forEach((msg) => {
-        socket.send(JSON.stringify(msg));
-      });
+      // Clear any pending reconnect since we're now connected
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
 
+      // Flush queued messages
+      sendQueueRef.current.forEach((msg) => socket.send(JSON.stringify(msg)));
       sendQueueRef.current = [];
+
+      // Heartbeat ping every 25s to keep connection alive
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 25000);
     };
 
     socket.onmessage = async (event) => {
@@ -714,8 +1018,6 @@ export const WebSocketProvider = ({ children }) => {
         switch (message.type) {
           case "chat_deliver":
             handleIncomingMessage(message);
-
-            // send delivered ack
             if (socketRef.current?.readyState === WebSocket.OPEN) {
               socketRef.current.send(
                 JSON.stringify({
@@ -725,45 +1027,38 @@ export const WebSocketProvider = ({ children }) => {
                 }),
               );
             }
-
             break;
 
           case "ack":
             handleAck(message);
-
             break;
 
           case "queued_ack":
             if (message.success === "ok") setUistate("successfully_queued");
-
             break;
 
           case "matched_ack":
             if (message.success === "ok") setUistate("successfully_matched");
-
             break;
 
           case "close_ack":
             if (message.success === "ok") setUistate("successfully_closed");
-
             break;
 
           case "queued_and_searching_next_for_you":
             setUistate("successfully_skipped_and_searching");
-
             setVideoCallLoader(true);
-
             manualCleanupRef.current = true;
-
             cleanupRemotePeer();
-
             break;
 
           case "successfully_ended_call":
             setUistate("idle");
-
             cleanupFull();
+            break;
 
+          case "pong":
+            // Server acknowledged our ping — connection is healthy
             break;
         }
 
@@ -779,17 +1074,13 @@ export const WebSocketProvider = ({ children }) => {
 
     socket.onclose = (event) => {
       console.log("WebSocket closed:", event.code, event.reason);
-
       clearInterval(pingIntervalRef.current);
-
       setWsConnected(false);
 
-      // ✅ auto reconnect after 2 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        if (user?._id) {
-          connectToWebSocketServer();
-        }
-      }, 2000);
+      // Only reconnect if it wasn't closed intentionally
+      if (!isIntentionalClose.current) {
+        scheduleReconnect();
+      }
     };
 
     return socket;
@@ -798,55 +1089,65 @@ export const WebSocketProvider = ({ children }) => {
   /* ============================================
      CONNECT WHEN USER READY
   ============================================ */
-
   useEffect(() => {
     if (!user?._id) return;
 
-    const socket = connectToWebSocketServer();
+    connectToWebSocketServer();
 
     return () => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close();
+      // Mark as intentional so onclose doesn't trigger reconnect on unmount
+      isIntentionalClose.current = true;
+      clearTimeout(reconnectTimeoutRef.current);
+      clearInterval(pingIntervalRef.current);
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.close();
       }
     };
   }, [user]);
 
-
-
+  /* ============================================
+     RECONNECT ON TAB FOCUS / COMING BACK TO APP
+  ============================================ */
   useEffect(() => {
     const handleVisibility = () => {
-      if (!document.hidden) {
-        if (
-          !socketRef.current ||
-          socketRef.current.readyState !== WebSocket.OPEN
-        ) {
+      if (!document.hidden && user?._id) {
+        const state = socketRef.current?.readyState;
+        if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
           console.log("Reconnecting websocket after tab focus");
+          connectToWebSocketServer();
+        }
+      }
+    };
 
+    // Also reconnect on network coming back online
+    const handleOnline = () => {
+      if (user?._id) {
+        const state = socketRef.current?.readyState;
+        if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
+          console.log("Reconnecting websocket after network restore");
           connectToWebSocketServer();
         }
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
     };
   }, [user]);
 
   /* ============================================
      SEND SIGNAL
   ============================================ */
-
   const sendSignal = (msg) => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       console.log("Queued message:", msg);
-
       sendQueueRef.current.push(msg);
-
       return;
     }
-
     socketRef.current.send(JSON.stringify(msg));
   };
 
@@ -858,17 +1159,12 @@ export const WebSocketProvider = ({ children }) => {
     <websocketContext.Provider
       value={{
         sendSignal,
-
         registerHandlers,
-
         wsConnected,
-
         uiState,
-
         setUistate,
-
-        messages, // now object
-        setMessages, // still usable
+        messages,
+        setMessages,
       }}
     >
       {children}

@@ -831,6 +831,22 @@ function ChatView() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+  const handleNewMessage = (chatId, messageText) => {
+    setChats((prev) => {
+      const updated = prev.map((c) =>
+        c._id === chatId ? { ...c, lastMessage: messageText } : c,
+      );
+      // move the updated chat to the top
+      const chatIndex = updated.findIndex((c) => c._id === chatId);
+      if (chatIndex > 0) {
+        const [chat] = updated.splice(chatIndex, 1);
+        updated.unshift(chat);
+      }
+      return [...updated];
+    });
+  };
+
   const handleDeleteChat = async (chatId) => {
     const confirmed = window.confirm("Delete this conversation?");
     if (!confirmed) return;
@@ -1015,7 +1031,11 @@ function ChatView() {
               </p>
             </div>
           ) : (
-            <ChatBox chat={activeChat} onBack={() => setActiveChat(null)} />
+            <ChatBox
+              chat={activeChat}
+              onBack={() => setActiveChat(null)}
+              onNewMessage={handleNewMessage} // ← add this
+            />
           )}
         </div>
       </div>

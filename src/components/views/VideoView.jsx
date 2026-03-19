@@ -1516,9 +1516,9 @@ function VideoView({ onUiStateChange }) {
             autoPlay
             playsInline
             className={`
-              w-full h-full object-cover transition-opacity duration-300
-              ${!videoCallLoader && !showUserCard ? "opacity-100" : "opacity-0"}
-            `}
+                        w-full h-full object-cover transition-opacity duration-300
+                        ${!videoCallLoader && !showUserCard && !matchedUser ? "opacity-100" : "opacity-0"}
+                      `}
           />
           {videoCallLoader && uiState !== "idle" && (
             <Loader

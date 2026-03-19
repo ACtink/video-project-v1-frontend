@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useRef, useState } from "react";
+import React, { createContext, use, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { getCountryNameFromCode } from "../utils/countryName";
 
@@ -68,6 +68,8 @@ const manualCleanupRef = useRef(false);
       setStrangerUserProfileData(msg);
 
 
+
+
       setVideoCallLoader(false);
     }
   };
@@ -81,12 +83,13 @@ const manualCleanupRef = useRef(false);
 
       console.log("user ki info in datachannel open--->", user);
 
+  
       sendJsonMessage({
         type: "userInfo",
         data: {
           id: user?._id,
           username: user?.username,
-          country: getCountryNameFromCode(user?.country),
+          country: user?.country,
         },
       });
 

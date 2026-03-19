@@ -3979,7 +3979,7 @@ function MessageSkeleton() {
   );
 }
 
-function ChatBox({ chat, onBack }) {
+function ChatBox({ chat, onBack, onNewMessage }) {
   const { user } = useAuth();
   const { sendSignal, messages, setMessages } = useContext(websocketContext);
   const [text, setText] = useState("");
@@ -4059,10 +4059,49 @@ function ChatBox({ chat, onBack }) {
     });
   };
 
+  // const handleSend = async () => {
+  //   if (!text.trim()) return;
+  //   const messageId = uuidv4();
+  //   const createdAt = Date.now();
+  //   setMessages((prev) => {
+  //     const existing = prev[conversationId] || [];
+  //     return {
+  //       ...prev,
+  //       [conversationId]: [
+  //         ...existing,
+  //         {
+  //           messageId,
+  //           conversationId,
+  //           from: myUserId,
+  //           to: receiverId,
+  //           text,
+  //           status: "sending",
+  //           createdAt,
+  //         },
+  //       ],
+  //     };
+  //   });
+  //   sendSignal({
+  //     type: "chat_message",
+  //     messageId,
+  //     conversationId,
+  //     to: receiverId,
+  //     text,
+  //     createdAt,
+  //   });
+  //   setText("");
+  //   setShowEmojiPicker(false);
+  //   if (textareaRef.current) {
+  //     textareaRef.current.style.height = "auto";
+  //   }
+  // };
+
   const handleSend = async () => {
     if (!text.trim()) return;
     const messageId = uuidv4();
     const createdAt = Date.now();
+    const messageText = text; // ← capture before clearing
+
     setMessages((prev) => {
       const existing = prev[conversationId] || [];
       return {
@@ -4074,21 +4113,25 @@ function ChatBox({ chat, onBack }) {
             conversationId,
             from: myUserId,
             to: receiverId,
-            text,
+            text: messageText,
             status: "sending",
             createdAt,
           },
         ],
       };
     });
+
     sendSignal({
       type: "chat_message",
       messageId,
       conversationId,
       to: receiverId,
-      text,
+      text: messageText,
       createdAt,
     });
+
+    onNewMessage?.(conversationId, messageText); // ← add this
+
     setText("");
     setShowEmojiPicker(false);
     if (textareaRef.current) {
