@@ -776,12 +776,13 @@
 
 // export default ChatView;
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import ChatBox from "./ChatBox";
 import fetchData from "../../utils/fetchData";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { websocketContext } from "../../context/WebSocket";
 
 function ChatView() {
   const [activeChat, setActiveChat] = useState(null);
@@ -796,6 +797,31 @@ function ChatView() {
 
   const queryParams = new URLSearchParams(location.search);
   const conversationIdFromQuery = queryParams.get("conversation");
+   const { messages } = useContext(websocketContext);
+
+  useEffect(() => {
+    const allMessages = Object.entries(messages);
+    if (!allMessages.length) return;
+
+    allMessages.forEach(([chatId, msgs]) => {
+      if (!msgs.length) return;
+      const latest = msgs[msgs.length - 1];
+      // only update if message is from the other user (not me)
+      if (latest.from !== user?._id) {
+        setChats((prev) => {
+          const updated = prev.map((c) =>
+            c._id === chatId ? { ...c, lastMessage: latest.text } : c,
+          );
+          const chatIndex = updated.findIndex((c) => c._id === chatId);
+          if (chatIndex > 0) {
+            const [chat] = updated.splice(chatIndex, 1);
+            updated.unshift(chat);
+          }
+          return [...updated];
+        });
+      }
+    });
+  }, [messages]);
 
   useEffect(() => {
     const fetchChats = async () => {

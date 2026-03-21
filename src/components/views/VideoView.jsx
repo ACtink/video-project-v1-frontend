@@ -1404,7 +1404,14 @@ function VideoView({ onUiStateChange }) {
     return () => clearTimeout(timer);
   }, [videoCallLoader, matchedUser]);
 
-  const showAddFriend = !videoCallLoader && !showUserCard && uiState !== "idle";
+  // const showAddFriend = !videoCallLoader && !showUserCard && uiState !== "idle";
+
+  // After
+  const showAddFriend =
+    !videoCallLoader &&
+    !showUserCard &&
+    uiState !== "idle" &&
+    allGoodAndConnected;
 
   const onPointerDown = useCallback(
     (e) => {
@@ -1527,7 +1534,7 @@ function VideoView({ onUiStateChange }) {
             />
           )}
           {showUserCard && <DisplayUserInfoCard strangerInfo={matchedUser} />}
-          {showAddFriend && allGoodAndConnected && (
+          {showAddFriend && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
               <AddFriend
                 uiState={uiState}
@@ -1540,7 +1547,7 @@ function VideoView({ onUiStateChange }) {
 
       {/* ===================== CONTROLS + CHAT ===================== */}
       {/* ✅ flex-shrink-0 — never compressed, always stays at fixed height */}
-      <div className="h-[180px] xl:h-[200px] flex flex-row flex-shrink-0 border-t border-white/10 bg-[#020617]/80 backdrop-blur-md">
+      <div className="h-[120px] xl:h-[200px] flex flex-row flex-shrink-0 border-t border-white/10 bg-[#020617]/80 backdrop-blur-md">
         {/* CONTROLS */}
         <div className="xl:w-1/2 w-full flex items-center justify-center px-6 border-r border-white/10">
           <div className="flex items-center justify-center gap-3 w-full max-w-[420px]">
@@ -1584,7 +1591,8 @@ function VideoView({ onUiStateChange }) {
 
             {/* NEXT + STOP */}
             {(allGoodAndConnected ||
-              uiState === "successfully_skipped_and_searching") && (
+              uiState === "successfully_skipped_and_searching" ||
+              uiState === "successfully_matched") && (
               <>
                 <button
                   onClick={handleNext}

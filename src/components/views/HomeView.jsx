@@ -529,7 +529,7 @@ function HomeView({ openProfile }) {
         </div>
 
         {/* FEED */}
-        <div className="lg:col-span-6 space-y-6 transition-opacity duration-500">
+        <div className="lg:col-span-6 transition-opacity duration-500">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonPost key={i} />)
             : posts.map((post) => (

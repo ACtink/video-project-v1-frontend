@@ -1157,6 +1157,532 @@
 
 // export default ProfileView;
 
+// import { useAuth } from "../../hooks/useAuth";
+// import { useEffect, useRef, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import ProfilePhotoModal from "../ProfilePhotoModal";
+// import FollowersFollowingModal from "../FollowersFollowingModal";
+// import CreatePostModal from "../CreatePostModal";
+// import ProfilePosts from "../ProfilePosts";
+// import fetchData from "../../utils/fetchData";
+// import { useParams } from "react-router-dom";
+// import ProfileSkeleton from "../ProfileSkeleton";
+// import { Home } from "lucide-react";
+
+// function ProfileView() {
+//   const { user: authUser, setUser } = useAuth();
+//   const { username } = useParams();
+//   const navigate = useNavigate();
+//   console.log("authUser in ProfileView:", authUser);
+
+//   const [open, setOpen] = useState(false);
+//   const [listOpen, setListOpen] = useState(false);
+//   const [listType, setListType] = useState(null);
+//   const fileInputRef = useRef(null);
+//   const [followed, setFollowed] = useState(false);
+//   const [loadingProfile, setLoadingProfile] = useState(true);
+//   const [user, setProfileUser] = useState(null);
+//   const [visible, setVisible] = useState(false); // ← fade-in trigger
+
+//   const [messagingLoading, setMessagingLoading] = useState(false);
+// const [followLoading, setFollowLoading] = useState(false);
+
+//   useEffect(() => {
+//     setLoadingProfile(true);
+//     setVisible(false); // reset fade on every profile change
+//     if (username) {
+//       const fetchProfile = async () => {
+//         try {
+//           const res = await fetchData(`/api/users/profile/${username}`, {
+//             credentials: "include",
+//           });
+//           if (!res.ok) throw new Error();
+//           const data = await res.json();
+//           console.log("Fetched profile data:", data);
+//           setProfileUser(data);
+
+//         } catch {
+//           setProfileUser(null);
+//         } finally {
+//           setLoadingProfile(false);
+//         }
+//       };
+//       fetchProfile();
+//     } else {
+//       setProfileUser(authUser);
+//       setLoadingProfile(false);
+//     }
+//   }, [username, authUser]);
+
+//   // once loading is done, trigger fade-in on next tick
+//   useEffect(() => {
+//     if (!loadingProfile && user) {
+//       requestAnimationFrame(() => {
+//         requestAnimationFrame(() => setVisible(true));
+//       });
+//     }
+//   }, [loadingProfile, user]);
+
+//   const [createOpen, setCreateOpen] = useState(false);
+
+//   const isMe = user?._id === authUser?._id;
+
+//   const isFollowing =
+//     !!authUser &&
+//     !!user &&
+//     user.followers?.some((id) => id.toString() === authUser._id.toString());
+
+//   const handleUploadClick = () => {
+//     if (fileInputRef.current) fileInputRef.current.click();
+//   };
+
+//   useEffect(() => {
+//     if (followed) {
+//       setUser((prevUser) => {
+//         if (!prevUser) return prevUser;
+//         return {
+//           ...prevUser,
+//           following: [...prevUser.following, user._id],
+//         };
+//       });
+//     }
+//   }, [followed, user, setUser]);
+// const handleFollowUser = async () => {
+//   if (!user?._id || isFollowing) return;
+//   try {
+//     setFollowLoading(true);
+//     await fetchData(`/api/users/${user._id}/follow`, {
+//       method: "POST",
+//       credentials: "include",
+//       headers: { "Content-Type": "application/json" },
+//     });
+//     setProfileUser((prev) => ({
+//       ...prev,
+//       followers: [...prev.followers, authUser._id.toString()],
+//     }));
+//   } catch (err) {
+//     console.error("Follow error:", err);
+//   } finally {
+//     setFollowLoading(false);
+//   }
+// };
+
+//   // const handleUnfollowUser = async () => {
+//   //   if (!user?._id || !isFollowing) return;
+//   //   try {
+//   //     await fetchData(`/api/users/${user._id}/unfollow`, {
+//   //       method: "POST",
+//   //       credentials: "include",
+//   //       headers: { "Content-Type": "application/json" },
+//   //     });
+//   //     setProfileUser((prev) => ({
+//   //       ...prev,
+//   //       followers: prev.followers.filter(
+//   //         (id) => id.toString() !== authUser._id.toString(),
+//   //       ),
+//   //     }));
+//   //   } catch (err) {
+//   //     console.error("Unfollow error:", err);
+//   //   }
+//   // };
+
+//   const handleUnfollowUser = async () => {
+//     if (!user?._id || !isFollowing) return;
+//     try {
+//       setFollowLoading(true);
+//       await fetchData(`/api/users/${user._id}/unfollow`, {
+//         method: "POST",
+//         credentials: "include",
+//         headers: { "Content-Type": "application/json" },
+//       });
+//       setProfileUser((prev) => ({
+//         ...prev,
+//         followers: prev.followers.filter(
+//           (id) => id.toString() !== authUser._id.toString(),
+//         ),
+//       }));
+//     } catch (err) {
+//       console.error("Unfollow error:", err);
+//     } finally {
+//       setFollowLoading(false);
+//     }
+//   };
+
+//   const handleFileChange = async (e) => {
+//     const file = e.target.files[0];
+//     if (!file) return;
+//     if (!file.type.startsWith("image/")) {
+//       alert("Please upload an image file");
+//       return;
+//     }
+//     if (file.size > 5 * 1024 * 1024) {
+//       alert("Image must be under 5MB");
+//       return;
+//     }
+//     try {
+//       const formData = new FormData();
+//       formData.append("profilePicture", file);
+//       const res = await fetchData("/api/upload/profile-picture", {
+//         method: "PUT",
+//         credentials: "include",
+//         body: formData,
+//       });
+//       if (!res.ok) throw new Error("Upload failed");
+//       const updatedUser = await res.json();
+//       setUser(updatedUser);
+//       setOpen(false);
+//     } catch (err) {
+//       console.error("Profile picture upload failed", err);
+//       alert("Failed to upload profile picture");
+//     } finally {
+//       e.target.value = "";
+//     }
+//   };
+
+//   const handleRemovePhoto = async () => {
+//     try {
+//       console.log("Remove profile photo");
+//       const res = await fetchData("/api/upload/profile-picture", {
+//         method: "DELETE",
+//         credentials: "include",
+//       });
+//       if (!res.ok) {
+//         const err = await res.json();
+//         throw new Error(err?.error || "Failed to remove photo");
+//       }
+//       const data = await res.json();
+//       console.log("Profile photo removed:", data);
+//       window.location.reload();
+//       setOpen(false);
+//     } catch (err) {
+//       console.error(err);
+//       alert(err.message || "Something went wrong");
+//     }
+//   };
+
+//   if (loadingProfile || !user) {
+//     return <ProfileSkeleton />;
+//   }
+
+//   return (
+//     <div
+//       className="bg-black text-white overflow-y-auto h-[calc(100vh-72px-56px)] md:h-[calc(100vh-80px-56px)] flex justify-center"
+//       style={{
+//         opacity: visible ? 1 : 0,
+//         transform: visible ? "translateY(0)" : "translateY(10px)",
+//         transition: "opacity 0.35s ease, transform 0.35s ease",
+//       }}
+//     >
+//       {/* CENTER COLUMN */}
+//       <div className="w-full max-w-[935px] px-4 pt-8 pb-10">
+//         {/* GO BACK / HOME BUTTONS */}
+//         {!isMe && (
+//           <div className="mb-5 flex items-center gap-1">
+//             <button
+//               onClick={() => navigate(-1)}
+//               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
+//             >
+//               <span className="text-base leading-none">←</span>
+//               <span className="hidden sm:inline tracking-wide">Back</span>
+//             </button>
+//             <button
+//               onClick={() => navigate("/")}
+//               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
+//             >
+//               <Home size={18} />
+//               <span className="hidden sm:inline tracking-wide">Home</span>
+//             </button>
+//           </div>
+//         )}
+
+//         {isMe && (
+//           <div className="mb-5 flex items-center">
+//             <button
+//               onClick={() => navigate("/")}
+//               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
+//             >
+//               <Home size={18} />{" "}
+//               <span className="hidden sm:inline tracking-wide">Home</span>
+//             </button>
+//           </div>
+//         )}
+
+//         {/* PROFILE HEADER */}
+//         <div className="flex flex-col sm:flex-row sm:items-start gap-7 sm:gap-14 mb-8">
+//           {/* AVATAR */}
+//           <div
+//             onClick={isMe ? () => setOpen(true) : undefined}
+//             className={`flex justify-center sm:justify-start ${isMe ? "cursor-pointer" : ""}`}
+//           >
+//             <div
+//               className="
+//                 w-24 h-24 sm:w-36 sm:h-36
+//                 rounded-full overflow-hidden
+//                 bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600
+//                 flex items-center justify-center
+//                 ring-[3px] ring-white/10
+//                 transition-opacity duration-200
+//                 hover:opacity-90
+//               "
+//             >
+//               {user?.profilePicture ? (
+//                 <img
+//                   src={user?.profilePicture}
+//                   alt="Profile"
+//                   className="w-full h-full object-cover"
+//                 />
+//               ) : (
+//                 <span className="text-3xl sm:text-4xl font-semibold text-white">
+//                   {user?.username?.[0]?.toUpperCase() || "U"}
+//                 </span>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* RIGHT CONTENT */}
+//           <div className="flex flex-col gap-5 w-full max-w-xl">
+//             {/* STATS */}
+//             <div className="flex justify-around sm:justify-start gap-0 sm:gap-10">
+//               <div className="text-center sm:text-left">
+//                 <p className="text-[15px] font-bold text-white">
+//                   {user?.postsCount || 0}
+//                 </p>
+//                 <p className="text-xs text-white/45 mt-0.5 tracking-wide">
+//                   posts
+//                 </p>
+//               </div>
+//               <div
+//                 className="text-center sm:text-left cursor-pointer group"
+//                 onClick={() => {
+//                   setListType("followers");
+//                   setListOpen(true);
+//                 }}
+//               >
+//                 <p className="text-[15px] font-bold text-white group-hover:text-white/80 transition-colors">
+//                   {user?.followers?.length}
+//                 </p>
+//                 <p className="text-xs text-white/45 mt-0.5 tracking-wide">
+//                   followers
+//                 </p>
+//               </div>
+//               <div
+//                 className="text-center sm:text-left cursor-pointer group"
+//                 onClick={() => {
+//                   setListType("following");
+//                   setListOpen(true);
+//                 }}
+//               >
+//                 <p className="text-[15px] font-bold text-white group-hover:text-white/80 transition-colors">
+//                   {user?.following?.length}
+//                 </p>
+//                 <p className="text-xs text-white/45 mt-0.5 tracking-wide">
+//                   following
+//                 </p>
+//               </div>
+//             </div>
+
+//             {/* USERNAME + FULLNAME + BIO */}
+//             <div className="space-y-1.5">
+//               <div className="flex items-center gap-2">
+//                 <span
+//                   className={`text-[14px] tracking-wide transition-all duration-200 ${
+//                     isMe
+//                       ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
+//                       : "font-semibold text-white/90 hover:text-white"
+//                   }`}
+//                 >
+//                   {isMe ? `@${user?.username}` : user?.username}
+//                 </span>
+//               </div>
+//               {user?.fullName && (
+//                 <p className="text-[13px] text-white font-medium">
+//                   {user.fullName}
+//                 </p>
+//               )}
+//               <p className="text-[13px] text-white/60 leading-relaxed">
+//                 {user?.bio || "Welcome to my profile ✨"}
+//               </p>
+//             </div>
+
+//             {/* ACTION BUTTONS */}
+//             <div className="flex gap-2.5">
+//               {isMe ? (
+//                 <>
+//                   <button
+//                     onClick={() => setCreateOpen(true)}
+//                     className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all duration-150 tracking-wide"
+//                   >
+//                     Create post
+//                   </button>
+//                   <button
+//                     onClick={() => navigate("/edit-profile")}
+//                     className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg border border-white/15 hover:bg-white/8 active:scale-95 transition-all duration-150 tracking-wide text-white/80 hover:text-white"
+//                   >
+//                     Edit profile
+//                   </button>
+//                 </>
+//               ) : isFollowing ? (
+//                 <>
+//                   <button
+//                     onClick={handleUnfollowUser}
+//                     disabled={followLoading}
+//                     className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg border border-white/15 text-white/80 hover:bg-white/8 hover:text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+//                   >
+//                     {followLoading ? (
+//                       <svg
+//                         className="animate-spin h-3.5 w-3.5 text-white"
+//                         xmlns="http://www.w3.org/2000/svg"
+//                         fill="none"
+//                         viewBox="0 0 24 24"
+//                       >
+//                         <circle
+//                           className="opacity-25"
+//                           cx="12"
+//                           cy="12"
+//                           r="10"
+//                           stroke="currentColor"
+//                           strokeWidth="4"
+//                         />
+//                         <path
+//                           className="opacity-75"
+//                           fill="currentColor"
+//                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+//                         />
+//                       </svg>
+//                     ) : (
+//                       "Unfollow"
+//                     )}
+//                   </button>
+//                   <button
+//                     onClick={async () => {
+//                       try {
+//                         setMessagingLoading(true);
+//                         const res = await fetchData(
+//                           `/api/chat/start/${user._id}`,
+//                           {
+//                             method: "POST",
+//                             credentials: "include",
+//                           },
+//                         );
+//                         const data = await res.json();
+//                         navigate(`/chat?conversation=${data._id}`);
+//                       } catch (err) {
+//                         console.error(err);
+//                       } finally {
+//                         setMessagingLoading(false);
+//                       }
+//                     }}
+//                     disabled={messagingLoading}
+//                     className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg border border-white/15 text-white/80 hover:bg-white/8 hover:text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+//                   >
+//                     {messagingLoading ? (
+//                       <>
+//                         <svg
+//                           className="animate-spin h-3.5 w-3.5 text-white"
+//                           xmlns="http://www.w3.org/2000/svg"
+//                           fill="none"
+//                           viewBox="0 0 24 24"
+//                         >
+//                           <circle
+//                             className="opacity-25"
+//                             cx="12"
+//                             cy="12"
+//                             r="10"
+//                             stroke="currentColor"
+//                             strokeWidth="4"
+//                           />
+//                           <path
+//                             className="opacity-75"
+//                             fill="currentColor"
+//                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+//                           />
+//                         </svg>
+//                         <span>Opening...</span>
+//                       </>
+//                     ) : (
+//                       "Message"
+//                     )}
+//                   </button>
+//                 </>
+//               ) : (
+//                 <button
+//                   onClick={handleFollowUser}
+//                   disabled={followLoading}
+//                   className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+//                 >
+//                   {followLoading ? (
+//                     <svg
+//                       className="animate-spin h-3.5 w-3.5 text-white"
+//                       xmlns="http://www.w3.org/2000/svg"
+//                       fill="none"
+//                       viewBox="0 0 24 24"
+//                     >
+//                       <circle
+//                         className="opacity-25"
+//                         cx="12"
+//                         cy="12"
+//                         r="10"
+//                         stroke="currentColor"
+//                         strokeWidth="4"
+//                       />
+//                       <path
+//                         className="opacity-75"
+//                         fill="currentColor"
+//                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+//                       />
+//                     </svg>
+//                   ) : (
+//                     "Follow"
+//                   )}
+//                 </button>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* DIVIDER */}
+//         <div className="border-t border-white/10" />
+
+//         {/* POSTS */}
+//         {user?.postsCount === 0 ? (
+//           <div className="mt-16 flex flex-col items-center justify-center gap-3 text-white/30">
+//             <span className="text-5xl opacity-40">📷</span>
+//             <p className="text-sm tracking-wide">No posts yet</p>
+//           </div>
+//         ) : (
+//           <ProfilePosts userId={user?._id} />
+//         )}
+
+//         {/* MODALS */}
+//         <ProfilePhotoModal
+//           open={open}
+//           onClose={() => setOpen(false)}
+//           onUpload={handleUploadClick}
+//           onRemove={handleRemovePhoto}
+//         />
+//         <input
+//           ref={fileInputRef}
+//           type="file"
+//           accept="image/*"
+//           className="hidden"
+//           onChange={handleFileChange}
+//         />
+//       </div>
+
+//       <CreatePostModal open={createOpen} onClose={() => setCreateOpen(false)} />
+
+//       <FollowersFollowingModal
+//         open={listOpen}
+//         onClose={() => setListOpen(false)}
+//         title={listType === "followers" ? "Followers" : "Following"}
+//         ids={listType === "followers" ? user?.followers : user?.following}
+//       />
+//     </div>
+//   );
+// }
+
+// export default ProfileView;
+
 import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -1169,30 +1695,54 @@ import { useParams } from "react-router-dom";
 import ProfileSkeleton from "../ProfileSkeleton";
 import { Home } from "lucide-react";
 
+const Spinner = () => (
+  <svg
+    className="animate-spin h-3.5 w-3.5 text-white"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
+  </svg>
+);
+
 function ProfileView() {
   const { user: authUser, setUser } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
-  console.log("authUser in ProfileView:", authUser);
 
   const [open, setOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [listType, setListType] = useState(null);
   const fileInputRef = useRef(null);
-  const [followed, setFollowed] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [user, setProfileUser] = useState(null);
-  const [visible, setVisible] = useState(false); // ← fade-in trigger
-
+  const [visible, setVisible] = useState(false);
+  const [fadeKey, setFadeKey] = useState(0); // forces re-animation on profile switch
   const [messagingLoading, setMessagingLoading] = useState(false);
-const [followLoading, setFollowLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
+    setVisible(false); // fade out current content
     setLoadingProfile(true);
-    setVisible(false); // reset fade on every profile change
-    if (username) {
-      const fetchProfile = async () => {
-        try {
+
+    const timer = setTimeout(async () => {
+      // small delay lets fade-out play
+      try {
+        if (username) {
           const res = await fetchData(`/api/users/profile/${username}`, {
             credentials: "include",
           });
@@ -1200,21 +1750,21 @@ const [followLoading, setFollowLoading] = useState(false);
           const data = await res.json();
           console.log("Fetched profile data:", data);
           setProfileUser(data);
-         
-        } catch {
-          setProfileUser(null);
-        } finally {
-          setLoadingProfile(false);
+        } else {
+          setProfileUser(authUser);
         }
-      };
-      fetchProfile();
-    } else {
-      setProfileUser(authUser);
-      setLoadingProfile(false);
-    }
-  }, [username, authUser]);
+      } catch {
+        setProfileUser(null);
+      } finally {
+        setLoadingProfile(false);
+        setFadeKey((k) => k + 1); // trigger re-animation
+      }
+    }, 150); // enough time for fade-out
 
-  // once loading is done, trigger fade-in on next tick
+    return () => clearTimeout(timer);
+  }, [username]);
+
+  // fade in once data is ready
   useEffect(() => {
     if (!loadingProfile && user) {
       requestAnimationFrame(() => {
@@ -1223,8 +1773,6 @@ const [followLoading, setFollowLoading] = useState(false);
     }
   }, [loadingProfile, user]);
 
-  const [createOpen, setCreateOpen] = useState(false);
-
   const isMe = user?._id === authUser?._id;
 
   const isFollowing =
@@ -1232,59 +1780,30 @@ const [followLoading, setFollowLoading] = useState(false);
     !!user &&
     user.followers?.some((id) => id.toString() === authUser._id.toString());
 
-  const handleUploadClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
-
-  useEffect(() => {
-    if (followed) {
-      setUser((prevUser) => {
-        if (!prevUser) return prevUser;
-        return {
-          ...prevUser,
-          following: [...prevUser.following, user._id],
-        };
+  const handleFollowUser = async () => {
+    if (!user?._id || isFollowing) return;
+    try {
+      setFollowLoading(true);
+      await fetchData(`/api/users/${user._id}/follow`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
       });
+      setProfileUser((prev) => ({
+        ...prev,
+        followers: [...prev.followers, authUser._id.toString()],
+      }));
+      // also update authUser's following list
+      setUser((prev) => ({
+        ...prev,
+        following: [...prev.following, user._id],
+      }));
+    } catch (err) {
+      console.error("Follow error:", err);
+    } finally {
+      setFollowLoading(false);
     }
-  }, [followed, user, setUser]);
-const handleFollowUser = async () => {
-  if (!user?._id || isFollowing) return;
-  try {
-    setFollowLoading(true);
-    await fetchData(`/api/users/${user._id}/follow`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
-    setProfileUser((prev) => ({
-      ...prev,
-      followers: [...prev.followers, authUser._id.toString()],
-    }));
-  } catch (err) {
-    console.error("Follow error:", err);
-  } finally {
-    setFollowLoading(false);
-  }
-};
-
-  // const handleUnfollowUser = async () => {
-  //   if (!user?._id || !isFollowing) return;
-  //   try {
-  //     await fetchData(`/api/users/${user._id}/unfollow`, {
-  //       method: "POST",
-  //       credentials: "include",
-  //       headers: { "Content-Type": "application/json" },
-  //     });
-  //     setProfileUser((prev) => ({
-  //       ...prev,
-  //       followers: prev.followers.filter(
-  //         (id) => id.toString() !== authUser._id.toString(),
-  //       ),
-  //     }));
-  //   } catch (err) {
-  //     console.error("Unfollow error:", err);
-  //   }
-  // };
+  };
 
   const handleUnfollowUser = async () => {
     if (!user?._id || !isFollowing) return;
@@ -1301,6 +1820,12 @@ const handleFollowUser = async () => {
           (id) => id.toString() !== authUser._id.toString(),
         ),
       }));
+      setUser((prev) => ({
+        ...prev,
+        following: prev.following.filter(
+          (id) => id.toString() !== user._id.toString(),
+        ),
+      }));
     } catch (err) {
       console.error("Unfollow error:", err);
     } finally {
@@ -1308,17 +1833,14 @@ const handleFollowUser = async () => {
     }
   };
 
+  const handleUploadClick = () => fileInputRef.current?.click();
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be under 5MB");
-      return;
-    }
+    if (!file.type.startsWith("image/"))
+      return alert("Please upload an image file");
+    if (file.size > 5 * 1024 * 1024) return alert("Image must be under 5MB");
     try {
       const formData = new FormData();
       formData.append("profilePicture", file);
@@ -1341,7 +1863,6 @@ const handleFollowUser = async () => {
 
   const handleRemovePhoto = async () => {
     try {
-      console.log("Remove profile photo");
       const res = await fetchData("/api/upload/profile-picture", {
         method: "DELETE",
         credentials: "include",
@@ -1350,34 +1871,29 @@ const handleFollowUser = async () => {
         const err = await res.json();
         throw new Error(err?.error || "Failed to remove photo");
       }
-      const data = await res.json();
-      console.log("Profile photo removed:", data);
       window.location.reload();
       setOpen(false);
     } catch (err) {
-      console.error(err);
       alert(err.message || "Something went wrong");
     }
   };
 
-  if (loadingProfile || !user) {
-    return <ProfileSkeleton />;
-  }
+  if (loadingProfile || !user) return <ProfileSkeleton />;
 
   return (
     <div
+      key={fadeKey}
       className="bg-black text-white overflow-y-auto h-[calc(100vh-72px-56px)] md:h-[calc(100vh-80px-56px)] flex justify-center"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(10px)",
-        transition: "opacity 0.35s ease, transform 0.35s ease",
+        transform: visible ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 0.3s ease, transform 0.3s ease",
       }}
     >
-      {/* CENTER COLUMN */}
       <div className="w-full max-w-[935px] px-4 pt-8 pb-10">
-        {/* GO BACK / HOME BUTTONS */}
-        {!isMe && (
-          <div className="mb-5 flex items-center gap-1">
+        {/* BACK / HOME */}
+        <div className="mb-5 flex items-center gap-1">
+          {!isMe && (
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
@@ -1385,27 +1901,15 @@ const handleFollowUser = async () => {
               <span className="text-base leading-none">←</span>
               <span className="hidden sm:inline tracking-wide">Back</span>
             </button>
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
-            >
-              <Home size={18} />
-              <span className="hidden sm:inline tracking-wide">Home</span>
-            </button>
-          </div>
-        )}
-
-        {isMe && (
-          <div className="mb-5 flex items-center">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
-            >
-              <Home size={18} />{" "}
-              <span className="hidden sm:inline tracking-wide">Home</span>
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 active:scale-95"
+          >
+            <Home size={18} />
+            <span className="hidden sm:inline tracking-wide">Home</span>
+          </button>
+        </div>
 
         {/* PROFILE HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-start gap-7 sm:gap-14 mb-8">
@@ -1414,20 +1918,10 @@ const handleFollowUser = async () => {
             onClick={isMe ? () => setOpen(true) : undefined}
             className={`flex justify-center sm:justify-start ${isMe ? "cursor-pointer" : ""}`}
           >
-            <div
-              className="
-                w-24 h-24 sm:w-36 sm:h-36
-                rounded-full overflow-hidden
-                bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600
-                flex items-center justify-center
-                ring-[3px] ring-white/10
-                transition-opacity duration-200
-                hover:opacity-90
-              "
-            >
+            <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center ring-[3px] ring-white/10 transition-opacity duration-200 hover:opacity-90">
               {user?.profilePicture ? (
                 <img
-                  src={user?.profilePicture}
+                  src={user.profilePicture}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -1481,21 +1975,19 @@ const handleFollowUser = async () => {
               </div>
             </div>
 
-            {/* USERNAME + FULLNAME + BIO */}
+            {/* USERNAME + BIO */}
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-[14px] tracking-wide transition-all duration-200 ${
-                    isMe
-                      ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
-                      : "font-semibold text-white/90 hover:text-white"
-                  }`}
-                >
-                  {isMe ? `@${user?.username}` : user?.username}
-                </span>
-              </div>
+              <span
+                className={`text-[15px] tracking-tight transition-all duration-200 ${
+                  isMe
+                    ? "font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
+                    : "font-black text-white"
+                }`}
+              >
+                {isMe ? `@${user?.username}` : user.username}
+              </span>
               {user?.fullName && (
-                <p className="text-[13px] text-white font-medium">
+                <p className="text-[13px] text-white/50 font-normal tracking-wide">
                   {user.fullName}
                 </p>
               )}
@@ -1528,30 +2020,7 @@ const handleFollowUser = async () => {
                     disabled={followLoading}
                     className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg border border-white/15 text-white/80 hover:bg-white/8 hover:text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {followLoading ? (
-                      <svg
-                        className="animate-spin h-3.5 w-3.5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                    ) : (
-                      "Unfollow"
-                    )}
+                    {followLoading ? <Spinner /> : "Unfollow"}
                   </button>
                   <button
                     onClick={async () => {
@@ -1573,30 +2042,11 @@ const handleFollowUser = async () => {
                       }
                     }}
                     disabled={messagingLoading}
-                    className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg border border-white/15 text-white/80 hover:bg-white/8 hover:text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {messagingLoading ? (
                       <>
-                        <svg
-                          className="animate-spin h-3.5 w-3.5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          />
-                        </svg>
+                        <Spinner />
                         <span>Opening...</span>
                       </>
                     ) : (
@@ -1610,37 +2060,13 @@ const handleFollowUser = async () => {
                   disabled={followLoading}
                   className="flex-1 px-4 py-2 text-[13px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 transition-all duration-150 tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {followLoading ? (
-                    <svg
-                      className="animate-spin h-3.5 w-3.5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                  ) : (
-                    "Follow"
-                  )}
+                  {followLoading ? <Spinner /> : "Follow"}
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* DIVIDER */}
         <div className="border-t border-white/10" />
 
         {/* POSTS */}

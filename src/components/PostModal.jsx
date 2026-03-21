@@ -1342,7 +1342,14 @@ import { SendHorizontal, MoreHorizontal, X, Trash2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import fetchData from "../utils/fetchData";
 
-function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
+function PostModal({
+  post,
+  onClose,
+  onDelete,
+  onDeleteProfilePost,
+  onCommentAdded,
+  onCommentDeleted,
+}) {
   const { user } = useAuth();
   const isOwner = String(user?._id) === String(post.user?._id);
   const [showMenu, setShowMenu] = useState(false);
@@ -1353,6 +1360,8 @@ function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
   const [activeCommentMenu, setActiveCommentMenu] = useState(null);
   const menuRef = useRef(null);
   const inputRef = useRef(null);
+
+  const [likesCount, setLikesCount] = useState(post.likesCount ?? 0);
 
   const handleDelete = async () => {
     const confirmed = window.confirm("Delete this post?");
@@ -1370,6 +1379,24 @@ function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
     }
   };
 
+  // const handlePost = async () => {
+  //   if (!comment.trim()) return;
+  //   try {
+  //     const res = await fetchData(`/api/posts/${post._id}/comments`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //       body: JSON.stringify({ text: comment }),
+  //     });
+  //     const data = await res.json();
+  //     setComments((prev) => [data.comment, ...prev]);
+  //     setComment("");
+  //   } catch (err) {
+  //     console.error("Post comment error:", err);
+  //   }
+  // };
+
+
   const handlePost = async () => {
     if (!comment.trim()) return;
     try {
@@ -1382,6 +1409,7 @@ function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
       const data = await res.json();
       setComments((prev) => [data.comment, ...prev]);
       setComment("");
+      onCommentAdded?.(); // ← add this
     } catch (err) {
       console.error("Post comment error:", err);
     }
@@ -1397,10 +1425,11 @@ function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
         },
       );
       const data = await res.json();
-      if (data.success) {
-        setComments((prev) => prev.filter((c) => c._id !== commentId));
-        setActiveCommentMenu(null);
-      }
+     if (data.success) {
+       setComments((prev) => prev.filter((c) => c._id !== commentId));
+       setActiveCommentMenu(null);
+       onCommentDeleted?.(); // ← add this
+     }
     } catch (err) {
       console.error("Delete comment error:", err);
     }
@@ -1567,6 +1596,28 @@ function PostModal({ post, onClose, onDelete, onDeleteProfilePost }) {
             >
               <X size={14} />
             </button>
+          </div>
+
+          {/* LIKES COUNT — desktop only */}
+          <div className="hidden md:flex flex-shrink-0 items-center gap-2 px-4 py-2.5 border-b border-white/[0.06]">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="#ef4444"
+              stroke="#ef4444"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            <span className="text-[13px] font-semibold text-white/90">
+              {likesCount.toLocaleString()}
+            </span>
+            <span className="text-[13px] text-white/35">
+              {likesCount === 1 ? "like" : "likes"}
+            </span>
           </div>
 
           {/* CAPTION */}

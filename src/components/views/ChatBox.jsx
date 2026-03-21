@@ -3877,19 +3877,538 @@
 
 // export default ChatBox;
 
+// import { ArrowLeft, Send, Smile } from "lucide-react";
+// import { useContext, useState, useEffect, useRef } from "react";
+// import { createPortal } from "react-dom";
+// import { v4 as uuidv4 } from "uuid";
+// import { websocketContext } from "../../context/WebSocket";
+// import { useAuth } from "../../hooks/useAuth";
+
+// import fetchData from "../../utils/fetchData";
+// import MessageBubble from "../MessageBubble";
+// import ChatOptionsPopup from "../ChatOptionsPopup";
+
+// const normalizeMessageId = (m) => m.messageId;
+
+// const EMOJI_LIST = [
+//   "😀",
+//   "😂",
+//   "😍",
+//   "🥰",
+//   "😎",
+//   "🤔",
+//   "😭",
+//   "😡",
+//   "🥺",
+//   "😴",
+//   "👍",
+//   "👎",
+//   "❤️",
+//   "🔥",
+//   "✨",
+//   "🎉",
+//   "🙏",
+//   "💯",
+//   "😊",
+//   "🤣",
+//   "😘",
+//   "🥳",
+//   "😤",
+//   "🤯",
+//   "😇",
+//   "🤗",
+//   "😏",
+//   "🙄",
+//   "😬",
+//   "🤝",
+//   "👀",
+//   "💀",
+//   "🫡",
+//   "🫠",
+//   "🥹",
+//   "😮",
+//   "😱",
+//   "🤌",
+//   "💪",
+//   "👏",
+//   "🍕",
+//   "🎮",
+//   "🎵",
+//   "⚡",
+//   "🌙",
+//   "☀️",
+//   "🌈",
+//   "💫",
+//   "🚀",
+//   "🎯",
+// ];
+
+// function MessageSkeleton() {
+//   return (
+//     <div className="flex flex-col gap-3 px-4 py-4 animate-pulse">
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-48 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       <div className="flex justify-end">
+//         <div className="h-9 w-36 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-14 w-56 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       <div className="flex justify-end">
+//         <div className="h-9 w-44 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-32 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       <div className="flex justify-end">
+//         <div className="h-14 w-52 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//       <div className="flex items-end gap-2">
+//         <div className="w-6 h-6 rounded-full bg-white/8 flex-shrink-0" />
+//         <div className="h-9 w-40 rounded-2xl rounded-bl-sm bg-white/8" />
+//       </div>
+//       <div className="flex justify-end">
+//         <div className="h-9 w-28 rounded-2xl rounded-br-sm bg-white/8" />
+//       </div>
+//     </div>
+//   );
+// }
+
+// function ChatBox({ chat, onBack, onNewMessage }) {
+//   const { user } = useAuth();
+//   const { sendSignal, messages, setMessages } = useContext(websocketContext);
+//   const [text, setText] = useState("");
+//   const [cursor, setCursor] = useState(null);
+//   const [loadingMore, setLoadingMore] = useState(false);
+//   const [fetchingMessages, setFetchingMessages] = useState(true);
+//   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+//   const [showChatOptions, setShowChatOptions] = useState(false);
+//   const [popupPos, setPopupPos] = useState({ top: 0, right: 0 });
+//   const [chatTheme, setChatTheme] = useState({
+//     id: "default",
+//     label: "Default",
+//     bg: "#0a0a0a",
+//   });
+//   const myUserId = user._id;
+//   const messagesContainerRef = useRef(null);
+//   const shouldAutoScrollRef = useRef(true);
+//   const textareaRef = useRef(null);
+//   const emojiPickerRef = useRef(null);
+//   const chatOptionsRef = useRef(null);
+//   const conversationId = chat._id.toString();
+//   const otherUser = chat.participants?.find((p) => p._id !== myUserId);
+
+//   if (!otherUser) return null;
+
+//   const receiverId = otherUser._id;
+//   const [hasMore, setHasMore] = useState(true);
+
+//   useEffect(() => {
+//     const handleClickOutside = (e) => {
+//       if (
+//         emojiPickerRef.current &&
+//         !emojiPickerRef.current.contains(e.target)
+//       ) {
+//         setShowEmojiPicker(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   useEffect(() => {
+//     setHasMore(true);
+//     setCursor(null);
+//     setFetchingMessages(true);
+//     setShowEmojiPicker(false);
+//     setShowChatOptions(false);
+//   }, [conversationId]);
+
+//   const handleToggleChatOptions = () => {
+//     if (!showChatOptions && chatOptionsRef.current) {
+//       const rect = chatOptionsRef.current.getBoundingClientRect();
+//       setPopupPos({
+//         top: rect.bottom + 6,
+//         right: window.innerWidth - rect.right,
+//       });
+//     }
+//     setShowChatOptions((v) => !v);
+//   };
+
+//   const insertEmoji = (emoji) => {
+//     const ta = textareaRef.current;
+//     if (!ta) {
+//       setText((prev) => prev + emoji);
+//       return;
+//     }
+//     const start = ta.selectionStart;
+//     const end = ta.selectionEnd;
+//     const newText = text.slice(0, start) + emoji + text.slice(end);
+//     setText(newText);
+//     requestAnimationFrame(() => {
+//       ta.focus();
+//       ta.selectionStart = start + emoji.length;
+//       ta.selectionEnd = start + emoji.length;
+//       ta.style.height = "auto";
+//       ta.style.height = Math.min(ta.scrollHeight, 112) + "px";
+//     });
+//   };
+
+//   const handleSend = async () => {
+//     if (!text.trim()) return;
+//     const messageId = uuidv4();
+//     const createdAt = Date.now();
+//     const messageText = text; // ← capture before clearing
+
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: [
+//           ...existing,
+//           {
+//             messageId,
+//             conversationId,
+//             from: myUserId,
+//             to: receiverId,
+//             text: messageText,
+//             status: "sending",
+//             createdAt,
+//           },
+//         ],
+//       };
+//     });
+
+//     sendSignal({
+//       type: "chat_message",
+//       messageId,
+//       conversationId,
+//       to: receiverId,
+//       text: messageText,
+//       createdAt,
+//     });
+
+//     onNewMessage?.(conversationId, messageText); // ← add this
+
+//     setText("");
+//     setShowEmojiPicker(false);
+//     if (textareaRef.current) {
+//       textareaRef.current.style.height = "auto";
+//     }
+//   };
+
+//   const loadOlderMessages = async () => {
+//     if (!cursor || loadingMore) return;
+//     setLoadingMore(true);
+//     const el = messagesContainerRef.current;
+//     const scrollHeightBefore = el ? el.scrollHeight : 0;
+//     try {
+//       const res = await fetchData(
+//         `/api/chat/messages/${conversationId}?cursor=${cursor}`,
+//         { credentials: "include" },
+//       );
+//       const data = await res.json();
+//       const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//       if (messagesArray.length < 50) setHasMore(false);
+//       const formatted = messagesArray.map((msg) => ({
+//         messageId: msg.messageId,
+//         conversationId,
+//         from: msg.senderId,
+//         to: msg.receiverId,
+//         text: msg.text,
+//         status: msg.status || "sent",
+//         createdAt: new Date(msg.createdAt).getTime(),
+//       }));
+//       shouldAutoScrollRef.current = false;
+//       setMessages((prev) => {
+//         const existing = prev[conversationId] || [];
+//         const ids = new Set(existing.map((m) => m.messageId));
+//         const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//         return { ...prev, [conversationId]: [...newMessages, ...existing] };
+//       });
+//       if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//       setTimeout(() => {
+//         if (el) el.scrollTop = el.scrollHeight - scrollHeightBefore;
+//       }, 50);
+//     } catch (err) {
+//       console.error("Failed loading older messages", err);
+//     }
+//     setLoadingMore(false);
+//   };
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     const handleScroll = () => {
+//       const threshold = 150;
+//       const isNearBottom =
+//         el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+//       shouldAutoScrollRef.current = isNearBottom;
+//     };
+//     el.addEventListener("scroll", handleScroll);
+//     return () => el.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   useEffect(() => {
+//     if (!conversationId) return;
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await fetchData(`/api/chat/messages/${conversationId}`, {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+//         const messagesArray = Array.isArray(data) ? data : data.messages || [];
+//         if (messagesArray.length < 50) setHasMore(false);
+//         const formatted = messagesArray.map((msg) => ({
+//           messageId: msg.messageId,
+//           conversationId,
+//           from: msg.senderId,
+//           to: msg.receiverId,
+//           text: msg.text,
+//           status: msg.status || "sent",
+//           createdAt: new Date(msg.createdAt).getTime(),
+//         }));
+//         if (messagesArray.length > 0) setCursor(messagesArray[0].createdAt);
+//         setMessages((prev) => {
+//           const existing = prev[conversationId] || [];
+//           const ids = new Set(existing.map((m) => m.messageId));
+//           const newMessages = formatted.filter((m) => !ids.has(m.messageId));
+//           return { ...prev, [conversationId]: [...existing, ...newMessages] };
+//         });
+//       } catch (err) {
+//         console.error("Failed to fetch messages", err);
+//       } finally {
+//         setFetchingMessages(false);
+//       }
+//     };
+//     fetchMessages();
+//   }, [conversationId]);
+
+//   useEffect(() => {
+//     const el = messagesContainerRef.current;
+//     if (!el) return;
+//     if (shouldAutoScrollRef.current) {
+//       el.scrollTop = el.scrollHeight;
+//     }
+//   }, [messages[conversationId]]);
+
+//   return (
+//     <div className="flex flex-col w-full h-full min-h-0 overflow-hidden">
+//       {/* HEADER */}
+//       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
+//         <button
+//           onClick={onBack}
+//           className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+//         >
+//           <ArrowLeft size={18} />
+//         </button>
+//         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+//           {otherUser.profilePicture ? (
+//             <img
+//               src={otherUser.profilePicture}
+//               alt={otherUser.username}
+//               className="w-full h-full object-cover"
+//             />
+//           ) : (
+//             <span className="text-sm font-semibold text-white">
+//               {otherUser.username?.[0]?.toUpperCase()}
+//             </span>
+//           )}
+//         </div>
+//         <h3 className="font-semibold text-sm text-white truncate flex-1">
+//           {otherUser.username}
+//         </h3>
+
+//         {/* Three dots */}
+//         <div ref={chatOptionsRef} className="relative flex-shrink-0">
+//           <button
+//             onClick={handleToggleChatOptions}
+//             className="p-2 rounded-xl hover:bg-white/10 transition active:scale-95 text-white/50 hover:text-white"
+//           >
+//             <svg
+//               width="16"
+//               height="16"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="2"
+//               strokeLinecap="round"
+//             >
+//               <circle cx="12" cy="5" r="1" />
+//               <circle cx="12" cy="12" r="1" />
+//               <circle cx="12" cy="19" r="1" />
+//             </svg>
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* MESSAGES */}
+//       {fetchingMessages ? (
+//         <div className="flex-1 overflow-hidden">
+//           <MessageSkeleton />
+//         </div>
+//       ) : (
+//         <div
+//           ref={messagesContainerRef}
+//           className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+//           style={{
+//             overscrollBehavior: "contain",
+//             WebkitOverflowScrolling: "touch",
+//             animation: "fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+//             background: chatTheme.bg,
+//             transition: "background 0.3s ease",
+//           }}
+//         >
+//           {hasMore &&
+//             messages[conversationId] &&
+//             messages[conversationId].length > 0 && (
+//               <div className="flex justify-center mb-2">
+//                 <button
+//                   onClick={loadOlderMessages}
+//                   className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
+//                 >
+//                   {loadingMore ? "Loading..." : "Load older messages"}
+//                 </button>
+//               </div>
+//             )}
+
+//           {(!messages[conversationId] ||
+//             messages[conversationId].length === 0) && (
+//             <div className="text-center text-white/60 text-sm">
+//               Start a conversation with {otherUser.username}
+//             </div>
+//           )}
+
+//           {(messages[conversationId] || []).map((msg) => {
+//             const isMe = msg.from === myUserId;
+//             return (
+//               <MessageBubble
+//                 key={msg.messageId}
+//                 msg={msg}
+//                 isMe={isMe}
+//                 otherUser={otherUser}
+//                 user={user}
+//               />
+//             );
+//           })}
+
+//           <div className="h-2" />
+//         </div>
+//       )}
+
+//       {/* INPUT */}
+//       <div className="flex-shrink-0 px-3 py-3 border-t border-white/10 bg-white/5 backdrop-blur-sm relative">
+//         {showEmojiPicker && (
+//           <div
+//             ref={emojiPickerRef}
+//             className="absolute bottom-full left-0 mx-3 mb-2 w-80 max-w-[calc(100%-24px)] p-3 rounded-2xl bg-[#1a1a1a] border border-white/10 shadow-2xl z-10"
+//           >
+//             <div className="grid grid-cols-10 gap-1">
+//               {EMOJI_LIST.map((emoji) => (
+//                 <button
+//                   key={emoji}
+//                   onClick={() => insertEmoji(emoji)}
+//                   className="w-8 h-8 flex items-center justify-center text-[18px] rounded-lg hover:bg-white/10 active:scale-90 transition-all duration-100"
+//                 >
+//                   {emoji}
+//                 </button>
+//               ))}
+//             </div>
+//           </div>
+//         )}
+
+//         <div className="flex items-end gap-2">
+//           <button
+//             onClick={() => setShowEmojiPicker((prev) => !prev)}
+//             className={`
+//               flex-shrink-0 w-10 h-10 mb-0.5 rounded-full flex items-center justify-center
+//               border transition-all duration-150 active:scale-90
+//               ${
+//                 showEmojiPicker
+//                   ? "bg-indigo-600 border-indigo-500 text-white"
+//                   : "bg-white/8 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/12"
+//               }
+//             `}
+//           >
+//             <Smile size={17} />
+//           </button>
+
+//           <textarea
+//             ref={textareaRef}
+//             rows={1}
+//             value={text}
+//             onChange={(e) => {
+//               setText(e.target.value);
+//               e.target.style.height = "auto";
+//               e.target.style.height =
+//                 Math.min(e.target.scrollHeight, 112) + "px";
+//             }}
+//             onKeyDown={(e) => {
+//               if (e.key === "Enter" && !e.shiftKey) {
+//                 e.preventDefault();
+//                 handleSend();
+//               }
+//             }}
+//             placeholder="Type a message..."
+//             className="flex-1 resize-none overflow-y-auto px-4 py-3 rounded-2xl bg-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 leading-relaxed min-h-[44px]"
+//             style={{ maxHeight: "112px", fontSize: "16px" }}
+//           />
+
+//           <button
+//             onClick={handleSend}
+//             disabled={!text.trim()}
+//             className="flex-shrink-0 w-11 h-11 mb-0.5 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center transition active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+//           >
+//             <Send size={16} className="text-white ml-0.5" />
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Chat options popup — portaled to body to escape stacking context */}
+//       {showChatOptions &&
+//         createPortal(
+//           <div
+//             style={{
+//               position: "fixed",
+//               top: popupPos.top,
+//               right: popupPos.right,
+//               zIndex: 99999,
+//             }}
+//           >
+//             <ChatOptionsPopup
+//               onClose={() => setShowChatOptions(false)}
+//               onClearChat={() => {
+//                 setMessages((prev) => ({ ...prev, [conversationId]: [] }));
+//               }}
+//               onBlock={() => {
+//                 // wire up block logic here
+//               }}
+//               onThemeChange={(theme) => setChatTheme(theme)}
+//               currentTheme={chatTheme}
+//               anchorRef={chatOptionsRef}
+//             />
+//           </div>,
+//           document.body,
+//         )}
+//     </div>
+//   );
+// }
+
+// export default ChatBox;
+
 import { ArrowLeft, Send, Smile } from "lucide-react";
 import { useContext, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { v4 as uuidv4 } from "uuid";
 import { websocketContext } from "../../context/WebSocket";
 import { useAuth } from "../../hooks/useAuth";
-import { getChatMessages } from "../../utils/getMessages";
-import { saveMessage } from "../../utils/saveMessage";
 import fetchData from "../../utils/fetchData";
 import MessageBubble from "../MessageBubble";
 import ChatOptionsPopup from "../ChatOptionsPopup";
-
-const normalizeMessageId = (m) => m.messageId;
 
 const EMOJI_LIST = [
   "😀",
@@ -3944,6 +4463,76 @@ const EMOJI_LIST = [
   "🎯",
 ];
 
+// ── MESSAGE STATUS TICKS ──────────────────────────────
+function MessageStatus({ status }) {
+  if (status === "sending") {
+    return (
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path
+          d="M1 5l3 3 5-6"
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (status === "read") {
+    return (
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
+        <path
+          d="M1 5l3 3 5-6"
+          stroke="#60a5fa"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M6 5l3 3 5-6"
+          stroke="#60a5fa"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (status === "delivered") {
+    return (
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
+        <path
+          d="M1 5l3 3 5-6"
+          stroke="rgba(255,255,255,0.35)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M6 5l3 3 5-6"
+          stroke="rgba(255,255,255,0.35)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  // sent
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path
+        d="M1 5l3 3 5-6"
+        stroke="rgba(255,255,255,0.35)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+// ─────────────────────────────────────────────────────
+
 function MessageSkeleton() {
   return (
     <div className="flex flex-col gap-3 px-4 py-4 animate-pulse">
@@ -3981,7 +4570,8 @@ function MessageSkeleton() {
 
 function ChatBox({ chat, onBack, onNewMessage }) {
   const { user } = useAuth();
-  const { sendSignal, messages, setMessages } = useContext(websocketContext);
+ 
+
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -3994,6 +4584,7 @@ function ChatBox({ chat, onBack, onNewMessage }) {
     label: "Default",
     bg: "#0a0a0a",
   });
+
   const myUserId = user._id;
   const messagesContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -4007,6 +4598,64 @@ function ChatBox({ chat, onBack, onNewMessage }) {
 
   const receiverId = otherUser._id;
   const [hasMore, setHasMore] = useState(true);
+
+   const {
+     sendSignal,
+     messages,
+     setMessages,
+     markAsRead,
+     setCurrentConversation,
+   } = useContext(websocketContext);
+
+   useEffect(() => {
+     setCurrentConversation(conversationId);
+     return () => setCurrentConversation(null);
+   }, [conversationId]);
+  // ── MARK AS READ when new messages arrive while chat is open ──
+ useEffect(() => {
+   const convMessages = messages[conversationId] || [];
+   const hasUnread = convMessages.some(
+     (msg) => msg.from !== myUserId && msg.status !== "read",
+   );
+
+   if (!hasUnread) return;
+
+   // optimistically mark received messages as read in local state
+   setMessages((prev) => {
+     const existing = prev[conversationId] || [];
+     return {
+       ...prev,
+       [conversationId]: existing.map((msg) =>
+         msg.from !== myUserId && msg.status !== "read"
+           ? { ...msg, status: "read" }
+           : msg,
+       ),
+     };
+   });
+
+   markAsRead(conversationId);
+
+  fetchData(`/api/chat/conversations/${conversationId}/read`, {
+    // ← change here
+    method: "PATCH",
+    credentials: "include",
+  }).catch(() => {});
+ }, [messages[conversationId]]);
+  // ─────────────────────────────────────────────────────────────
+
+  // ── MARK AS READ when conversation opens ─────────────
+  useEffect(() => {
+    if (!conversationId) return;
+
+    markAsRead(conversationId);
+
+fetchData(`/api/chat/conversations/${conversationId}/read`, {
+  // ← change here
+  method: "PATCH",
+  credentials: "include",
+}).catch(() => {});
+  }, [conversationId]);
+  // ─────────────────────────────────────────────────────
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -4059,48 +4708,11 @@ function ChatBox({ chat, onBack, onNewMessage }) {
     });
   };
 
-  // const handleSend = async () => {
-  //   if (!text.trim()) return;
-  //   const messageId = uuidv4();
-  //   const createdAt = Date.now();
-  //   setMessages((prev) => {
-  //     const existing = prev[conversationId] || [];
-  //     return {
-  //       ...prev,
-  //       [conversationId]: [
-  //         ...existing,
-  //         {
-  //           messageId,
-  //           conversationId,
-  //           from: myUserId,
-  //           to: receiverId,
-  //           text,
-  //           status: "sending",
-  //           createdAt,
-  //         },
-  //       ],
-  //     };
-  //   });
-  //   sendSignal({
-  //     type: "chat_message",
-  //     messageId,
-  //     conversationId,
-  //     to: receiverId,
-  //     text,
-  //     createdAt,
-  //   });
-  //   setText("");
-  //   setShowEmojiPicker(false);
-  //   if (textareaRef.current) {
-  //     textareaRef.current.style.height = "auto";
-  //   }
-  // };
-
   const handleSend = async () => {
     if (!text.trim()) return;
     const messageId = uuidv4();
     const createdAt = Date.now();
-    const messageText = text; // ← capture before clearing
+    const messageText = text;
 
     setMessages((prev) => {
       const existing = prev[conversationId] || [];
@@ -4130,7 +4742,7 @@ function ChatBox({ chat, onBack, onNewMessage }) {
       createdAt,
     });
 
-    onNewMessage?.(conversationId, messageText); // ← add this
+    onNewMessage?.(conversationId, messageText);
 
     setText("");
     setShowEmojiPicker(false);
@@ -4260,8 +4872,6 @@ function ChatBox({ chat, onBack, onNewMessage }) {
         <h3 className="font-semibold text-sm text-white truncate flex-1">
           {otherUser.username}
         </h3>
-
-        {/* Three dots */}
         <div ref={chatOptionsRef} className="relative flex-shrink-0">
           <button
             onClick={handleToggleChatOptions}
@@ -4301,18 +4911,16 @@ function ChatBox({ chat, onBack, onNewMessage }) {
             transition: "background 0.3s ease",
           }}
         >
-          {hasMore &&
-            messages[conversationId] &&
-            messages[conversationId].length > 0 && (
-              <div className="flex justify-center mb-2">
-                <button
-                  onClick={loadOlderMessages}
-                  className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
-                >
-                  {loadingMore ? "Loading..." : "Load older messages"}
-                </button>
-              </div>
-            )}
+          {hasMore && messages[conversationId]?.length > 0 && (
+            <div className="flex justify-center mb-2">
+              <button
+                onClick={loadOlderMessages}
+                className="px-3 py-1.5 text-xs rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150 active:scale-95 tracking-wide"
+              >
+                {loadingMore ? "Loading..." : "Load older messages"}
+              </button>
+            </div>
+          )}
 
           {(!messages[conversationId] ||
             messages[conversationId].length === 0) && (
@@ -4324,13 +4932,15 @@ function ChatBox({ chat, onBack, onNewMessage }) {
           {(messages[conversationId] || []).map((msg) => {
             const isMe = msg.from === myUserId;
             return (
-              <MessageBubble
-                key={msg.messageId}
-                msg={msg}
-                isMe={isMe}
-                otherUser={otherUser}
-                user={user}
-              />
+              <div key={msg.messageId}>
+                <MessageBubble
+                  msg={msg}
+                  isMe={isMe}
+                  otherUser={otherUser}
+                  user={user}
+                />
+               
+              </div>
             );
           })}
 
@@ -4362,15 +4972,11 @@ function ChatBox({ chat, onBack, onNewMessage }) {
         <div className="flex items-end gap-2">
           <button
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className={`
-              flex-shrink-0 w-10 h-10 mb-0.5 rounded-full flex items-center justify-center
-              border transition-all duration-150 active:scale-90
-              ${
-                showEmojiPicker
-                  ? "bg-indigo-600 border-indigo-500 text-white"
-                  : "bg-white/8 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/12"
-              }
-            `}
+            className={`flex-shrink-0 w-10 h-10 mb-0.5 rounded-full flex items-center justify-center border transition-all duration-150 active:scale-90 ${
+              showEmojiPicker
+                ? "bg-indigo-600 border-indigo-500 text-white"
+                : "bg-white/8 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/12"
+            }`}
           >
             <Smile size={17} />
           </button>
@@ -4406,7 +5012,6 @@ function ChatBox({ chat, onBack, onNewMessage }) {
         </div>
       </div>
 
-      {/* Chat options popup — portaled to body to escape stacking context */}
       {showChatOptions &&
         createPortal(
           <div
@@ -4419,12 +5024,10 @@ function ChatBox({ chat, onBack, onNewMessage }) {
           >
             <ChatOptionsPopup
               onClose={() => setShowChatOptions(false)}
-              onClearChat={() => {
-                setMessages((prev) => ({ ...prev, [conversationId]: [] }));
-              }}
-              onBlock={() => {
-                // wire up block logic here
-              }}
+              onClearChat={() =>
+                setMessages((prev) => ({ ...prev, [conversationId]: [] }))
+              }
+              onBlock={() => {}}
               onThemeChange={(theme) => setChatTheme(theme)}
               currentTheme={chatTheme}
               anchorRef={chatOptionsRef}

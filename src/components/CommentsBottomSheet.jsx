@@ -1202,7 +1202,12 @@ import { useEffect, useRef, useState } from "react";
 import fetchData from "../utils/fetchData";
 import { useAuth } from "../hooks/useAuth";
 
-function CommentsBottomSheet({ post, onClose }) {
+function CommentsBottomSheet({
+  post,
+  onClose,
+  onCommentAdded,
+  onCommentDeleted,
+}) {
   const { user } = useAuth();
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
@@ -1264,22 +1269,23 @@ function CommentsBottomSheet({ post, onClose }) {
       });
   }, [post._id]);
 
-  const handlePost = async () => {
-    if (!comment.trim()) return;
-    try {
-      const res = await fetchData(`/api/posts/${post._id}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ text: comment }),
-      });
-      const data = await res.json();
-      setComments((prev) => [data.comment, ...prev]);
-      setComment("");
-    } catch (err) {
-      console.error("Post comment error:", err);
-    }
-  };
+ const handlePost = async () => {
+   if (!comment.trim()) return;
+   try {
+     const res = await fetchData(`/api/posts/${post._id}/comments`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       credentials: "include",
+       body: JSON.stringify({ text: comment }),
+     });
+     const data = await res.json();
+     setComments((prev) => [data.comment, ...prev]);
+     setComment("");
+     onCommentAdded?.(); // ← add this
+   } catch (err) {
+     console.error("Post comment error:", err);
+   }
+ };
 
   const handleDeleteComment = async (commentId) => {
     try {
@@ -1294,6 +1300,7 @@ function CommentsBottomSheet({ post, onClose }) {
       if (data.success) {
         setComments((prev) => prev.filter((c) => c._id !== commentId));
         setActiveCommentMenu(null);
+        onCommentDeleted?.(); // ← add this
       }
     } catch (err) {
       console.error("Delete comment error:", err);
