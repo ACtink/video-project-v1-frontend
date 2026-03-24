@@ -1060,7 +1060,15 @@ function ChatView() {
             <ChatBox
               chat={activeChat}
               onBack={() => setActiveChat(null)}
-              onNewMessage={handleNewMessage} // ← add this
+              onNewMessage={handleNewMessage}
+              onClearMessages={(chatId) => {
+                // ← add this
+                setChats((prev) =>
+                  prev.map((c) =>
+                    c._id === chatId ? { ...c, lastMessage: "" } : c,
+                  ),
+                );
+              }}
             />
           )}
         </div>

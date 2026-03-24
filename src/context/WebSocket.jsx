@@ -1205,6 +1205,367 @@
 //   );
 // };
 
+// import React, {
+//   createContext,
+//   useContext,
+//   useEffect,
+//   useRef,
+//   useState,
+// } from "react";
+
+// import { webRTCContext } from "./WebRTC";
+// import { useAuth } from "../hooks/useAuth";
+
+// export const websocketContext = createContext(null);
+
+// export const WebSocketProvider = ({ children }) => {
+//   const socketRef = useRef(null);
+//   const handlersRef = useRef({});
+//   const sendQueueRef = useRef([]);
+//   const pingIntervalRef = useRef(null);
+//   const reconnectTimeoutRef = useRef(null);
+//   const isIntentionalClose = useRef(false);
+
+//   const [wsConnected, setWsConnected] = useState(false);
+//   const [messages, setMessages] = useState({});
+
+//   const { user } = useAuth();
+
+//   const currentConversationIdRef = useRef(null);
+
+//   const setCurrentConversation = (conversationId) => {
+//     currentConversationIdRef.current = conversationId;
+//   };
+
+//   const {
+//     setVideoCallLoader,
+//     cleanupFull,
+//     cleanupRemotePeer,
+//     manualCleanupRef,
+//   } = useContext(webRTCContext);
+
+//   const [uiState, setUistate] = useState("idle");
+
+//   const userIdRef = useRef(null);
+
+//   useEffect(() => {
+//     userIdRef.current = user?._id;
+//   }, [user]);
+
+//   /* ============================================
+//      HANDLE INCOMING MESSAGE
+//   ============================================ */
+//   function handleIncomingMessage(message) {
+//     const msg = message.message;
+//     const convId = msg.conversationId;
+
+//     setMessages((prev) => {
+//       const existing = prev[convId] || [];
+//       const exists = existing.some((m) => m.messageId === msg.messageId);
+//       if (exists) return prev;
+
+//       return {
+//         ...prev,
+//         [convId]: [
+//           ...existing,
+//           {
+//             messageId: msg.messageId,
+//             conversationId: convId,
+//             from: msg.from,
+//             to: userIdRef.current,
+//             text: msg.text,
+//             status: "delivered",
+//             createdAt: new Date(msg.createdAt).getTime(),
+//           },
+//         ],
+//       };
+//     });
+//   }
+
+//   /* ============================================
+//      HANDLE ACK (sent / delivered / read)
+//   ============================================ */
+//  function handleAck({ messageId, status, conversationId }) {
+//    console.log("handleAck called:", { messageId, status, conversationId }); // ← add this
+
+//    setMessages((prev) => {
+//      const updated = { ...prev };
+
+//      if (status === "read" && conversationId) {
+//        // bulk update all messages in this conversation to read
+//        if (updated[conversationId]) {
+//          updated[conversationId] = updated[conversationId].map((msg) =>
+//            msg.from === userIdRef.current && msg.status !== "read"
+//              ? { ...msg, status: "read" }
+//              : msg,
+//          );
+//        }
+//        return updated;
+//      }
+
+//      // sent / delivered — update specific message by id
+//      for (const convId in updated) {
+//        updated[convId] = updated[convId].map((msg) =>
+//          msg.messageId === messageId ? { ...msg, status } : msg,
+//        );
+//      }
+//      return updated;
+//    });
+//  }
+
+//   /* ============================================
+//      MARK CONVERSATION AS READ
+//   ============================================ */
+//   const markAsRead = (conversationId) => {
+//     sendSignal({ type: "read", conversationId });
+
+//     // update ALL unread messages in this conversation to read
+//     // (both for receiver's view and sender's incoming ack)
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: existing.map((msg) =>
+//           msg.status !== "read" ? { ...msg, status: "read" } : msg,
+//         ),
+//       };
+//     });
+//   };
+
+//   /* ============================================
+//      SCHEDULE RECONNECT
+//   ============================================ */
+//   function scheduleReconnect() {
+//     if (reconnectTimeoutRef.current) {
+//       clearTimeout(reconnectTimeoutRef.current);
+//     }
+//     reconnectTimeoutRef.current = setTimeout(() => {
+//       if (user?._id && !isIntentionalClose.current) {
+//         console.log("Attempting reconnect...");
+//         connectToWebSocketServer();
+//       }
+//     }, 2000);
+//   }
+
+//   /* ============================================
+//      CONNECT FUNCTION
+//   ============================================ */
+//   function connectToWebSocketServer() {
+//     if (socketRef.current?.readyState === WebSocket.OPEN)
+//       return socketRef.current;
+
+//     if (socketRef.current?.readyState === WebSocket.CONNECTING)
+//       return socketRef.current;
+
+//     isIntentionalClose.current = false;
+
+//     const WS_URL = import.meta.env.VITE_WS_URL;
+//     const socket = new WebSocket(WS_URL);
+//     socketRef.current = socket;
+
+//     socket.onopen = () => {
+//       console.log("WebSocket connected");
+//       setWsConnected(true);
+
+//       if (reconnectTimeoutRef.current) {
+//         clearTimeout(reconnectTimeoutRef.current);
+//         reconnectTimeoutRef.current = null;
+//       }
+
+//       // flush queued messages
+//       sendQueueRef.current.forEach((msg) => socket.send(JSON.stringify(msg)));
+//       sendQueueRef.current = [];
+
+//       // heartbeat ping every 25s
+//       clearInterval(pingIntervalRef.current);
+//       pingIntervalRef.current = setInterval(() => {
+//         if (socket.readyState === WebSocket.OPEN) {
+//           socket.send(JSON.stringify({ type: "ping" }));
+//         }
+//       }, 25000);
+//     };
+
+//     socket.onmessage = async (event) => {
+//       try {
+//         const message = JSON.parse(event.data);
+
+//         switch (message.type) {
+//           case "chat_deliver":
+//             handleIncomingMessage(message);
+//             if (socketRef.current?.readyState === WebSocket.OPEN) {
+//               socketRef.current.send(
+//                 JSON.stringify({
+//                   type: "ack",
+//                   messageId: message.message.messageId,
+//                   status: "delivered",
+//                 }),
+//               );
+
+//               // if receiver is currently viewing this conversation → mark as read immediately
+//               const incomingConvId = message.message.conversationId?.toString();
+//               if (
+//                 incomingConvId &&
+//                 currentConversationIdRef.current === incomingConvId
+//               ) {
+//                 socketRef.current.send(
+//                   JSON.stringify({
+//                     type: "read",
+//                     conversationId: incomingConvId,
+//                   }),
+//                 );
+//               }
+//             }
+//             break;
+
+//           case "ack":
+//             handleAck(message);
+//             break;
+
+//           case "read_ack":
+//             handleAck({
+//               messageId: message.messageId,
+//               conversationId: message.conversationId,
+//               status: "read",
+//             });
+//             break;
+
+//           case "queued_ack":
+//             if (message.success === "ok") setUistate("successfully_queued");
+//             break;
+
+//           case "matched_ack":
+//             if (message.success === "ok") setUistate("successfully_matched");
+//             break;
+
+//           case "close_ack":
+//             if (message.success === "ok") setUistate("successfully_closed");
+//             break;
+
+//           case "queued_and_searching_next_for_you":
+//             setUistate("successfully_skipped_and_searching");
+//             setVideoCallLoader(true);
+//             manualCleanupRef.current = true;
+//             cleanupRemotePeer();
+//             break;
+
+//           case "successfully_ended_call":
+//             setUistate("idle");
+//             cleanupFull();
+//             break;
+
+//           case "pong":
+//             break;
+//         }
+
+//         handlersRef.current[message.type]?.(message);
+//       } catch {
+//         console.warn("Invalid WS message");
+//       }
+//     };
+
+//     socket.onerror = (error) => {
+//       console.error("WebSocket error:", error);
+//     };
+
+//     socket.onclose = (event) => {
+//       console.log("WebSocket closed:", event.code, event.reason);
+//       clearInterval(pingIntervalRef.current);
+//       setWsConnected(false);
+
+//       if (!isIntentionalClose.current) {
+//         scheduleReconnect();
+//       }
+//     };
+
+//     return socket;
+//   }
+
+//   /* ============================================
+//      CONNECT WHEN USER READY
+//   ============================================ */
+//   useEffect(() => {
+//     if (!user?._id) return;
+
+//     connectToWebSocketServer();
+
+//     return () => {
+//       isIntentionalClose.current = true;
+//       clearTimeout(reconnectTimeoutRef.current);
+//       clearInterval(pingIntervalRef.current);
+//       if (socketRef.current?.readyState === WebSocket.OPEN) {
+//         socketRef.current.close();
+//       }
+//     };
+//   }, [user]);
+
+//   /* ============================================
+//      RECONNECT ON TAB FOCUS / NETWORK RESTORE
+//   ============================================ */
+//   useEffect(() => {
+//     const handleVisibility = () => {
+//       if (!document.hidden && user?._id) {
+//         const state = socketRef.current?.readyState;
+//         if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
+//           console.log("Reconnecting websocket after tab focus");
+//           connectToWebSocketServer();
+//         }
+//       }
+//     };
+
+//     const handleOnline = () => {
+//       if (user?._id) {
+//         const state = socketRef.current?.readyState;
+//         if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
+//           console.log("Reconnecting websocket after network restore");
+//           connectToWebSocketServer();
+//         }
+//       }
+//     };
+
+//     document.addEventListener("visibilitychange", handleVisibility);
+//     window.addEventListener("online", handleOnline);
+
+//     return () => {
+//       document.removeEventListener("visibilitychange", handleVisibility);
+//       window.removeEventListener("online", handleOnline);
+//     };
+//   }, [user]);
+
+//   /* ============================================
+//      SEND SIGNAL
+//   ============================================ */
+//   const sendSignal = (msg) => {
+//     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+//       console.log("Queued message:", msg);
+//       sendQueueRef.current.push(msg);
+//       return;
+//     }
+//     socketRef.current.send(JSON.stringify(msg));
+//   };
+
+//   const registerHandlers = (handlers) => {
+//     handlersRef.current = handlers;
+//   };
+
+//   return (
+//     <websocketContext.Provider
+//       value={{
+//         sendSignal,
+//         registerHandlers,
+//         wsConnected,
+//         uiState,
+//         setUistate,
+//         messages,
+//         setMessages,
+//         markAsRead,
+//         setCurrentConversation, // ← add
+//       }}
+//     >
+//       {children}
+//     </websocketContext.Provider>
+//   );
+// };
+
 import React, {
   createContext,
   useContext,
@@ -1285,33 +1646,48 @@ export const WebSocketProvider = ({ children }) => {
   /* ============================================
      HANDLE ACK (sent / delivered / read)
   ============================================ */
- function handleAck({ messageId, status, conversationId }) {
-   console.log("handleAck called:", { messageId, status, conversationId }); // ← add this
+  function handleAck({ messageId, status, conversationId }) {
+    console.log("handleAck called:", { messageId, status, conversationId });
 
-   setMessages((prev) => {
-     const updated = { ...prev };
+    setMessages((prev) => {
+      const updated = { ...prev };
 
-     if (status === "read" && conversationId) {
-       // bulk update all messages in this conversation to read
-       if (updated[conversationId]) {
-         updated[conversationId] = updated[conversationId].map((msg) =>
-           msg.from === userIdRef.current && msg.status !== "read"
-             ? { ...msg, status: "read" }
-             : msg,
-         );
-       }
-       return updated;
-     }
+      if (status === "read" && conversationId) {
+        if (updated[conversationId]) {
+          updated[conversationId] = updated[conversationId].map((msg) =>
+            msg.from === userIdRef.current && msg.status !== "read"
+              ? { ...msg, status: "read" }
+              : msg,
+          );
+        }
+        return updated;
+      }
 
-     // sent / delivered — update specific message by id
-     for (const convId in updated) {
-       updated[convId] = updated[convId].map((msg) =>
-         msg.messageId === messageId ? { ...msg, status } : msg,
-       );
-     }
-     return updated;
-   });
- }
+      for (const convId in updated) {
+        updated[convId] = updated[convId].map((msg) =>
+          msg.messageId === messageId ? { ...msg, status } : msg,
+        );
+      }
+      return updated;
+    });
+  }
+
+  /* ============================================
+     HANDLE MESSAGE BLOCKED
+  ============================================ */
+function handleMessageBlocked({ messageId, reason }) {
+  console.warn("Message blocked:", messageId, reason);
+
+  setMessages((prev) => {
+    const updated = { ...prev };
+    for (const convId in updated) {
+      updated[convId] = updated[convId].filter(
+        (msg) => msg.messageId !== messageId,
+      );
+    }
+    return updated;
+  });
+}
 
   /* ============================================
      MARK CONVERSATION AS READ
@@ -1319,8 +1695,6 @@ export const WebSocketProvider = ({ children }) => {
   const markAsRead = (conversationId) => {
     sendSignal({ type: "read", conversationId });
 
-    // update ALL unread messages in this conversation to read
-    // (both for receiver's view and sender's incoming ack)
     setMessages((prev) => {
       const existing = prev[conversationId] || [];
       return {
@@ -1372,11 +1746,9 @@ export const WebSocketProvider = ({ children }) => {
         reconnectTimeoutRef.current = null;
       }
 
-      // flush queued messages
       sendQueueRef.current.forEach((msg) => socket.send(JSON.stringify(msg)));
       sendQueueRef.current = [];
 
-      // heartbeat ping every 25s
       clearInterval(pingIntervalRef.current);
       pingIntervalRef.current = setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
@@ -1401,7 +1773,6 @@ export const WebSocketProvider = ({ children }) => {
                 }),
               );
 
-              // if receiver is currently viewing this conversation → mark as read immediately
               const incomingConvId = message.message.conversationId?.toString();
               if (
                 incomingConvId &&
@@ -1428,6 +1799,12 @@ export const WebSocketProvider = ({ children }) => {
               status: "read",
             });
             break;
+
+          // ── BLOCK ──────────────────────────────────────
+          case "message_blocked":
+            handleMessageBlocked(message);
+            break;
+          // ───────────────────────────────────────────────
 
           case "queued_ack":
             if (message.success === "ok") setUistate("successfully_queued");
@@ -1558,7 +1935,7 @@ export const WebSocketProvider = ({ children }) => {
         messages,
         setMessages,
         markAsRead,
-        setCurrentConversation, // ← add
+        setCurrentConversation,
       }}
     >
       {children}

@@ -315,15 +315,946 @@
 
 // export default ChatOptionsPopup;
 
+// import { useEffect, useRef, useState } from "react";
 
+// const themes = [
+//   {
+//     id: "default",
+//     label: "Default",
+//     bg: "#0a0a0a",
+//     bubble: "#4f46e5",
+//     preview: "linear-gradient(135deg, #0a0a0a 0%, #111111 100%)",
+//   },
+//   {
+//     id: "midnight",
+//     label: "Midnight",
+//     bg: "linear-gradient(160deg, #0d0d2b 0%, #1a1040 100%)",
+//     bubble: "#7c3aed",
+//     preview: "linear-gradient(135deg, #0d0d2b 0%, #1a1040 100%)",
+//   },
+//   {
+//     id: "aurora",
+//     label: "Aurora",
+//     bg: "linear-gradient(160deg, #071a12 0%, #0a1628 100%)",
+//     bubble: "#059669",
+//     preview: "linear-gradient(135deg, #071a12 0%, #0a1628 100%)",
+//   },
+//   {
+//     id: "rose",
+//     label: "Rose",
+//     bg: "linear-gradient(160deg, #1a0a10 0%, #2a0d1a 100%)",
+//     bubble: "#e11d48",
+//     preview: "linear-gradient(135deg, #1a0a10 0%, #2a0d1a 100%)",
+//   },
+//   {
+//     id: "slate",
+//     label: "Slate",
+//     bg: "linear-gradient(160deg, #0d1117 0%, #161b22 100%)",
+//     bubble: "#0ea5e9",
+//     preview: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)",
+//   },
+//   {
+//     id: "amber",
+//     label: "Amber",
+//     bg: "linear-gradient(160deg, #12100a 0%, #1c1506 100%)",
+//     bubble: "#d97706",
+//     preview: "linear-gradient(135deg, #12100a 0%, #1c1506 100%)",
+//   },
+// ];
 
+// function ChatOptionsPopup({
+//   onClose,
+//   onClearChat,
+//   onBlock,
+//   onThemeChange,
+//   currentTheme,
+//   anchorRef,
+// }) {
+//   const [showThemes, setShowThemes] = useState(false);
+//   const popupRef = useRef(null);
 
+//   useEffect(() => {
+//     const handleClickOutside = (e) => {
+//       if (
+//         popupRef.current &&
+//         !popupRef.current.contains(e.target) &&
+//         anchorRef.current &&
+//         !anchorRef.current.contains(e.target)
+//       ) {
+//         onClose();
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
 
+//   return (
+//     <>
+//       <style>{`
+//         @keyframes popupFadeIn {
+//           from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+//           to   { opacity: 1; transform: translateY(0) scale(1); }
+//         }
+//         .chat-popup { animation: popupFadeIn 0.18s ease forwards; }
 
+//         @keyframes themesSlideIn {
+//           from { opacity: 0; transform: translateY(-4px); }
+//           to   { opacity: 1; transform: translateY(0); }
+//         }
+//         .themes-grid { animation: themesSlideIn 0.16s ease forwards; }
 
+//         .theme-swatch {
+//           transition: transform 0.15s ease, box-shadow 0.15s ease;
+//         }
+//         .theme-swatch:hover {
+//           transform: scale(1.08);
+//         }
+//       `}</style>
 
+//       <div
+//         ref={popupRef}
+//         className="chat-popup"
+//         style={{
+//           position: "absolute",
+//           right: 0,
+//           top: 36,
+//           zIndex: 9999,
+//           width: 220,
+//           borderRadius: 16,
+//           background: "#161616",
+//           border: "0.5px solid rgba(255,255,255,0.1)",
+//           boxShadow:
+//             "0 16px 48px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05) inset",
+//           overflow: "hidden",
+//         }}
+//       >
+//         {/* Theme option */}
+//         <div>
+//           <button
+//             onClick={() => setShowThemes((v) => !v)}
+//             style={{
+//               width: "100%",
+//               display: "flex",
+//               alignItems: "center",
+//               justifyContent: "space-between",
+//               gap: 10,
+//               padding: "11px 14px",
+//               background: "transparent",
+//               border: "none",
+//               cursor: "pointer",
+//               color: "rgba(255,255,255,0.8)",
+//               fontSize: 13,
+//               fontWeight: 500,
+//               textAlign: "left",
+//               transition: "background 0.15s ease",
+//               borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//             }}
+//             onMouseEnter={(e) =>
+//               (e.currentTarget.style.background = "rgba(255,255,255,0.05)")
+//             }
+//             onMouseLeave={(e) =>
+//               (e.currentTarget.style.background = "transparent")
+//             }
+//           >
+//             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+//               {/* Palette icon */}
+//               <svg
+//                 width="15"
+//                 height="15"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="currentColor"
+//                 strokeWidth="1.8"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               >
+//                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+//                 <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+//                 <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+//                 <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+//                 <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+//               </svg>
+//               Theme
+//             </div>
+//             {/* Current theme color dot */}
+//             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+//               <div
+//                 style={{
+//                   width: 12,
+//                   height: 12,
+//                   borderRadius: "50%",
+//                   background: currentTheme?.bubble || "#4f46e5",
+//                   boxShadow: `0 0 6px ${currentTheme?.bubble || "#4f46e5"}80`,
+//                 }}
+//               />
+//               <svg
+//                 width="12"
+//                 height="12"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="rgba(255,255,255,0.3)"
+//                 strokeWidth="2"
+//                 strokeLinecap="round"
+//                 style={{
+//                   transform: showThemes ? "rotate(180deg)" : "rotate(0deg)",
+//                   transition: "transform 0.2s ease",
+//                 }}
+//               >
+//                 <polyline points="6 9 12 15 18 9" />
+//               </svg>
+//             </div>
+//           </button>
+
+//           {/* Theme grid */}
+//           {showThemes && (
+//             <div
+//               className="themes-grid"
+//               style={{
+//                 padding: "12px 14px 14px",
+//                 borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//                 display: "grid",
+//                 gridTemplateColumns: "repeat(3, 1fr)",
+//                 gap: 10,
+//               }}
+//             >
+//               {themes.map((theme) => {
+//                 const isActive = currentTheme?.id === theme.id;
+//                 return (
+//                   <button
+//                     key={theme.id}
+//                     onClick={() => {
+//                       onThemeChange(theme);
+//                       onClose();
+//                     }}
+//                     className="theme-swatch"
+//                     style={{
+//                       display: "flex",
+//                       flexDirection: "column",
+//                       alignItems: "center",
+//                       gap: 6,
+//                       background: "transparent",
+//                       border: "none",
+//                       cursor: "pointer",
+//                       padding: 0,
+//                     }}
+//                   >
+//                     <div
+//                       style={{
+//                         width: 48,
+//                         height: 48,
+//                         borderRadius: 12,
+//                         background: theme.preview,
+//                         border: isActive
+//                           ? `2px solid ${theme.bubble}`
+//                           : "1.5px solid rgba(255,255,255,0.08)",
+//                         boxShadow: isActive
+//                           ? `0 0 12px ${theme.bubble}60`
+//                           : "none",
+//                         position: "relative",
+//                         overflow: "hidden",
+//                         transition: "border 0.15s ease, box-shadow 0.15s ease",
+//                       }}
+//                     >
+//                       {/* Received bubble */}
+//                       <div
+//                         style={{
+//                           position: "absolute",
+//                           top: 10,
+//                           left: 6,
+//                           width: 20,
+//                           height: 7,
+//                           borderRadius: 4,
+//                           background: "rgba(255,255,255,0.14)",
+//                         }}
+//                       />
+//                       {/* Sent bubble */}
+//                       <div
+//                         style={{
+//                           position: "absolute",
+//                           bottom: 10,
+//                           right: 6,
+//                           width: 24,
+//                           height: 7,
+//                           borderRadius: 4,
+//                           background: theme.bubble,
+//                           opacity: 0.9,
+//                           boxShadow: `0 0 6px ${theme.bubble}80`,
+//                         }}
+//                       />
+//                       {/* Active checkmark */}
+//                       {isActive && (
+//                         <div
+//                           style={{
+//                             position: "absolute",
+//                             inset: 0,
+//                             display: "flex",
+//                             alignItems: "center",
+//                             justifyContent: "center",
+//                             background: "rgba(0,0,0,0.25)",
+//                           }}
+//                         >
+//                           <svg
+//                             width="14"
+//                             height="14"
+//                             viewBox="0 0 24 24"
+//                             fill="none"
+//                             stroke={theme.bubble}
+//                             strokeWidth="2.5"
+//                             strokeLinecap="round"
+//                             strokeLinejoin="round"
+//                           >
+//                             <polyline points="20 6 9 17 4 12" />
+//                           </svg>
+//                         </div>
+//                       )}
+//                     </div>
+//                     <span
+//                       style={{
+//                         fontSize: 10,
+//                         color: isActive
+//                           ? "rgba(255,255,255,0.7)"
+//                           : "rgba(255,255,255,0.35)",
+//                         whiteSpace: "nowrap",
+//                         fontWeight: isActive ? 600 : 400,
+//                         transition: "color 0.15s ease",
+//                       }}
+//                     >
+//                       {theme.label}
+//                     </span>
+//                   </button>
+//                 );
+//               })}
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Clear chat */}
+//         <button
+//           onClick={() => {
+//             onClearChat();
+//             onClose();
+//           }}
+//           style={{
+//             width: "100%",
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 10,
+//             padding: "11px 14px",
+//             background: "transparent",
+//             border: "none",
+//             cursor: "pointer",
+//             color: "rgba(255,255,255,0.8)",
+//             fontSize: 13,
+//             fontWeight: 500,
+//             textAlign: "left",
+//             transition: "background 0.15s ease",
+//             borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//           }}
+//           onMouseEnter={(e) =>
+//             (e.currentTarget.style.background = "rgba(255,255,255,0.05)")
+//           }
+//           onMouseLeave={(e) =>
+//             (e.currentTarget.style.background = "transparent")
+//           }
+//         >
+//           <svg
+//             width="15"
+//             height="15"
+//             viewBox="0 0 24 24"
+//             fill="none"
+//             stroke="currentColor"
+//             strokeWidth="1.8"
+//             strokeLinecap="round"
+//             strokeLinejoin="round"
+//           >
+//             <polyline points="3 6 5 6 21 6" />
+//             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+//             <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+//           </svg>
+//           Clear chat
+//         </button>
+
+//         {/* Block */}
+//         <button
+//           onClick={() => {
+//             onBlock();
+//             onClose();
+//           }}
+//           style={{
+//             width: "100%",
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 10,
+//             padding: "11px 14px",
+//             background: "transparent",
+//             border: "none",
+//             cursor: "pointer",
+//             color: "#f87171",
+//             fontSize: 13,
+//             fontWeight: 500,
+//             textAlign: "left",
+//             transition: "background 0.15s ease",
+//           }}
+//           onMouseEnter={(e) =>
+//             (e.currentTarget.style.background = "rgba(248,113,113,0.06)")
+//           }
+//           onMouseLeave={(e) =>
+//             (e.currentTarget.style.background = "transparent")
+//           }
+//         >
+//           <svg
+//             width="15"
+//             height="15"
+//             viewBox="0 0 24 24"
+//             fill="none"
+//             stroke="currentColor"
+//             strokeWidth="1.8"
+//             strokeLinecap="round"
+//             strokeLinejoin="round"
+//           >
+//             <circle cx="12" cy="12" r="10" />
+//             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+//           </svg>
+//           Block user
+//         </button>
+//       </div>
+//     </>
+//   );
+// }
+
+// export default ChatOptionsPopup;
+
+// import { useEffect, useRef, useState } from "react";
+// import fetchData from "../utils/fetchData";
+
+// const themes = [
+//   {
+//     id: "default",
+//     label: "Default",
+//     bg: "#0a0a0a",
+//     bubble: "#4f46e5",
+//     preview: "linear-gradient(135deg, #0a0a0a 0%, #111111 100%)",
+//   },
+//   {
+//     id: "midnight",
+//     label: "Midnight",
+//     bg: "linear-gradient(160deg, #0d0d2b 0%, #1a1040 100%)",
+//     bubble: "#7c3aed",
+//     preview: "linear-gradient(135deg, #0d0d2b 0%, #1a1040 100%)",
+//   },
+//   {
+//     id: "aurora",
+//     label: "Aurora",
+//     bg: "linear-gradient(160deg, #071a12 0%, #0a1628 100%)",
+//     bubble: "#059669",
+//     preview: "linear-gradient(135deg, #071a12 0%, #0a1628 100%)",
+//   },
+//   {
+//     id: "rose",
+//     label: "Rose",
+//     bg: "linear-gradient(160deg, #1a0a10 0%, #2a0d1a 100%)",
+//     bubble: "#e11d48",
+//     preview: "linear-gradient(135deg, #1a0a10 0%, #2a0d1a 100%)",
+//   },
+//   {
+//     id: "slate",
+//     label: "Slate",
+//     bg: "linear-gradient(160deg, #0d1117 0%, #161b22 100%)",
+//     bubble: "#0ea5e9",
+//     preview: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)",
+//   },
+//   {
+//     id: "amber",
+//     label: "Amber",
+//     bg: "linear-gradient(160deg, #12100a 0%, #1c1506 100%)",
+//     bubble: "#d97706",
+//     preview: "linear-gradient(135deg, #12100a 0%, #1c1506 100%)",
+//   },
+// ];
+
+// function ChatOptionsPopup({
+//   onClose,
+//   onClearChat,
+//   onBlock,
+//   onThemeChange,
+//   currentTheme,
+//   anchorRef,
+//   conversationId,
+//   otherUserId,
+// }) {
+//   const [showThemes, setShowThemes] = useState(false);
+//   const [clearLoading, setClearLoading] = useState(false);
+//   const [blockLoading, setBlockLoading] = useState(false);
+//   const [isBlocked, setIsBlocked] = useState(false);
+//   const [clearError, setClearError] = useState(null);
+//   const [blockError, setBlockError] = useState(null);
+//   const popupRef = useRef(null);
+
+//   useEffect(() => {
+//     const handleClickOutside = (e) => {
+//       if (
+//         popupRef.current &&
+//         !popupRef.current.contains(e.target) &&
+//         anchorRef.current &&
+//         !anchorRef.current.contains(e.target)
+//       ) {
+//         onClose();
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   const handleClearChat = async () => {
+//     if (!conversationId) return;
+//     const confirmed = window.confirm(
+//       "Clear this conversation? This will only remove it from your side.",
+//     );
+//     if (!confirmed) return;
+
+//     setClearLoading(true);
+//     setClearError(null);
+//     try {
+
+//        const res = await fetchData(`/api/chat/conversations/${conversationId}`, {
+//        method: "DELETE",
+//           credentials: "include",
+//         },
+//       );
+//       if (!res.ok) throw new Error("Failed to clear chat");
+//       onClearChat?.(); // parent clears messages from UI
+//       onClose();
+//     } catch (err) {
+//       console.error("Clear chat error:", err);
+//       setClearError("Failed to clear. Try again.");
+//     } finally {
+//       setClearLoading(false);
+//     }
+//   };
+
+//   const handleBlock = async () => {
+//     if (!otherUserId) return;
+//     const confirmed = window.confirm(
+//       "Block this user? They won't be able to message you.",
+//     );
+//     if (!confirmed) return;
+
+//     setBlockLoading(true);
+//     setBlockError(null);
+//     try {
+//       const res = await fetchData(`/api/users/${otherUserId}/block`, {
+//         method: "POST",
+//         credentials: "include",
+//         headers: { "Content-Type": "application/json" },
+//       });
+//       if (!res.ok) throw new Error("Failed to block user");
+//       setIsBlocked(true);
+//       onBlock?.(); // parent can show blocked state in chat
+//       onClose();
+//     } catch (err) {
+//       console.error("Block error:", err);
+//       setBlockError("Failed to block. Try again.");
+//     } finally {
+//       setBlockLoading(false);
+//     }
+//   };
+
+//   return (
+//     <>
+//       <style>{`
+//         @keyframes popupFadeIn {
+//           from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+//           to   { opacity: 1; transform: translateY(0) scale(1); }
+//         }
+//         .chat-popup { animation: popupFadeIn 0.18s ease forwards; }
+
+//         @keyframes themesSlideIn {
+//           from { opacity: 0; transform: translateY(-4px); }
+//           to   { opacity: 1; transform: translateY(0); }
+//         }
+//         .themes-grid { animation: themesSlideIn 0.16s ease forwards; }
+
+//         .theme-swatch {
+//           transition: transform 0.15s ease, box-shadow 0.15s ease;
+//         }
+//         .theme-swatch:hover {
+//           transform: scale(1.08);
+//         }
+//       `}</style>
+
+//       <div
+//         ref={popupRef}
+//         className="chat-popup"
+//         style={{
+//           position: "absolute",
+//           right: 0,
+//           top: 36,
+//           zIndex: 9999,
+//           width: 220,
+//           borderRadius: 16,
+//           background: "#161616",
+//           border: "0.5px solid rgba(255,255,255,0.1)",
+//           boxShadow:
+//             "0 16px 48px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05) inset",
+//           overflow: "hidden",
+//         }}
+//       >
+//         {/* Theme option */}
+//         <div>
+//           <button
+//             onClick={() => setShowThemes((v) => !v)}
+//             style={{
+//               width: "100%",
+//               display: "flex",
+//               alignItems: "center",
+//               justifyContent: "space-between",
+//               gap: 10,
+//               padding: "11px 14px",
+//               background: "transparent",
+//               border: "none",
+//               cursor: "pointer",
+//               color: "rgba(255,255,255,0.8)",
+//               fontSize: 13,
+//               fontWeight: 500,
+//               textAlign: "left",
+//               transition: "background 0.15s ease",
+//               borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//             }}
+//             onMouseEnter={(e) =>
+//               (e.currentTarget.style.background = "rgba(255,255,255,0.05)")
+//             }
+//             onMouseLeave={(e) =>
+//               (e.currentTarget.style.background = "transparent")
+//             }
+//           >
+//             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+//               <svg
+//                 width="15"
+//                 height="15"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="currentColor"
+//                 strokeWidth="1.8"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               >
+//                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+//                 <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+//                 <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+//                 <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+//                 <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+//               </svg>
+//               Theme
+//             </div>
+//             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+//               <div
+//                 style={{
+//                   width: 12,
+//                   height: 12,
+//                   borderRadius: "50%",
+//                   background: currentTheme?.bubble || "#4f46e5",
+//                   boxShadow: `0 0 6px ${currentTheme?.bubble || "#4f46e5"}80`,
+//                 }}
+//               />
+//               <svg
+//                 width="12"
+//                 height="12"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="rgba(255,255,255,0.3)"
+//                 strokeWidth="2"
+//                 strokeLinecap="round"
+//                 style={{
+//                   transform: showThemes ? "rotate(180deg)" : "rotate(0deg)",
+//                   transition: "transform 0.2s ease",
+//                 }}
+//               >
+//                 <polyline points="6 9 12 15 18 9" />
+//               </svg>
+//             </div>
+//           </button>
+
+//           {/* Theme grid */}
+//           {showThemes && (
+//             <div
+//               className="themes-grid"
+//               style={{
+//                 padding: "12px 14px 14px",
+//                 borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//                 display: "grid",
+//                 gridTemplateColumns: "repeat(3, 1fr)",
+//                 gap: 10,
+//               }}
+//             >
+//               {themes.map((theme) => {
+//                 const isActive = currentTheme?.id === theme.id;
+//                 return (
+//                   <button
+//                     key={theme.id}
+//                     onClick={() => {
+//                       onThemeChange(theme);
+//                       onClose();
+//                     }}
+//                     className="theme-swatch"
+//                     style={{
+//                       display: "flex",
+//                       flexDirection: "column",
+//                       alignItems: "center",
+//                       gap: 6,
+//                       background: "transparent",
+//                       border: "none",
+//                       cursor: "pointer",
+//                       padding: 0,
+//                     }}
+//                   >
+//                     <div
+//                       style={{
+//                         width: 48,
+//                         height: 48,
+//                         borderRadius: 12,
+//                         background: theme.preview,
+//                         border: isActive
+//                           ? `2px solid ${theme.bubble}`
+//                           : "1.5px solid rgba(255,255,255,0.08)",
+//                         boxShadow: isActive
+//                           ? `0 0 12px ${theme.bubble}60`
+//                           : "none",
+//                         position: "relative",
+//                         overflow: "hidden",
+//                         transition: "border 0.15s ease, box-shadow 0.15s ease",
+//                       }}
+//                     >
+//                       <div
+//                         style={{
+//                           position: "absolute",
+//                           top: 10,
+//                           left: 6,
+//                           width: 20,
+//                           height: 7,
+//                           borderRadius: 4,
+//                           background: "rgba(255,255,255,0.14)",
+//                         }}
+//                       />
+//                       <div
+//                         style={{
+//                           position: "absolute",
+//                           bottom: 10,
+//                           right: 6,
+//                           width: 24,
+//                           height: 7,
+//                           borderRadius: 4,
+//                           background: theme.bubble,
+//                           opacity: 0.9,
+//                           boxShadow: `0 0 6px ${theme.bubble}80`,
+//                         }}
+//                       />
+//                       {isActive && (
+//                         <div
+//                           style={{
+//                             position: "absolute",
+//                             inset: 0,
+//                             display: "flex",
+//                             alignItems: "center",
+//                             justifyContent: "center",
+//                             background: "rgba(0,0,0,0.25)",
+//                           }}
+//                         >
+//                           <svg
+//                             width="14"
+//                             height="14"
+//                             viewBox="0 0 24 24"
+//                             fill="none"
+//                             stroke={theme.bubble}
+//                             strokeWidth="2.5"
+//                             strokeLinecap="round"
+//                             strokeLinejoin="round"
+//                           >
+//                             <polyline points="20 6 9 17 4 12" />
+//                           </svg>
+//                         </div>
+//                       )}
+//                     </div>
+//                     <span
+//                       style={{
+//                         fontSize: 10,
+//                         color: isActive
+//                           ? "rgba(255,255,255,0.7)"
+//                           : "rgba(255,255,255,0.35)",
+//                         whiteSpace: "nowrap",
+//                         fontWeight: isActive ? 600 : 400,
+//                         transition: "color 0.15s ease",
+//                       }}
+//                     >
+//                       {theme.label}
+//                     </span>
+//                   </button>
+//                 );
+//               })}
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Clear chat */}
+//         <button
+//           onClick={handleClearChat}
+//           disabled={clearLoading}
+//           style={{
+//             width: "100%",
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 10,
+//             padding: "11px 14px",
+//             background: "transparent",
+//             border: "none",
+//             cursor: clearLoading ? "not-allowed" : "pointer",
+//             color: clearLoading
+//               ? "rgba(255,255,255,0.35)"
+//               : "rgba(255,255,255,0.8)",
+//             fontSize: 13,
+//             fontWeight: 500,
+//             textAlign: "left",
+//             transition: "background 0.15s ease",
+//             borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+//           }}
+//           onMouseEnter={(e) => {
+//             if (!clearLoading)
+//               e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+//           }}
+//           onMouseLeave={(e) =>
+//             (e.currentTarget.style.background = "transparent")
+//           }
+//         >
+//           {clearLoading ? (
+//             <svg
+//               width="15"
+//               height="15"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               style={{ animation: "spin 0.8s linear infinite" }}
+//             >
+//               <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+//               <path d="M12 2a10 10 0 0 1 10 10" />
+//             </svg>
+//           ) : (
+//             <svg
+//               width="15"
+//               height="15"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <polyline points="3 6 5 6 21 6" />
+//               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+//               <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+//             </svg>
+//           )}
+//           {clearLoading ? "Clearing…" : "Clear chat"}
+//         </button>
+//         {clearError && (
+//           <p
+//             style={{
+//               fontSize: 11,
+//               color: "#f87171",
+//               padding: "4px 14px 8px",
+//               margin: 0,
+//             }}
+//           >
+//             {clearError}
+//           </p>
+//         )}
+
+//         {/* Block */}
+//         <button
+//           onClick={handleBlock}
+//           disabled={blockLoading || isBlocked}
+//           style={{
+//             width: "100%",
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 10,
+//             padding: "11px 14px",
+//             background: "transparent",
+//             border: "none",
+//             cursor: blockLoading || isBlocked ? "not-allowed" : "pointer",
+//             color: isBlocked ? "rgba(248,113,113,0.4)" : "#f87171",
+//             fontSize: 13,
+//             fontWeight: 500,
+//             textAlign: "left",
+//             transition: "background 0.15s ease",
+//           }}
+//           onMouseEnter={(e) => {
+//             if (!blockLoading && !isBlocked)
+//               e.currentTarget.style.background = "rgba(248,113,113,0.06)";
+//           }}
+//           onMouseLeave={(e) =>
+//             (e.currentTarget.style.background = "transparent")
+//           }
+//         >
+//           {blockLoading ? (
+//             <svg
+//               width="15"
+//               height="15"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               style={{ animation: "spin 0.8s linear infinite" }}
+//             >
+//               <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+//               <path d="M12 2a10 10 0 0 1 10 10" />
+//             </svg>
+//           ) : (
+//             <svg
+//               width="15"
+//               height="15"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <circle cx="12" cy="12" r="10" />
+//               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+//             </svg>
+//           )}
+//           {blockLoading ? "Blocking…" : isBlocked ? "Blocked" : "Block user"}
+//         </button>
+//         {blockError && (
+//           <p
+//             style={{
+//               fontSize: 11,
+//               color: "#f87171",
+//               padding: "4px 14px 8px",
+//               margin: 0,
+//             }}
+//           >
+//             {blockError}
+//           </p>
+//         )}
+
+//         <style>{`
+//           @keyframes spin {
+//             from { transform: rotate(0deg); }
+//             to { transform: rotate(360deg); }
+//           }
+//         `}</style>
+//       </div>
+//     </>
+//   );
+// }
+
+// export default ChatOptionsPopup;
 
 import { useEffect, useRef, useState } from "react";
+import fetchData from "../utils/fetchData";
 
 const themes = [
   {
@@ -374,12 +1305,26 @@ function ChatOptionsPopup({
   onClose,
   onClearChat,
   onBlock,
+  onUnblock,
   onThemeChange,
   currentTheme,
   anchorRef,
+  conversationId,
+  otherUserId,
+  isBlocked: isBlockedProp,
 }) {
   const [showThemes, setShowThemes] = useState(false);
+  const [clearLoading, setClearLoading] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(isBlockedProp || false);
+  const [clearError, setClearError] = useState(null);
+  const [blockError, setBlockError] = useState(null);
   const popupRef = useRef(null);
+
+  // Sync if prop changes
+  useEffect(() => {
+    setIsBlocked(isBlockedProp || false);
+  }, [isBlockedProp]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -395,6 +1340,88 @@ function ChatOptionsPopup({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleClearChat = async () => {
+    if (!conversationId) return;
+    const confirmed = window.confirm(
+      "Clear this conversation? This will only remove it from your side.",
+    );
+    if (!confirmed) return;
+
+    setClearLoading(true);
+    setClearError(null);
+    try {
+      const res = await fetchData(
+        `/api/chat/conversations/${conversationId}/messages`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+      if (!res.ok) throw new Error("Failed to clear chat");
+      onClearChat?.();
+      onClose();
+    } catch (err) {
+      console.error("Clear chat error:", err);
+      setClearError("Failed to clear. Try again.");
+    } finally {
+      setClearLoading(false);
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!otherUserId) return;
+    const confirmed = window.confirm(
+      "Block this user? They won't be able to message you.",
+    );
+    if (!confirmed) return;
+
+    setBlockLoading(true);
+    setBlockError(null);
+    try {
+      const res = await fetchData(`/api/users/${otherUserId}/block`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to block user");
+      setIsBlocked(true);
+      onBlock?.();
+      onClose();
+    } catch (err) {
+      console.error("Block error:", err);
+      setBlockError("Failed to block. Try again.");
+    } finally {
+      setBlockLoading(false);
+    }
+  };
+
+  const handleUnblock = async () => {
+    console.log("otherUserId:", otherUserId); // ← add this
+
+    if (!otherUserId) return;
+    const confirmed = window.confirm("Unblock this user?");
+    if (!confirmed) return;
+
+    setBlockLoading(true);
+    setBlockError(null);
+    try {
+      const res = await fetchData(`/api/users/${otherUserId}/unblock`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to unblock user");
+      setIsBlocked(false);
+      onUnblock?.();
+      onClose();
+    } catch (err) {
+      console.error("Unblock error:", err);
+      setBlockError("Failed to unblock. Try again.");
+    } finally {
+      setBlockLoading(false);
+    }
+  };
 
   return (
     <>
@@ -416,6 +1443,10 @@ function ChatOptionsPopup({
         }
         .theme-swatch:hover {
           transform: scale(1.08);
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -465,7 +1496,6 @@ function ChatOptionsPopup({
             }
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {/* Palette icon */}
               <svg
                 width="15"
                 height="15"
@@ -484,7 +1514,6 @@ function ChatOptionsPopup({
               </svg>
               Theme
             </div>
-            {/* Current theme color dot */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div
                 style={{
@@ -563,7 +1592,6 @@ function ChatOptionsPopup({
                         transition: "border 0.15s ease, box-shadow 0.15s ease",
                       }}
                     >
-                      {/* Received bubble */}
                       <div
                         style={{
                           position: "absolute",
@@ -575,7 +1603,6 @@ function ChatOptionsPopup({
                           background: "rgba(255,255,255,0.14)",
                         }}
                       />
-                      {/* Sent bubble */}
                       <div
                         style={{
                           position: "absolute",
@@ -589,7 +1616,6 @@ function ChatOptionsPopup({
                           boxShadow: `0 0 6px ${theme.bubble}80`,
                         }}
                       />
-                      {/* Active checkmark */}
                       {isActive && (
                         <div
                           style={{
@@ -638,10 +1664,8 @@ function ChatOptionsPopup({
 
         {/* Clear chat */}
         <button
-          onClick={() => {
-            onClearChat();
-            onClose();
-          }}
+          onClick={handleClearChat}
+          disabled={clearLoading}
           style={{
             width: "100%",
             display: "flex",
@@ -650,44 +1674,73 @@ function ChatOptionsPopup({
             padding: "11px 14px",
             background: "transparent",
             border: "none",
-            cursor: "pointer",
-            color: "rgba(255,255,255,0.8)",
+            cursor: clearLoading ? "not-allowed" : "pointer",
+            color: clearLoading
+              ? "rgba(255,255,255,0.35)"
+              : "rgba(255,255,255,0.8)",
             fontSize: 13,
             fontWeight: 500,
             textAlign: "left",
             transition: "background 0.15s ease",
             borderBottom: "0.5px solid rgba(255,255,255,0.06)",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.05)")
-          }
+          onMouseEnter={(e) => {
+            if (!clearLoading)
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+          }}
           onMouseLeave={(e) =>
             (e.currentTarget.style.background = "transparent")
           }
         >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-          </svg>
-          Clear chat
+          {clearLoading ? (
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              style={{ animation: "spin 0.8s linear infinite" }}
+            >
+              <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
+          ) : (
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+            </svg>
+          )}
+          {clearLoading ? "Clearing…" : "Clear chat"}
         </button>
+        {clearError && (
+          <p
+            style={{
+              fontSize: 11,
+              color: "#f87171",
+              padding: "4px 14px 8px",
+              margin: 0,
+            }}
+          >
+            {clearError}
+          </p>
+        )}
 
-        {/* Block */}
+        {/* Block / Unblock — toggles based on isBlocked */}
         <button
-          onClick={() => {
-            onBlock();
-            onClose();
-          }}
+          onClick={isBlocked ? handleUnblock : handleBlock}
+          disabled={blockLoading}
           style={{
             width: "100%",
             display: "flex",
@@ -696,35 +1749,86 @@ function ChatOptionsPopup({
             padding: "11px 14px",
             background: "transparent",
             border: "none",
-            cursor: "pointer",
-            color: "#f87171",
+            cursor: blockLoading ? "not-allowed" : "pointer",
+            color: blockLoading ? "rgba(248,113,113,0.4)" : "#f87171",
             fontSize: 13,
             fontWeight: 500,
             textAlign: "left",
             transition: "background 0.15s ease",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(248,113,113,0.06)")
-          }
+          onMouseEnter={(e) => {
+            if (!blockLoading)
+              e.currentTarget.style.background = "rgba(248,113,113,0.06)";
+          }}
           onMouseLeave={(e) =>
             (e.currentTarget.style.background = "transparent")
           }
         >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-          </svg>
-          Block user
+          {blockLoading ? (
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              style={{ animation: "spin 0.8s linear infinite" }}
+            >
+              <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
+          ) : isBlocked ? (
+            // Unblock icon — unlocked padlock
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+            </svg>
+          ) : (
+            // Block icon — circle with slash
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+          )}
+          {blockLoading
+            ? isBlocked
+              ? "Unblocking…"
+              : "Blocking…"
+            : isBlocked
+              ? "Unblock user"
+              : "Block user"}
         </button>
+        {blockError && (
+          <p
+            style={{
+              fontSize: 11,
+              color: "#f87171",
+              padding: "4px 14px 8px",
+              margin: 0,
+            }}
+          >
+            {blockError}
+          </p>
+        )}
       </div>
     </>
   );

@@ -401,6 +401,7 @@ import LeftSidebar from "../LeftSidebar";
 import RightSidebar from "../RightSidebar";
 import fetchData from "../../utils/fetchData";
 import SkeletonPost from "../SkeletonPost";
+import { usePosts } from "../../hooks/usePosts";
 
 /* CACHE */
 let cachedPosts = null;
@@ -412,7 +413,7 @@ function HomeView({ openProfile }) {
   const containerRef = useRef(null);
   const scrollThrottleRef = useRef(false);
 
-  const [posts, setPosts] = useState(cachedPosts || []);
+const { posts, setPosts, updatePostLike } = usePosts(cachedPosts || []);
   const [loading, setLoading] = useState(!cachedPosts);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -537,6 +538,27 @@ function HomeView({ openProfile }) {
                   key={post._id}
                   post={post}
                   openProfile={openProfile}
+                  onLikeUpdate={(postId, userId, liked, likesCount) => {
+                    updatePostLike(postId, userId, liked, likesCount);
+                    cachedPosts = posts.map((p) =>
+                      String(p._id) === String(postId)
+                        ? {
+                            ...p,
+                            likesCount,
+                            likes: liked
+                              ? [
+                                  ...new Set([
+                                    ...(p.likes || []),
+                                    String(userId),
+                                  ]),
+                                ]
+                              : (p.likes || []).filter(
+                                  (id) => String(id) !== String(userId),
+                                ),
+                          }
+                        : p,
+                    );
+                  }}
                   onDelete={() => {
                     const updated = posts.filter((p) => p._id !== post._id);
                     setPosts(updated);

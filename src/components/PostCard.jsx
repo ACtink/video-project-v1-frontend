@@ -1099,7 +1099,7 @@ import PostOptionsPopup from "./PostOptionsPopup";
 import { useAuth } from "../hooks/useAuth";
 import fetchData from "../utils/fetchData";
 
-function PostCard({ post, onDelete }) {
+function PostCard({ post, onDelete, onLikeUpdate }) {
   const { user } = useAuth();
   const isOwner = String(user?._id) === String(post.user?._id);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -1112,9 +1112,9 @@ function PostCard({ post, onDelete }) {
   const [commentsCount, setCommentsCount] = useState(post.commentsCount ?? 0);
 
   // ── LIKE STATE ──────────────────────────────────────────────
- const [liked, setLiked] = useState(() =>
-   post.likes?.some((id) => String(id) === String(user?.id ?? user?._id)),
- );
+  const [liked, setLiked] = useState(() =>
+    post.likes?.some((id) => String(id) === String(user?.id ?? user?._id)),
+  );
   const [likesCount, setLikesCount] = useState(post.likesCount ?? 0);
   const [likeLoading, setLikeLoading] = useState(false);
   const [animating, setAnimating] = useState(false);
@@ -1126,12 +1126,14 @@ function PostCard({ post, onDelete }) {
 
   const handleLike = async () => {
     if (likeLoading) return;
-    setLikeLoading(true); // ✅ block immediately
+    setLikeLoading(true);
 
     const wasLiked = liked;
-    setLiked(!wasLiked);
-    setLikesCount((c) => (wasLiked ? c - 1 : c + 1));
+    const newLiked = !wasLiked;
+    const newCount = wasLiked ? likesCount - 1 : likesCount + 1;
 
+    setLiked(newLiked);
+    setLikesCount(newCount);
     setAnimating(true);
     setTimeout(() => setAnimating(false), 350);
 
@@ -1140,9 +1142,10 @@ function PostCard({ post, onDelete }) {
         method: "POST",
         credentials: "include",
       });
+      onLikeUpdate?.(post._id, user?._id ?? user?.id, newLiked, newCount); // ← add this line
     } catch (err) {
       setLiked(wasLiked);
-      setLikesCount((c) => (wasLiked ? c + 1 : c - 1));
+      setLikesCount(wasLiked ? likesCount : likesCount);
       console.error("Like error:", err);
     } finally {
       setLikeLoading(false);
