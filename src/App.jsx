@@ -12,6 +12,8 @@ import VideoView from './components/views/VideoView.jsx';
 import ChatView from './components/views/ChatView.jsx';
 import ProfileView from './components/views/ProfileView.jsx';
 import EditProfile from './pages/EditProfile.jsx';
+import NotificationsPage from './pages/NotificationsPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 
 function App() {
   return (
@@ -31,7 +33,12 @@ function App() {
 
           <Route path="/profile/:username" element={<ProfileView />} />
 
+          <Route path="/notifications" element={<NotificationsPage />} />
+
           <Route path="/edit-profile" element={<EditProfile />} />
+
+          <Route path="*" element={<NotFoundPage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1174,261 +1174,651 @@
 
 // export default FollowersFollowingModal;
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import fetchData from "../utils/fetchData";
-import { useAuth } from "../hooks/useAuth";
-import { X, MessageCircle, UserPlus } from "lucide-react";
+// import { useEffect, useState } from "react";
+// import { createPortal } from "react-dom";
+// import { useNavigate } from "react-router-dom";
+// import fetchData from "../utils/fetchData";
+// import { useAuth } from "../hooks/useAuth";
+// import { X, MessageCircle, UserPlus } from "lucide-react";
 
-function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
+// function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
+//   const [users, setUsers] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [show, setShow] = useState(false);
+//   const [navigatingTo, setNavigatingTo] = useState(null);
+
+//   const { user: authUser } = useAuth();
+//   const navigate = useNavigate();
+
+//   // ── Lock body scroll when open ──────────────────────────────
+//   useEffect(() => {
+//     if (open) {
+//       document.body.style.overflow = "hidden";
+//       setTimeout(() => setShow(true), 10);
+//     } else {
+//       document.body.style.overflow = "";
+//       setShow(false);
+//     }
+//     return () => {
+//       document.body.style.overflow = "";
+//     };
+//   }, [open]);
+
+//   // ── Fetch users ─────────────────────────────────────────────
+//   useEffect(() => {
+//     if (!open) return;
+//     if (ids.length === 0) {
+//       setUsers([]);
+//       return;
+//     }
+
+//     const fetchUsers = async () => {
+//       try {
+//         setLoading(true);
+//         const res = await fetchData("/api/users/by-ids", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           credentials: "include",
+//           body: JSON.stringify({ ids }),
+//         });
+//         const data = await res.json();
+//         setUsers(data.filter((u) => !u.isBlocked));      } catch (err) {
+//         console.error("Failed to load users", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchUsers();
+//   }, [open, ids]);
+
+//   const handleNavigateToProfile = (username) => {
+//     setNavigatingTo(username);
+//     setTimeout(() => {
+//       onClose();
+//       navigate(`/profile/${username}`);
+//       setNavigatingTo(null);
+//     }, 250);
+//   };
+
+//   if (!open) return null;
+
+//   return createPortal(
+//     <>
+//       <style>{`
+//         @keyframes fadeInUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+//         .fade-in-up { opacity:0; animation: fadeInUp .25s ease forwards }
+//       `}</style>
+
+//       <div
+//         onClick={(e) => e.target === e.currentTarget && onClose()}
+//         className={`fixed inset-0 z-[999] flex items-center justify-center px-4 transition-all duration-300 ${
+//           show
+//             ? "bg-black/80 backdrop-blur-sm"
+//             : "bg-black/0 backdrop-blur-none"
+//         }`}
+//       >
+//         <div
+//           className={`w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-all duration-300 ease-out ${
+//             show
+//               ? "scale-100 opacity-100 translate-y-0"
+//               : "scale-95 opacity-0 translate-y-4"
+//           }`}
+//           style={{ maxHeight: "min(75vh, 560px)" }}
+//         >
+//           {/* HEADER */}
+//           <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+//             <div className="flex items-center gap-2">
+//               <h3 className="text-[15px] font-semibold text-white tracking-tight">
+//                 {title}
+//               </h3>
+//               {users.length > 0 && !loading && (
+//                 <span className="text-[11px] text-white/30 bg-white/8 px-2 py-0.5 rounded-full tabular-nums">
+//                   {ids.length}
+//                 </span>
+//               )}
+//             </div>
+//             <button
+//               onClick={onClose}
+//               className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
+//             >
+//               <X size={13} strokeWidth={2.5} />
+//             </button>
+//           </div>
+
+//           {/* BODY */}
+//           <div className="overflow-y-auto overscroll-contain flex-1 min-h-0">
+//             {/* LOADING SKELETON */}
+//             {loading && (
+//               <div className="px-2 py-2 space-y-1">
+//                 {[...Array(6)].map((_, i) => (
+//                   <div
+//                     key={i}
+//                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl animate-pulse"
+//                   >
+//                     <div className="w-10 h-10 rounded-full bg-white/8 flex-shrink-0" />
+//                     <div className="flex-1 space-y-2">
+//                       <div className="h-2.5 bg-white/8 rounded-full w-1/2" />
+//                       <div className="h-2 bg-white/5 rounded-full w-1/3" />
+//                     </div>
+//                     <div className="w-16 h-7 rounded-full bg-white/8 flex-shrink-0" />
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* EMPTY STATE */}
+//             {!loading && users.length === 0 && (
+//               <div className="flex flex-col items-center justify-center py-14 gap-2 text-white/25">
+//                 <span className="text-3xl">👤</span>
+//                 <p className="text-[13px] tracking-wide">No users yet</p>
+//               </div>
+//             )}
+
+//             {/* USER LIST */}
+//             {!loading && users.length > 0 && (
+//               <div className="px-2 py-2">
+//                 {users.map((u, index) => {
+//                   const isMyOwnRow = authUser?._id === u._id;
+//                   const isNavigating = navigatingTo === u.username;
+
+//                   return (
+//                     <div
+//                       key={u._id}
+//                       className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 active:bg-white/8 transition-all duration-150 fade-in-up"
+//                       style={{ animationDelay: `${index * 35}ms` }}
+//                     >
+//                       {/* LEFT */}
+//                       <div
+//                         onClick={() => handleNavigateToProfile(u.username)}
+//                         className={`flex items-center gap-3 cursor-pointer flex-1 min-w-0 transition-opacity duration-200 ${
+//                           isNavigating ? "opacity-40" : "opacity-100"
+//                         }`}
+//                       >
+//                         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+//                           {u.profilePicture ? (
+//                             <img
+//                               src={u.profilePicture}
+//                               alt={u.username}
+//                               className="w-full h-full object-cover"
+//                             />
+//                           ) : (
+//                             <div className="w-full h-full bg-indigo-600/80 flex items-center justify-center">
+//                               <span className="text-sm font-semibold text-white">
+//                                 {u.username?.[0]?.toUpperCase() || "U"}
+//                               </span>
+//                             </div>
+//                           )}
+//                         </div>
+//                         <div className="flex flex-col min-w-0">
+//                           <span className="text-[13.5px] font-semibold text-white leading-tight truncate">
+//                             {u.username}
+//                             {isMyOwnRow && (
+//                               <span className="ml-1.5 text-[10px] font-normal text-white/30 tracking-wide">
+//                                 you
+//                               </span>
+//                             )}
+//                           </span>
+//                           {u.fullName && (
+//                             <span className="text-[12px] text-white/40 leading-tight truncate">
+//                               {u.fullName}
+//                             </span>
+//                           )}
+//                         </div>
+//                       </div>
+
+//                       {/* RIGHT */}
+//                       {!isMyOwnRow && (
+//                         <div className="flex-shrink-0 ml-3">
+//                           {u.isFollowing ? (
+//                             <button
+//                               onClick={async () => {
+//                                 try {
+//                                   const res = await fetchData(
+//                                     `/api/chat/start/${u._id}`,
+//                                     {
+//                                       method: "POST",
+//                                       credentials: "include",
+//                                     },
+//                                   );
+//                                   const data = await res.json();
+//                                   navigate(`/chat?conversation=${data._id}`);
+//                                 } catch (err) {
+//                                   console.error(err);
+//                                 }
+//                               }}
+//                               className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold border border-white/15 text-white/70 hover:text-white hover:bg-white/8 active:scale-90 transition-all duration-150"
+//                             >
+//                               <MessageCircle size={12} /> Message
+//                             </button>
+//                           ) : (
+//                             <button
+//                               onClick={async () => {
+//                                 try {
+//                                   await fetchData(
+//                                     `/api/users/${u._id}/follow`,
+//                                     {
+//                                       method: "POST",
+//                                       credentials: "include",
+//                                     },
+//                                   );
+//                                   setUsers((prev) =>
+//                                     prev.map((x) =>
+//                                       x._id === u._id
+//                                         ? { ...x, isFollowing: true }
+//                                         : x,
+//                                     ),
+//                                   );
+//                                 } catch (err) {
+//                                   console.error(err);
+//                                 }
+//                               }}
+//                               className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white active:scale-90 transition-all duration-150"
+//                             >
+//                               <UserPlus size={12} /> Follow
+//                             </button>
+//                           )}
+//                         </div>
+//                       )}
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     </>,
+//     document.body,
+//   );
+// }
+
+// export default FollowersFollowingModal;
+
+// import { useEffect, useState } from "react";
+// import { createPortal } from "react-dom";
+// import { useNavigate } from "react-router-dom";
+// import fetchData from "../utils/fetchData";
+// import { useAuth } from "../hooks/useAuth";
+// import { X, MessageCircle, UserPlus } from "lucide-react";
+
+// function FollowersFollowingModal({ open, onClose, title, ids = [] }) {
+//   const [users, setUsers] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [show, setShow] = useState(false);
+//   const [navigatingTo, setNavigatingTo] = useState(null);
+
+//   const { user: authUser } = useAuth();
+//   const navigate = useNavigate();
+
+//   // ── Lock body scroll when open ──────────────────────────────
+//   useEffect(() => {
+//     if (open) {
+//       document.body.style.overflow = "hidden";
+//       setTimeout(() => setShow(true), 10);
+//     } else {
+//       document.body.style.overflow = "";
+//       setShow(false);
+//     }
+//     return () => {
+//       document.body.style.overflow = "";
+//     };
+//   }, [open]);
+
+//   // ── Fetch users ─────────────────────────────────────────────
+//   const idsKey = ids.join(","); // stable primitive instead of array reference
+
+//   useEffect(() => {
+//     if (!open) return;
+//     if (ids.length === 0) {
+//       setUsers([]);
+//       return;
+//     }
+
+//     const fetchUsers = async () => {
+//       try {
+//         setLoading(true);
+//         const res = await fetchData("/api/users/by-ids", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           credentials: "include",
+//           body: JSON.stringify({ ids }),
+//         });
+//         const data = await res.json();
+//         setUsers(data.filter((u) => !u.isBlocked));
+//       } catch (err) {
+//         console.error("Failed to load users", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchUsers();
+//   }, [open, idsKey]); // ✅ idsKey instead of ids to prevent infinite re-renders
+
+//   const handleNavigateToProfile = (username) => {
+//     setNavigatingTo(username);
+//     setTimeout(() => {
+//       onClose();
+//       navigate(`/profile/${username}`);
+//       setNavigatingTo(null);
+//     }, 250);
+//   };
+
+//   if (!open) return null;
+
+//   return createPortal(
+//     <>
+//       <style>{`
+//         @keyframes fadeInUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+//         .fade-in-up { opacity:0; animation: fadeInUp .25s ease forwards }
+//       `}</style>
+
+//       <div
+//         onClick={(e) => e.target === e.currentTarget && onClose()}
+//         className={`fixed inset-0 z-[999] flex items-center justify-center px-4 transition-all duration-300 ${
+//           show
+//             ? "bg-black/80 backdrop-blur-sm"
+//             : "bg-black/0 backdrop-blur-none"
+//         }`}
+//       >
+//         <div
+//           className={`w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-all duration-300 ease-out ${
+//             show
+//               ? "scale-100 opacity-100 translate-y-0"
+//               : "scale-95 opacity-0 translate-y-4"
+//           }`}
+//           style={{ maxHeight: "min(75vh, 560px)" }}
+//         >
+//           {/* HEADER */}
+//           <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+//             <div className="flex items-center gap-2">
+//               <h3 className="text-[15px] font-semibold text-white tracking-tight">
+//                 {title}
+//               </h3>
+//               {users.length > 0 && !loading && (
+//                 <span className="text-[11px] text-white/30 bg-white/8 px-2 py-0.5 rounded-full tabular-nums">
+//                   {ids.length}
+//                 </span>
+//               )}
+//             </div>
+//             <button
+//               onClick={onClose}
+//               className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
+//             >
+//               <X size={13} strokeWidth={2.5} />
+//             </button>
+//           </div>
+
+//           {/* BODY */}
+//           <div className="overflow-y-auto overscroll-contain flex-1 min-h-0">
+//             {/* LOADING SKELETON */}
+//             {loading && (
+//               <div className="px-2 py-2 space-y-1">
+//                 {[...Array(6)].map((_, i) => (
+//                   <div
+//                     key={i}
+//                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl animate-pulse"
+//                   >
+//                     <div className="w-10 h-10 rounded-full bg-white/8 flex-shrink-0" />
+//                     <div className="flex-1 space-y-2">
+//                       <div className="h-2.5 bg-white/8 rounded-full w-1/2" />
+//                       <div className="h-2 bg-white/5 rounded-full w-1/3" />
+//                     </div>
+//                     <div className="w-16 h-7 rounded-full bg-white/8 flex-shrink-0" />
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* EMPTY STATE */}
+//             {!loading && users.length === 0 && (
+//               <div className="flex flex-col items-center justify-center py-14 gap-2 text-white/25">
+//                 <span className="text-3xl">👤</span>
+//                 <p className="text-[13px] tracking-wide">No users yet</p>
+//               </div>
+//             )}
+
+//             {/* USER LIST */}
+//             {!loading && users.length > 0 && (
+//               <div className="px-2 py-2">
+//                 {users.map((u, index) => {
+//                   const isMyOwnRow = authUser?._id === u._id;
+//                   const isNavigating = navigatingTo === u.username;
+
+//                   return (
+//                     <div
+//                       key={u._id}
+//                       className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 active:bg-white/8 transition-all duration-150 fade-in-up"
+//                       style={{ animationDelay: `${index * 35}ms` }}
+//                     >
+//                       {/* LEFT */}
+//                       <div
+//                         onClick={() => handleNavigateToProfile(u.username)}
+//                         className={`flex items-center gap-3 cursor-pointer flex-1 min-w-0 transition-opacity duration-200 ${
+//                           isNavigating ? "opacity-40" : "opacity-100"
+//                         }`}
+//                       >
+//                         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+//                           {u.profilePicture ? (
+//                             <img
+//                               src={u.profilePicture}
+//                               alt={u.username}
+//                               className="w-full h-full object-cover"
+//                             />
+//                           ) : (
+//                             <div className="w-full h-full bg-indigo-600/80 flex items-center justify-center">
+//                               <span className="text-sm font-semibold text-white">
+//                                 {u.username?.[0]?.toUpperCase() || "U"}
+//                               </span>
+//                             </div>
+//                           )}
+//                         </div>
+//                         <div className="flex flex-col min-w-0">
+//                           <span className="text-[13.5px] font-semibold text-white leading-tight truncate">
+//                             {u.username}
+//                             {isMyOwnRow && (
+//                               <span className="ml-1.5 text-[10px] font-normal text-white/30 tracking-wide">
+//                                 you
+//                               </span>
+//                             )}
+//                           </span>
+//                           {u.fullName && (
+//                             <span className="text-[12px] text-white/40 leading-tight truncate">
+//                               {u.fullName}
+//                             </span>
+//                           )}
+//                         </div>
+//                       </div>
+
+//                       {/* RIGHT */}
+//                       {!isMyOwnRow && (
+//                         <div className="flex-shrink-0 ml-3">
+//                           {u.isFollowing ? (
+//                             <button
+//                               onClick={async () => {
+//                                 try {
+//                                   const res = await fetchData(
+//                                     `/api/chat/start/${u._id}`,
+//                                     {
+//                                       method: "POST",
+//                                       credentials: "include",
+//                                     },
+//                                   );
+//                                   const data = await res.json();
+//                                   navigate(`/chat?conversation=${data._id}`);
+//                                 } catch (err) {
+//                                   console.error(err);
+//                                 }
+//                               }}
+//                               className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold border border-white/15 text-white/70 hover:text-white hover:bg-white/8 active:scale-90 transition-all duration-150"
+//                             >
+//                               <MessageCircle size={12} /> Message
+//                             </button>
+//                           ) : (
+//                             <button
+//                               onClick={async () => {
+//                                 try {
+//                                   await fetchData(
+//                                     `/api/users/${u._id}/follow`,
+//                                     {
+//                                       method: "POST",
+//                                       credentials: "include",
+//                                     },
+//                                   );
+//                                   setUsers((prev) =>
+//                                     prev.map((x) =>
+//                                       x._id === u._id
+//                                         ? { ...x, isFollowing: true }
+//                                         : x,
+//                                     ),
+//                                   );
+//                                 } catch (err) {
+//                                   console.error(err);
+//                                 }
+//                               }}
+//                               className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white active:scale-90 transition-all duration-150"
+//                             >
+//                               <UserPlus size={12} /> Follow
+//                             </button>
+//                           )}
+//                         </div>
+//                       )}
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     </>,
+//     document.body,
+//   );
+// }
+
+// export default FollowersFollowingModal;
+
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import fetchData from "../utils/fetchData";
+
+// Receives: open, onClose, title, userId, type ("followers" | "following")
+function FollowersFollowingModal({ open, onClose, title, userId, type }) {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [show, setShow] = useState(false);
-  const [navigatingTo, setNavigatingTo] = useState(null);
+  const [error, setError] = useState(null);
 
-  const { user: authUser } = useAuth();
-  const navigate = useNavigate();
-
-  // ── Lock body scroll when open ──────────────────────────────
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      setTimeout(() => setShow(true), 10);
-    } else {
-      document.body.style.overflow = "";
-      setShow(false);
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+    if (!open || !userId || !type) return;
 
-  // ── Fetch users ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!open) return;
-    if (ids.length === 0) {
-      setUsers([]);
-      return;
-    }
-
-    const fetchUsers = async () => {
+    const fetchList = async () => {
       try {
         setLoading(true);
-        const res = await fetchData("/api/users/by-ids", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        setError(null);
+        const res = await fetchData(`/api/users/${userId}/${type}`, {
           credentials: "include",
-          body: JSON.stringify({ ids }),
         });
+        if (!res.ok) throw new Error("Failed to fetch list");
         const data = await res.json();
-        setUsers(data.filter((u) => !u.isBlocked));      } catch (err) {
-        console.error("Failed to load users", err);
+        setUsers(data);
+      } catch (err) {
+        console.error(err);
+        setError("Could not load list.");
       } finally {
         setLoading(false);
       }
     };
-    fetchUsers();
-  }, [open, ids]);
 
-  const handleNavigateToProfile = (username) => {
-    setNavigatingTo(username);
-    setTimeout(() => {
-      onClose();
-      navigate(`/profile/${username}`);
-      setNavigatingTo(null);
-    }, 250);
-  };
+    fetchList();
+
+    // Reset when closed
+    return () => setUsers([]);
+  }, [open, userId, type]);
 
   if (!open) return null;
 
-  return createPortal(
-    <>
-      <style>{`
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
-        .fade-in-up { opacity:0; animation: fadeInUp .25s ease forwards }
-      `}</style>
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#111] border border-white/10 rounded-2xl shadow-2xl w-[340px] max-h-[480px] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+          <p className="text-[15px] font-semibold text-white">{title}</p>
+          <button
+            onClick={onClose}
+            className="text-white/40 hover:text-white transition-colors duration-100"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-      <div
-        onClick={(e) => e.target === e.currentTarget && onClose()}
-        className={`fixed inset-0 z-[999] flex items-center justify-center px-4 transition-all duration-300 ${
-          show
-            ? "bg-black/80 backdrop-blur-sm"
-            : "bg-black/0 backdrop-blur-none"
-        }`}
-      >
-        <div
-          className={`w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-all duration-300 ease-out ${
-            show
-              ? "scale-100 opacity-100 translate-y-0"
-              : "scale-95 opacity-0 translate-y-4"
-          }`}
-          style={{ maxHeight: "min(75vh, 560px)" }}
-        >
-          {/* HEADER */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-semibold text-white tracking-tight">
-                {title}
-              </h3>
-              {users.length > 0 && !loading && (
-                <span className="text-[11px] text-white/30 bg-white/8 px-2 py-0.5 rounded-full tabular-nums">
-                  {ids.length}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
-            >
-              <X size={13} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          {/* BODY */}
-          <div className="overflow-y-auto overscroll-contain flex-1 min-h-0">
-            {/* LOADING SKELETON */}
-            {loading && (
-              <div className="px-2 py-2 space-y-1">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl animate-pulse"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-white/8 flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-2.5 bg-white/8 rounded-full w-1/2" />
-                      <div className="h-2 bg-white/5 rounded-full w-1/3" />
-                    </div>
-                    <div className="w-16 h-7 rounded-full bg-white/8 flex-shrink-0" />
+        {/* List */}
+        <div className="overflow-y-auto flex-1 py-2">
+          {loading ? (
+            <div className="flex flex-col gap-3 px-4 py-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-white/6 flex-shrink-0" />
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <div className="h-3 w-28 rounded bg-white/6" />
+                    <div className="h-2.5 w-20 rounded bg-white/4" />
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <p className="text-center text-[13px] text-white/30 py-10">
+              {error}
+            </p>
+          ) : users.length === 0 ? (
+            <p className="text-center text-[13px] text-white/30 py-10">
+              {type === "followers"
+                ? "No followers yet"
+                : "Not following anyone yet"}
+            </p>
+          ) : (
+            users.map((u) => (
+              <button
+                key={u._id}
+                onClick={() => {
+                  onClose();
+                  navigate(`/profile/${u.username}`);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors duration-100"
+              >
+                {/* Avatar */}
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  {u.profilePicture ? (
+                    <img
+                      src={u.profilePicture}
+                      alt={u.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-white">
+                      {u.username?.[0]?.toUpperCase() || "?"}
+                    </span>
+                  )}
+                </div>
 
-            {/* EMPTY STATE */}
-            {!loading && users.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-14 gap-2 text-white/25">
-                <span className="text-3xl">👤</span>
-                <p className="text-[13px] tracking-wide">No users yet</p>
-              </div>
-            )}
-
-            {/* USER LIST */}
-            {!loading && users.length > 0 && (
-              <div className="px-2 py-2">
-                {users.map((u, index) => {
-                  const isMyOwnRow = authUser?._id === u._id;
-                  const isNavigating = navigatingTo === u.username;
-
-                  return (
-                    <div
-                      key={u._id}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 active:bg-white/8 transition-all duration-150 fade-in-up"
-                      style={{ animationDelay: `${index * 35}ms` }}
-                    >
-                      {/* LEFT */}
-                      <div
-                        onClick={() => handleNavigateToProfile(u.username)}
-                        className={`flex items-center gap-3 cursor-pointer flex-1 min-w-0 transition-opacity duration-200 ${
-                          isNavigating ? "opacity-40" : "opacity-100"
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-                          {u.profilePicture ? (
-                            <img
-                              src={u.profilePicture}
-                              alt={u.username}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-indigo-600/80 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-white">
-                                {u.username?.[0]?.toUpperCase() || "U"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[13.5px] font-semibold text-white leading-tight truncate">
-                            {u.username}
-                            {isMyOwnRow && (
-                              <span className="ml-1.5 text-[10px] font-normal text-white/30 tracking-wide">
-                                you
-                              </span>
-                            )}
-                          </span>
-                          {u.fullName && (
-                            <span className="text-[12px] text-white/40 leading-tight truncate">
-                              {u.fullName}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* RIGHT */}
-                      {!isMyOwnRow && (
-                        <div className="flex-shrink-0 ml-3">
-                          {u.isFollowing ? (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const res = await fetchData(
-                                    `/api/chat/start/${u._id}`,
-                                    {
-                                      method: "POST",
-                                      credentials: "include",
-                                    },
-                                  );
-                                  const data = await res.json();
-                                  navigate(`/chat?conversation=${data._id}`);
-                                } catch (err) {
-                                  console.error(err);
-                                }
-                              }}
-                              className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold border border-white/15 text-white/70 hover:text-white hover:bg-white/8 active:scale-90 transition-all duration-150"
-                            >
-                              <MessageCircle size={12} /> Message
-                            </button>
-                          ) : (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await fetchData(
-                                    `/api/users/${u._id}/follow`,
-                                    {
-                                      method: "POST",
-                                      credentials: "include",
-                                    },
-                                  );
-                                  setUsers((prev) =>
-                                    prev.map((x) =>
-                                      x._id === u._id
-                                        ? { ...x, isFollowing: true }
-                                        : x,
-                                    ),
-                                  );
-                                } catch (err) {
-                                  console.error(err);
-                                }
-                              }}
-                              className="flex items-center justify-center gap-1.5 w-[90px] h-[30px] rounded-full text-[12px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white active:scale-90 transition-all duration-150"
-                            >
-                              <UserPlus size={12} /> Follow
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                {/* Info */}
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="text-[13px] font-semibold text-white truncate">
+                    {u.username}
+                  </span>
+                  {u.fullName && (
+                    <span className="text-[12px] text-white/40 truncate">
+                      {u.fullName}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
-    </>,
-    document.body,
+    </div>
   );
 }
 
