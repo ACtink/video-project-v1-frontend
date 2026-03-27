@@ -988,7 +988,7 @@ function ChatView() {
                         <p className="text-[13.5px] font-semibold text-white leading-tight truncate">
                           {otherUser?.username}
                         </p>
-                        <p className="text-[12px] text-white/35 truncate mt-0.5">
+                        <p className="text-[12px] text-white/60 truncate mt-0.5 font-semibold">
                           {chat.lastMessage
                             ? chat.lastMessage.slice(0, 24) +
                               (chat.lastMessage.length > 24 ? "…" : "")

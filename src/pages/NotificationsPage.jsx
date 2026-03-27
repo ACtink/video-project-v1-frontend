@@ -417,9 +417,6 @@
 //           >
 //             {senderName}
 //           </p>
-//           {sender.username && (
-//             <p style={{ fontSize: 12, color: "#3a3a3a" }}>@{sender.username}</p>
-//           )}
 //         </div>
 //         <span style={{ fontSize: 11, color: "#303030" }}>{time} ago</span>
 //       </div>
@@ -898,1106 +895,35 @@
 //     if (selected?._id === id)
 //       setSelected((s) => ({ ...s, status: "accepted" }));
 //     try {
-//       const res = await fetchData(`/api/notifications/${id}/accept`, {
+//       await fetchData(`/api/notifications/${id}/accept`, {
 //         method: "POST",
 //         credentials: "include",
 //       });
-//       if (!res.ok) throw new Error("Failed to accept");
 //     } catch (err) {
-//       console.error("Accept error:", err);
-//       fetchNotifications();
-//     }
-//   };
-
-//   // Decline follow request — remove from list
-//   const handleDecline = async (id) => {
-//     setNotifications((prev) => prev.filter((n) => n._id !== id));
-//     if (selected?._id === id) setSelected(null);
-//     try {
-//       const res = await fetchData(`/api/notifications/${id}/decline`, {
-//         method: "POST",
-//         credentials: "include",
-//       });
-//       if (!res.ok) throw new Error("Failed to decline");
-//     } catch (err) {
-//       console.error("Decline error:", err);
-//       fetchNotifications();
-//     }
-//   };
-
-//   // ── Shared list props ──────────────────────────────────────────────────────
-//   const listProps = {
-//     filtered,
-//     activeTab,
-//     setActiveTab,
-//     unreadCount,
-//     clearCategory,
-//     selected,
-//     setSelected,
-//     markRead,
-//     handleAccept,
-//     handleDecline,
-//     loading,
-//   };
-
-//   const pageStyle = {
-//     fontFamily: "'DM Sans', -apple-system, sans-serif",
-//     background: "#0a0a0a",
-//     color: "#e0e0e0",
-//   };
-
-//   // ── Error state ────────────────────────────────────────────────────────────
-//   if (error) {
-//     return (
-//       <div
-//         style={{
-//           ...pageStyle,
-//           minHeight: "100vh",
-//           display: "flex",
-//           alignItems: "center",
-//           justifyContent: "center",
-//         }}
-//       >
-//         <div style={{ textAlign: "center" }}>
-//           <p style={{ color: "#c0392b", fontSize: 14, marginBottom: 12 }}>
-//             Failed to load notifications
-//           </p>
-//           <button
-//             onClick={fetchNotifications}
-//             style={{ ...btnStyle("primary"), padding: "8px 20px" }}
-//           >
-//             Retry
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ── Mobile ─────────────────────────────────────────────────────────────────
-//   if (isMobile) {
-//     return (
-//       <div style={{ ...pageStyle, minHeight: "100vh" }}>
-//         <div style={{ background: "#0d0d0d", minHeight: "100vh" }}>
-//           <NotifList {...listProps} compact={false} />
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ── Tablet ─────────────────────────────────────────────────────────────────
-//   if (isTablet) {
-//     return (
-//       <div
-//         style={{
-//           ...pageStyle,
-//           height: "100vh",
-//           display: "flex",
-//           overflow: "hidden",
-//         }}
-//       >
-//         <div
-//           style={{
-//             width: 320,
-//             background: "#0d0d0d",
-//             borderRight: "1px solid #181818",
-//             flexShrink: 0,
-//             display: "flex",
-//             flexDirection: "column",
-//           }}
-//         >
-//           <NotifList {...listProps} compact={true} />
-//         </div>
-//         <div
-//           style={{
-//             flex: 1,
-//             background: "#0a0a0a",
-//             display: "flex",
-//             flexDirection: "column",
-//             overflow: "hidden",
-//           }}
-//         >
-//           <DetailPanel
-//             notif={selected}
-//             onAccept={handleAccept}
-//             onDecline={handleDecline}
-//             onDelete={handleDelete}
-//           />
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ── Desktop ────────────────────────────────────────────────────────────────
-//   return (
-//     <div
-//       style={{
-//         ...pageStyle,
-//         height: "100vh",
-//         display: "flex",
-//         overflow: "hidden",
-//       }}
-//     >
-//       <div
-//         style={{
-//           width: 360,
-//           background: "#0d0d0d",
-//           borderRight: "1px solid #181818",
-//           flexShrink: 0,
-//           display: "flex",
-//           flexDirection: "column",
-//         }}
-//       >
-//         <NotifList {...listProps} compact={true} />
-//       </div>
-//       <div
-//         style={{
-//           flex: 1,
-//           background: "#0a0a0a",
-//           display: "flex",
-//           flexDirection: "column",
-//           overflow: "hidden",
-//         }}
-//       >
-//         <DetailPanel
-//           notif={selected}
-//           onAccept={handleAccept}
-//           onDecline={handleDecline}
-//           onDelete={handleDelete}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
-
-// import React, { useState, useEffect, useCallback } from "react";
-// import fetchData from "../utils/fetchData";
-
-// // ─── Constants ────────────────────────────────────────────────────────────────
-
-// const TABS = ["All", "Likes", "Comments", "Follows", "Messages", "Mentions"];
-
-// // Maps each tab to the DB `type` values it covers
-// const TAB_TYPE_MAP = {
-//   Likes: ["like"],
-//   Comments: ["comment"],
-//   Follows: ["follow_request", "follow_accepted"],
-//   Messages: ["message"],
-//   Mentions: ["mention"],
-// };
-
-// const AVATAR_PALETTE = [
-//   { bg: "#1a1033", fg: "#9d8fef" },
-//   { bg: "#0c2820", fg: "#4ec9a0" },
-//   { bg: "#2a1008", fg: "#e8845a" },
-//   { bg: "#0b1c30", fg: "#6aade8" },
-//   { bg: "#271a04", fg: "#e8952a" },
-//   { bg: "#28091a", fg: "#e87daa" },
-// ];
-
-// // ─── Pure view helpers ────────────────────────────────────────────────────────
-
-// function getInitials(name = "") {
-//   return (
-//     name
-//       .trim()
-//       .split(/\s+/)
-//       .map((w) => w[0] ?? "")
-//       .join("")
-//       .slice(0, 2)
-//       .toUpperCase() || "?"
-//   );
-// }
-
-// function getAvatarStyle(id = "") {
-//   const hash = String(id)
-//     .split("")
-//     .reduce((acc, c) => acc + c.charCodeAt(0), 0);
-//   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
-// }
-
-// function formatTime(dateStr) {
-//   const diff = Date.now() - new Date(dateStr).getTime();
-//   const mins = Math.floor(diff / 60_000);
-//   if (mins < 1) return "now";
-//   if (mins < 60) return `${mins}m`;
-//   const hrs = Math.floor(mins / 60);
-//   if (hrs < 24) return `${hrs}h`;
-//   const days = Math.floor(hrs / 24);
-//   if (days === 1) return "yesterday";
-//   return `${days}d`;
-// }
-
-// function isYesterday(dateStr) {
-//   const diff = Math.floor(
-//     (Date.now() - new Date(dateStr).getTime()) / 86_400_000,
-//   );
-//   return diff === 1;
-// }
-
-// function getNotifMessage(type) {
-//   switch (type) {
-//     case "follow_request":
-//       return "sent you a follow request";
-//     case "follow_accepted":
-//       return "accepted your follow request";
-//     case "like":
-//       return "liked your post";
-//     case "comment":
-//       return "commented on your post";
-//     case "message":
-//       return "sent you a message";
-//     case "mention":
-//       return "mentioned you in a post";
-//     default:
-//       return `sent you a ${type}`;
-//   }
-// }
-
-// function getCategory(type) {
-//   switch (type) {
-//     case "follow_request":
-//     case "follow_accepted":
-//       return "follows";
-//     case "like":
-//       return "likes";
-//     case "comment":
-//       return "comments";
-//     case "message":
-//       return "messages";
-//     case "mention":
-//       return "mentions";
-//     default:
-//       return type;
-//   }
-// }
-
-// // ─── useWindowWidth ───────────────────────────────────────────────────────────
-
-// function useWindowWidth() {
-//   const [w, setW] = useState(
-//     typeof window !== "undefined" ? window.innerWidth : 1200,
-//   );
-//   useEffect(() => {
-//     const h = () => setW(window.innerWidth);
-//     window.addEventListener("resize", h);
-//     return () => window.removeEventListener("resize", h);
-//   }, []);
-//   return w;
-// }
-
-// // ─── Button style helper ──────────────────────────────────────────────────────
-
-// function btnStyle(variant, extra = {}) {
-//   const base = {
-//     borderRadius: 8,
-//     fontSize: 12,
-//     fontWeight: 500,
-//     cursor: "pointer",
-//     fontFamily: "inherit",
-//     transition: "opacity 0.15s",
-//     ...extra,
-//   };
-//   if (variant === "primary")
-//     return { ...base, background: "#4a41a8", color: "#fff", border: "none" };
-//   if (variant === "danger")
-//     return {
-//       ...base,
-//       background: "transparent",
-//       color: "#c0392b",
-//       border: "1px solid #2a1010",
-//     };
-//   return {
-//     ...base,
-//     background: "transparent",
-//     color: "#666",
-//     border: "1px solid #2a2a2a",
-//   };
-// }
-
-// // ─── Avatar ───────────────────────────────────────────────────────────────────
-
-// function Avatar({ name, senderId, profilePicture, size = 40 }) {
-//   const { bg, fg } = getAvatarStyle(senderId);
-//   if (profilePicture) {
-//     return (
-//       <img
-//         src={profilePicture}
-//         alt={name}
-//         style={{
-//           width: size,
-//           height: size,
-//           borderRadius: "50%",
-//           objectFit: "cover",
-//           flexShrink: 0,
-//         }}
-//       />
-//     );
-//   }
-//   return (
-//     <div
-//       style={{
-//         width: size,
-//         height: size,
-//         borderRadius: "50%",
-//         background: bg,
-//         color: fg,
-//         flexShrink: 0,
-//         display: "flex",
-//         alignItems: "center",
-//         justifyContent: "center",
-//         fontSize: size * 0.35,
-//         fontWeight: 700,
-//         letterSpacing: "-0.02em",
-//       }}
-//     >
-//       {getInitials(name)}
-//     </div>
-//   );
-// }
-
-// // ─── NotificationCard ─────────────────────────────────────────────────────────
-
-// function NotificationCard({
-//   notif,
-//   selected,
-//   onSelect,
-//   onRead,
-//   onAccept,
-//   onDecline,
-//   compact,
-// }) {
-//   const isSelected = selected?._id === notif._id;
-//   const sender = notif.sender ?? {};
-//   const senderName = sender.username || "Unknown";
-//   const message = getNotifMessage(notif.type);
-//   const time = formatTime(notif.createdAt);
-//   const isPending =
-//     notif.type === "follow_request" && notif.status === "pending";
-
-//   return (
-//     <div
-//       onClick={() => {
-//         onSelect(notif);
-//         if (!notif.read) onRead(notif._id);
-//       }}
-//       style={{
-//         position: "relative",
-//         borderRadius: 12,
-//         padding: compact ? "10px 12px" : "12px 14px",
-//         display: "flex",
-//         gap: 11,
-//         cursor: "pointer",
-//         background: isSelected ? "#1c1840" : "transparent",
-//         border: `1px solid ${isSelected ? "#4a41a8" : notif.read ? "#1a1a1a" : "#2e2a5e"}`,
-//         transition: "background 0.15s, border-color 0.15s",
-//       }}
-//       onMouseEnter={(e) => {
-//         if (!isSelected) e.currentTarget.style.background = "#141414";
-//       }}
-//       onMouseLeave={(e) => {
-//         if (!isSelected) e.currentTarget.style.background = "transparent";
-//       }}
-//     >
-//       <Avatar
-//         name={senderName}
-//         senderId={sender._id}
-//         profilePicture={sender.profilePicture}
-//         size={compact ? 34 : 38}
-//       />
-
-//       <div style={{ flex: 1, minWidth: 0 }}>
-//         <div
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "baseline",
-//             marginBottom: 2,
-//           }}
-//         >
-//           <span
-//             style={{
-//               fontSize: 13,
-//               fontWeight: 600,
-//               color: "#e0e0e0",
-//               overflow: "hidden",
-//               textOverflow: "ellipsis",
-//               whiteSpace: "nowrap",
-//               maxWidth: "68%",
-//             }}
-//           >
-//             {senderName}
-//           </span>
-//           <span style={{ fontSize: 11, color: "#404040", flexShrink: 0 }}>
-//             {time}
-//           </span>
-//         </div>
-
-//         <p
-//           style={{
-//             fontSize: 12.5,
-//             color: "#555",
-//             lineHeight: 1.45,
-//             overflow: "hidden",
-//             textOverflow: "ellipsis",
-//             whiteSpace: compact ? "nowrap" : "normal",
-//           }}
-//         >
-//           {message}
-//         </p>
-
-//         {/* Accept / Decline buttons — only for pending follow requests in non-compact view */}
-//         {isPending && !compact && (
-//           <div style={{ display: "flex", gap: 6, marginTop: 9 }}>
-//             <button
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 onAccept(notif._id);
-//               }}
-//               style={{ ...btnStyle("primary"), flex: 1, padding: "7px 0" }}
-//             >
-//               Accept
-//             </button>
-//             <button
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 onDecline(notif._id);
-//               }}
-//               style={{ ...btnStyle("ghost"), flex: 1, padding: "7px 0" }}
-//             >
-//               Decline
-//             </button>
-//           </div>
-//         )}
-//       </div>
-
-//       {!notif.read && (
-//         <div
-//           style={{
-//             width: 7,
-//             height: 7,
-//             borderRadius: "50%",
-//             background: "#7c6fe0",
-//             position: "absolute",
-//             top: 14,
-//             right: 14,
-//             boxShadow: "0 0 6px #7c6fe066",
-//           }}
-//         />
-//       )}
-//     </div>
-//   );
-// }
-
-// // ─── Chip ─────────────────────────────────────────────────────────────────────
-
-// function Chip({ label, dim }) {
-//   return (
-//     <span
-//       style={{
-//         fontSize: 11,
-//         padding: "4px 11px",
-//         borderRadius: 20,
-//         background: dim ? "#141414" : "#1c1840",
-//         color: dim ? "#383838" : "#8a80d8",
-//         border: `1px solid ${dim ? "#1e1e1e" : "#2a2560"}`,
-//         textTransform: "capitalize",
-//         letterSpacing: "0.02em",
-//       }}
-//     >
-//       {label}
-//     </span>
-//   );
-// }
-
-// // ─── DetailPanel ─────────────────────────────────────────────────────────────
-
-// function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
-//   if (!notif) {
-//     return (
-//       <div
-//         style={{
-//           flex: 1,
-//           display: "flex",
-//           flexDirection: "column",
-//           alignItems: "center",
-//           justifyContent: "center",
-//           gap: 12,
-//         }}
-//       >
-//         <div
-//           style={{
-//             width: 44,
-//             height: 44,
-//             borderRadius: "50%",
-//             border: "1px solid #1e1e1e",
-//             display: "flex",
-//             alignItems: "center",
-//             justifyContent: "center",
-//           }}
-//         >
-//           <svg
-//             width="18"
-//             height="18"
-//             viewBox="0 0 24 24"
-//             fill="none"
-//             stroke="#2a2a2a"
-//             strokeWidth="1.5"
-//           >
-//             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-//             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-//           </svg>
-//         </div>
-//         <p style={{ fontSize: 12, color: "#2e2e2e" }}>Select a notification</p>
-//       </div>
-//     );
-//   }
-
-//   const sender = notif.sender ?? {};
-//   const senderName = sender.username || "Unknown";
-//   const message = getNotifMessage(notif.type);
-//   const category = getCategory(notif.type);
-//   const time = formatTime(notif.createdAt);
-//   const isPending =
-//     notif.type === "follow_request" && notif.status === "pending";
-
-//   return (
-//     <div style={{ flex: 1, padding: "36px 40px", overflowY: "auto" }}>
-//       {/* Header row */}
-//       <div
-//         style={{
-//           display: "flex",
-//           alignItems: "center",
-//           gap: 16,
-//           marginBottom: 32,
-//         }}
-//       >
-//         <Avatar
-//           name={senderName}
-//           senderId={sender._id}
-//           profilePicture={sender.profilePicture}
-//           size={52}
-//         />
-//         <div style={{ flex: 1 }}>
-//           <p
-//             style={{
-//               fontSize: 17,
-//               fontWeight: 600,
-//               color: "#f0f0f0",
-//               marginBottom: 3,
-//             }}
-//           >
-//             {senderName}
-//           </p>
-//         </div>
-//         <span style={{ fontSize: 11, color: "#303030" }}>{time} ago</span>
-//       </div>
-
-//       {/* Message */}
-//       <div
-//         style={{
-//           background: "#0f0f0f",
-//           border: "1px solid #1a1a1a",
-//           borderRadius: 12,
-//           padding: "18px 20px",
-//           marginBottom: 24,
-//         }}
-//       >
-//         <p style={{ fontSize: 14, color: "#777", lineHeight: 1.7 }}>
-//           <span style={{ color: "#ccc", fontWeight: 500 }}>{senderName}</span>{" "}
-//           {message}.
-//         </p>
-//       </div>
-
-//       {/* Accept / Decline */}
-//       {isPending && (
-//         <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-//           <button
-//             onClick={() => onAccept(notif._id)}
-//             style={{
-//               ...btnStyle("primary"),
-//               flex: 1,
-//               padding: "11px 0",
-//               fontSize: 13,
-//               borderRadius: 10,
-//             }}
-//           >
-//             Accept Request
-//           </button>
-//           <button
-//             onClick={() => onDecline(notif._id)}
-//             style={{
-//               ...btnStyle("ghost"),
-//               flex: 1,
-//               padding: "11px 0",
-//               fontSize: 13,
-//               borderRadius: 10,
-//             }}
-//           >
-//             Decline
-//           </button>
-//         </div>
-//       )}
-
-//       {/* Delete button */}
-//       <button
-//         onClick={() => onDelete(notif._id)}
-//         style={{
-//           ...btnStyle("danger"),
-//           width: "100%",
-//           padding: "10px 0",
-//           fontSize: 13,
-//           borderRadius: 10,
-//           marginBottom: 28,
-//         }}
-//       >
-//         Delete notification
-//       </button>
-
-//       {/* Meta chips */}
-//       <div
-//         style={{
-//           borderTop: "1px solid #141414",
-//           paddingTop: 20,
-//           display: "flex",
-//           gap: 8,
-//           flexWrap: "wrap",
-//         }}
-//       >
-//         <Chip label={category} />
-//         <Chip label={notif.read ? "Read" : "Unread"} dim={notif.read} />
-//         {notif.status && notif.status !== "pending" && (
-//           <Chip label={notif.status} />
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ─── Skeleton card ────────────────────────────────────────────────────────────
-
-// function SkeletonCard() {
-//   return (
-//     <div
-//       style={{
-//         borderRadius: 12,
-//         padding: "12px 14px",
-//         display: "flex",
-//         gap: 11,
-//         border: "1px solid #161616",
-//       }}
-//     >
-//       <div
-//         style={{
-//           width: 38,
-//           height: 38,
-//           borderRadius: "50%",
-//           background: "#181818",
-//           flexShrink: 0,
-//         }}
-//       />
-//       <div
-//         style={{
-//           flex: 1,
-//           display: "flex",
-//           flexDirection: "column",
-//           gap: 7,
-//           justifyContent: "center",
-//         }}
-//       >
-//         <div
-//           style={{
-//             height: 11,
-//             width: "45%",
-//             borderRadius: 6,
-//             background: "#181818",
-//           }}
-//         />
-//         <div
-//           style={{
-//             height: 10,
-//             width: "70%",
-//             borderRadius: 6,
-//             background: "#141414",
-//           }}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ─── NotifList ────────────────────────────────────────────────────────────────
-
-// function NotifList({
-//   filtered,
-//   activeTab,
-//   setActiveTab,
-//   unreadCount,
-//   clearCategory,
-//   selected,
-//   setSelected,
-//   markRead,
-//   handleAccept,
-//   handleDecline,
-//   compact,
-//   loading,
-// }) {
-//   const todayItems = filtered.filter((n) => !isYesterday(n.createdAt));
-//   const yesterdayItems = filtered.filter((n) => isYesterday(n.createdAt));
-//   const hasAny = filtered.length > 0;
-
-//   const DateLabel = ({ text }) => (
-//     <p
-//       style={{
-//         fontSize: 10.5,
-//         color: "#333",
-//         padding: "8px 2px 4px",
-//         fontWeight: 600,
-//         letterSpacing: "0.06em",
-//         textTransform: "uppercase",
-//       }}
-//     >
-//       {text}
-//     </p>
-//   );
-
-//   return (
-//     <div
-//       style={{
-//         display: "flex",
-//         flexDirection: "column",
-//         height: "100%",
-//         overflow: "hidden",
-//       }}
-//     >
-//       {/* Header */}
-//       <div
-//         style={{
-//           padding: compact ? "14px 14px 10px" : "18px 16px 12px",
-//           borderBottom: "1px solid #181818",
-//           flexShrink: 0,
-//         }}
-//       >
-//         <div
-//           style={{
-//             display: "flex",
-//             alignItems: "center",
-//             justifyContent: "space-between",
-//             marginBottom: 14,
-//           }}
-//         >
-//           <h1
-//             style={{
-//               fontSize: compact ? 15 : 17,
-//               fontWeight: 600,
-//               color: "#e0e0e0",
-//               letterSpacing: "-0.02em",
-//             }}
-//           >
-//             Notifications
-//           </h1>
-//           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-//             {unreadCount > 0 && (
-//               <span
-//                 style={{
-//                   fontSize: 11,
-//                   background: "#1c1840",
-//                   color: "#8a80d8",
-//                   padding: "3px 9px",
-//                   borderRadius: 20,
-//                   border: "1px solid #2a2560",
-//                 }}
-//               >
-//                 {unreadCount}
-//               </span>
-//             )}
-//             {/* "Clear all" deletes all notifications in the current tab/category */}
-//             {hasAny && (
-//               <button
-//                 onClick={clearCategory}
-//                 style={{
-//                   fontSize: 11,
-//                   color: "#555",
-//                   background: "transparent",
-//                   border: "1px solid #222",
-//                   borderRadius: 7,
-//                   padding: "4px 9px",
-//                   cursor: "pointer",
-//                   fontFamily: "inherit",
-//                 }}
-//                 title={
-//                   activeTab === "All"
-//                     ? "Delete all notifications"
-//                     : `Delete all ${activeTab.toLowerCase()} notifications`
-//                 }
-//               >
-//                 Clear {activeTab === "All" ? "all" : activeTab.toLowerCase()}
-//               </button>
-//             )}
-//           </div>
-//         </div>
-
-//         {/* Tabs */}
-//         <div
-//           style={{
-//             display: "flex",
-//             gap: 5,
-//             overflowX: "auto",
-//             scrollbarWidth: "none",
-//           }}
-//         >
-//           {TABS.map((tab) => (
-//             <button
-//               key={tab}
-//               onClick={() => setActiveTab(tab)}
-//               style={{
-//                 flexShrink: 0,
-//                 fontSize: 11.5,
-//                 padding: "4px 11px",
-//                 borderRadius: 20,
-//                 cursor: "pointer",
-//                 border: "1px solid",
-//                 fontFamily: "inherit",
-//                 transition: "all 0.15s",
-//                 ...(activeTab === tab
-//                   ? {
-//                       background: "#e0e0e0",
-//                       color: "#0d0d0d",
-//                       borderColor: "#e0e0e0",
-//                       fontWeight: 600,
-//                     }
-//                   : {
-//                       background: "transparent",
-//                       color: "#444",
-//                       borderColor: "#1e1e1e",
-//                     }),
-//               }}
-//             >
-//               {tab}
-//             </button>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* List */}
-//       <div
-//         style={{
-//           flex: 1,
-//           overflowY: "auto",
-//           padding: "8px 10px",
-//           display: "flex",
-//           flexDirection: "column",
-//           gap: 3,
-//           scrollbarWidth: "thin",
-//           scrollbarColor: "#1e1e1e transparent",
-//         }}
-//       >
-//         {loading ? (
-//           <div
-//             style={{
-//               display: "flex",
-//               flexDirection: "column",
-//               gap: 6,
-//               padding: "8px 0",
-//             }}
-//           >
-//             {[...Array(5)].map((_, i) => (
-//               <SkeletonCard key={i} />
-//             ))}
-//           </div>
-//         ) : filtered.length === 0 ? (
-//           <p
-//             style={{
-//               textAlign: "center",
-//               padding: "52px 0",
-//               color: "#2e2e2e",
-//               fontSize: 13,
-//             }}
-//           >
-//             Nothing here yet
-//           </p>
-//         ) : (
-//           <>
-//             {todayItems.length > 0 && (
-//               <>
-//                 {activeTab === "All" && <DateLabel text="Today" />}
-//                 {todayItems.map((n) => (
-//                   <NotificationCard
-//                     key={n._id}
-//                     notif={n}
-//                     selected={selected}
-//                     compact={compact}
-//                     onSelect={setSelected}
-//                     onRead={markRead}
-//                     onAccept={handleAccept}
-//                     onDecline={handleDecline}
-//                   />
-//                 ))}
-//               </>
-//             )}
-//             {yesterdayItems.length > 0 && (
-//               <>
-//                 {activeTab === "All" && <DateLabel text="Yesterday" />}
-//                 {yesterdayItems.map((n) => (
-//                   <NotificationCard
-//                     key={n._id}
-//                     notif={n}
-//                     selected={selected}
-//                     compact={compact}
-//                     onSelect={setSelected}
-//                     onRead={markRead}
-//                     onAccept={handleAccept}
-//                     onDecline={handleDecline}
-//                   />
-//                 ))}
-//               </>
-//             )}
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ─── Main Page ────────────────────────────────────────────────────────────────
-
-// export default function NotificationsPage() {
-//   const width = useWindowWidth();
-//   const [notifications, setNotifications] = useState([]);
-//   const [activeTab, setActiveTab] = useState("All");
-//   const [selected, setSelected] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   // ── Fetch ──────────────────────────────────────────────────────────────────
-//   const fetchNotifications = useCallback(async () => {
-//     try {
-//       setLoading(true);
-//       const res = await fetchData("/api/notifications", {
-//         credentials: "include",
-//       });
-//       if (!res.ok) throw new Error("Failed to fetch notifications");
-//       setNotifications(await res.json());
-//     } catch (err) {
-//       setError(err.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     fetchNotifications();
-//   }, [fetchNotifications]);
-
-//   // ── Layout breakpoints ─────────────────────────────────────────────────────
-//   const isMobile = width < 768;
-//   const isTablet = width >= 768 && width < 1100;
-
-//   // ── Derived state ──────────────────────────────────────────────────────────
-//   const filtered =
-//     activeTab === "All"
-//       ? notifications
-//       : notifications.filter((n) => TAB_TYPE_MAP[activeTab]?.includes(n.type));
-
-//   const unreadCount = notifications.filter((n) => !n.read).length;
-
-//   // ── Handlers ───────────────────────────────────────────────────────────────
-
-//   const markRead = async (id) => {
-//     setNotifications((prev) =>
-//       prev.map((n) => (n._id === id ? { ...n, read: true } : n)),
-//     );
-//     try {
-//       await fetchData(`/api/notifications/${id}/read`, {
-//         method: "PATCH",
-//         credentials: "include",
-//       });
-//     } catch (err) {
-//       console.error("Failed to mark as read:", err);
-//     }
-//   };
-
-//   // "Clear" button: marks all in category as read, then deletes them
-//   const clearCategory = async () => {
-//     const typesToClear = activeTab === "All" ? null : TAB_TYPE_MAP[activeTab];
-//     const typeParam = typesToClear ? `?types=${typesToClear.join(",")}` : "";
-
-//     // Optimistic update — remove from state immediately
-//     setNotifications((prev) =>
-//       typesToClear ? prev.filter((n) => !typesToClear.includes(n.type)) : [],
-//     );
-//     setSelected(null);
-
-//     try {
-//       // Mark as read first, then delete
-//       await fetchData(`/api/notifications/read-all${typeParam}`, {
-//         method: "POST",
-//         credentials: "include",
-//       });
-//       await fetchData(`/api/notifications${typeParam}`, {
-//         method: "DELETE",
-//         credentials: "include",
-//       });
-//     } catch (err) {
-//       console.error("Failed to clear notifications:", err);
-//       fetchNotifications();
-//     }
-//   };
-
-//   // Delete a single notification
-//   const handleDelete = async (id) => {
-//     setNotifications((prev) => prev.filter((n) => n._id !== id));
-//     if (selected?._id === id) setSelected(null);
-//     try {
-//       await fetchData(`/api/notifications/${id}`, {
-//         method: "DELETE",
-//         credentials: "include",
-//       });
-//     } catch (err) {
-//       console.error("Failed to delete notification:", err);
-//       fetchNotifications();
-//     }
-//   };
-
-//   // Accept follow request — mark as accepted (buttons disappear), keep in list
-//   const handleAccept = async (id) => {
-//     setNotifications((prev) =>
-//       prev.map((n) => (n._id === id ? { ...n, status: "accepted" } : n)),
-//     );
-//     if (selected?._id === id)
-//       setSelected((s) => ({ ...s, status: "accepted" }));
-//     try {
-//       const res = await fetchData(`/api/notifications/${id}/accept`, {
-//         method: "POST",
-//         credentials: "include",
-//       });
-//       if (res.status === 404) {
-//         // Request was already cancelled by the sender — remove the stale notification silently
+//       if (err.status === 404) {
+//         // Sender already cancelled — remove the stale notification silently
 //         setNotifications((prev) => prev.filter((n) => n._id !== id));
 //         if (selected?._id === id) setSelected(null);
 //         return;
 //       }
-//       if (!res.ok) throw new Error("Failed to accept");
-//     } catch (err) {
 //       console.error("Accept error:", err);
 //       fetchNotifications();
 //     }
 //   };
 
-//   // Decline follow request — remove from list
 //   const handleDecline = async (id) => {
 //     setNotifications((prev) => prev.filter((n) => n._id !== id));
 //     if (selected?._id === id) setSelected(null);
 //     try {
-//       const res = await fetchData(`/api/notifications/${id}/decline`, {
+//       await fetchData(`/api/notifications/${id}/decline`, {
 //         method: "POST",
 //         credentials: "include",
 //       });
-//       if (res.status === 404) {
-//         // Already cancelled by sender — notification is already removed from UI, nothing to do
+//     } catch (err) {
+//       if (err.status === 404) {
+//         // Sender already cancelled — UI is already correct, nothing to do
 //         return;
 //       }
-//       if (!res.ok) throw new Error("Failed to decline");
-//     } catch (err) {
 //       console.error("Decline error:", err);
 //       fetchNotifications();
 //     }
@@ -2147,14 +1073,92 @@
 //   );
 // }
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import fetchData from "../utils/fetchData";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+/**
+ * Measures the combined height of the sticky header and bottom footer,
+ * then returns `calc(100dvh - {headerH}px - {footerH}px)` so this page
+ * never overflows or under-fills the available viewport.
+ *
+ * Priority order:
+ *   1. CSS custom properties --header-h / --footer-h set by the layout root.
+ *   2. Direct DOM measurement via the ref callbacks passed back to the caller.
+ *   3. Automatic DOM query fallback (header tag + last fixed/sticky child).
+ */
+function useAvailableHeight() {
+  const [height, setHeight] = useState("100dvh");
+
+  useLayoutEffect(() => {
+    function measure() {
+      // 1. CSS vars (fastest — set these in your layout if you want zero jank)
+      const style = getComputedStyle(document.documentElement);
+      const cssH = parseFloat(style.getPropertyValue("--header-h"));
+      const cssF = parseFloat(style.getPropertyValue("--footer-h"));
+      if (!isNaN(cssH) && !isNaN(cssF)) {
+        setHeight(`calc(100dvh - ${cssH}px - ${cssF}px)`);
+        return;
+      }
+
+      // 2. DOM measurement — your header is <header>, your footer is a plain
+      //    <div> that is the last child of the layout root. We look for the
+      //    last sibling of the page content that sits below it.
+      const headerEl = document.querySelector("header");
+
+      // Footer: your component renders a plain div with border-t, no semantic
+      // tag. We grab it as the last element-child of <body> (or layout wrapper)
+      // that is NOT the header and NOT the main content wrapper.
+      const allBodyChildren = Array.from(document.body.children);
+      // Walk backwards — the footer is typically the last child
+      const footerEl = allBodyChildren
+        .slice()
+        .reverse()
+        .find(
+          (el) =>
+            el !== headerEl &&
+            el.tagName !== "SCRIPT" &&
+            el.tagName !== "STYLE" &&
+            // Only count it if it's visually at the bottom (short element)
+            el.getBoundingClientRect().height < 120,
+        );
+
+      const hh = headerEl?.getBoundingClientRect().height ?? 0;
+      const fh = footerEl?.getBoundingClientRect().height ?? 0;
+
+      setHeight(`calc(100dvh - ${Math.round(hh)}px - ${Math.round(fh)}px)`);
+    }
+
+    measure();
+
+    // Re-measure if header or footer resize (e.g. mobile browser chrome toggle)
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+
+    if (ro) {
+      const headerEl = document.querySelector("header");
+      if (headerEl) ro.observe(headerEl);
+      // Also observe body so any footer change is caught
+      ro.observe(document.body);
+    }
+
+    return () => ro?.disconnect();
+  }, []);
+
+  return height;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = ["All", "Likes", "Comments", "Follows", "Messages", "Mentions"];
 
-// Maps each tab to the DB `type` values it covers
 const TAB_TYPE_MAP = {
   Likes: ["like"],
   Comments: ["comment"],
@@ -2171,8 +1175,6 @@ const AVATAR_PALETTE = [
   { bg: "#271a04", fg: "#e8952a" },
   { bg: "#28091a", fg: "#e87daa" },
 ];
-
-// ─── Pure view helpers ────────────────────────────────────────────────────────
 
 function getInitials(name = "") {
   return (
@@ -2249,21 +1251,17 @@ function getCategory(type) {
   }
 }
 
-// ─── useWindowWidth ───────────────────────────────────────────────────────────
-
 function useWindowWidth() {
   const [w, setW] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200,
   );
   useEffect(() => {
-    const h = () => setW(window.innerWidth);
-    window.addEventListener("resize", h);
-    return () => window.removeEventListener("resize", h);
+    const handler = () => setW(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
   return w;
 }
-
-// ─── Button style helper ──────────────────────────────────────────────────────
 
 function btnStyle(variant, extra = {}) {
   const base = {
@@ -2275,24 +1273,32 @@ function btnStyle(variant, extra = {}) {
     transition: "opacity 0.15s",
     ...extra,
   };
-  if (variant === "primary")
-    return { ...base, background: "#4a41a8", color: "#fff", border: "none" };
-  if (variant === "danger")
-    return {
-      ...base,
-      background: "transparent",
-      color: "#c0392b",
-      border: "1px solid #2a1010",
-    };
-  return {
-    ...base,
-    background: "transparent",
-    color: "#666",
-    border: "1px solid #2a2a2a",
-  };
+  switch (variant) {
+    case "primary":
+      return { ...base, background: "#4a41a8", color: "#fff", border: "none" };
+    case "ghost":
+      return {
+        ...base,
+        background: "transparent",
+        color: "#888",
+        border: "1px solid #2a2a2a",
+      };
+    case "danger":
+      return {
+        ...base,
+        background: "transparent",
+        color: "#c0392b",
+        border: "1px solid #2a1010",
+      };
+    default:
+      return {
+        ...base,
+        background: "transparent",
+        color: "#666",
+        border: "1px solid #2a2a2a",
+      };
+  }
 }
-
-// ─── Avatar ───────────────────────────────────────────────────────────────────
 
 function Avatar({ name, senderId, profilePicture, size = 40 }) {
   const { bg, fg } = getAvatarStyle(senderId);
@@ -2332,8 +1338,6 @@ function Avatar({ name, senderId, profilePicture, size = 40 }) {
     </div>
   );
 }
-
-// ─── NotificationCard ─────────────────────────────────────────────────────────
 
 function NotificationCard({
   notif,
@@ -2412,6 +1416,7 @@ function NotificationCard({
 
         <p
           style={{
+            margin: 0,
             fontSize: 12.5,
             color: "#555",
             lineHeight: 1.45,
@@ -2423,7 +1428,6 @@ function NotificationCard({
           {message}
         </p>
 
-        {/* Accept / Decline buttons — only for pending follow requests in non-compact view */}
         {isPending && !compact && (
           <div style={{ display: "flex", gap: 6, marginTop: 9 }}>
             <button
@@ -2466,8 +1470,6 @@ function NotificationCard({
   );
 }
 
-// ─── Chip ─────────────────────────────────────────────────────────────────────
-
 function Chip({ label, dim }) {
   return (
     <span
@@ -2486,8 +1488,6 @@ function Chip({ label, dim }) {
     </span>
   );
 }
-
-// ─── DetailPanel ─────────────────────────────────────────────────────────────
 
 function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
   if (!notif) {
@@ -2525,7 +1525,9 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
         </div>
-        <p style={{ fontSize: 12, color: "#2e2e2e" }}>Select a notification</p>
+        <p style={{ fontSize: 12, color: "#2e2e2e", margin: 0 }}>
+          Select a notification
+        </p>
       </div>
     );
   }
@@ -2537,10 +1539,11 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
   const time = formatTime(notif.createdAt);
   const isPending =
     notif.type === "follow_request" && notif.status === "pending";
+  const timeLabel =
+    time === "now" || time === "yesterday" ? time : `${time} ago`;
 
   return (
     <div style={{ flex: 1, padding: "36px 40px", overflowY: "auto" }}>
-      {/* Header row */}
       <div
         style={{
           display: "flex",
@@ -2558,19 +1561,18 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
         <div style={{ flex: 1 }}>
           <p
             style={{
+              margin: 0,
               fontSize: 17,
               fontWeight: 600,
               color: "#f0f0f0",
-              marginBottom: 3,
             }}
           >
             {senderName}
           </p>
         </div>
-        <span style={{ fontSize: 11, color: "#303030" }}>{time} ago</span>
+        <span style={{ fontSize: 11, color: "#303030" }}>{timeLabel}</span>
       </div>
 
-      {/* Message */}
       <div
         style={{
           background: "#0f0f0f",
@@ -2580,13 +1582,12 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
           marginBottom: 24,
         }}
       >
-        <p style={{ fontSize: 14, color: "#777", lineHeight: 1.7 }}>
+        <p style={{ margin: 0, fontSize: 14, color: "#777", lineHeight: 1.7 }}>
           <span style={{ color: "#ccc", fontWeight: 500 }}>{senderName}</span>{" "}
           {message}.
         </p>
       </div>
 
-      {/* Accept / Decline */}
       {isPending && (
         <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
           <button
@@ -2616,7 +1617,6 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
         </div>
       )}
 
-      {/* Delete button */}
       <button
         onClick={() => onDelete(notif._id)}
         style={{
@@ -2631,7 +1631,6 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
         Delete notification
       </button>
 
-      {/* Meta chips */}
       <div
         style={{
           borderTop: "1px solid #141414",
@@ -2650,8 +1649,6 @@ function DetailPanel({ notif, onAccept, onDecline, onDelete }) {
     </div>
   );
 }
-
-// ─── Skeleton card ────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
   return (
@@ -2703,7 +1700,23 @@ function SkeletonCard() {
   );
 }
 
-// ─── NotifList ────────────────────────────────────────────────────────────────
+function DateLabel({ text }) {
+  return (
+    <p
+      style={{
+        margin: 0,
+        fontSize: 10.5,
+        color: "#333",
+        padding: "8px 2px 4px",
+        fontWeight: 600,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+      }}
+    >
+      {text}
+    </p>
+  );
+}
 
 function NotifList({
   filtered,
@@ -2723,21 +1736,6 @@ function NotifList({
   const yesterdayItems = filtered.filter((n) => isYesterday(n.createdAt));
   const hasAny = filtered.length > 0;
 
-  const DateLabel = ({ text }) => (
-    <p
-      style={{
-        fontSize: 10.5,
-        color: "#333",
-        padding: "8px 2px 4px",
-        fontWeight: 600,
-        letterSpacing: "0.06em",
-        textTransform: "uppercase",
-      }}
-    >
-      {text}
-    </p>
-  );
-
   return (
     <div
       style={{
@@ -2747,7 +1745,6 @@ function NotifList({
         overflow: "hidden",
       }}
     >
-      {/* Header */}
       <div
         style={{
           padding: compact ? "14px 14px 10px" : "18px 16px 12px",
@@ -2765,6 +1762,7 @@ function NotifList({
         >
           <h1
             style={{
+              margin: 0,
               fontSize: compact ? 15 : 17,
               fontWeight: 600,
               color: "#e0e0e0",
@@ -2788,7 +1786,6 @@ function NotifList({
                 {unreadCount}
               </span>
             )}
-            {/* "Clear all" deletes all notifications in the current tab/category */}
             {hasAny && (
               <button
                 onClick={clearCategory}
@@ -2814,7 +1811,6 @@ function NotifList({
           </div>
         </div>
 
-        {/* Tabs */}
         <div
           style={{
             display: "flex",
@@ -2856,7 +1852,6 @@ function NotifList({
         </div>
       </div>
 
-      {/* List */}
       <div
         style={{
           flex: 1,
@@ -2878,13 +1873,14 @@ function NotifList({
               padding: "8px 0",
             }}
           >
-            {[...Array(5)].map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <p
             style={{
+              margin: 0,
               textAlign: "center",
               padding: "52px 0",
               color: "#2e2e2e",
@@ -2936,17 +1932,15 @@ function NotifList({
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
 export default function NotificationsPage() {
   const width = useWindowWidth();
+  const availableHeight = useAvailableHeight();
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
@@ -2966,19 +1960,15 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // ── Layout breakpoints ─────────────────────────────────────────────────────
   const isMobile = width < 768;
   const isTablet = width >= 768 && width < 1100;
 
-  // ── Derived state ──────────────────────────────────────────────────────────
   const filtered =
     activeTab === "All"
       ? notifications
       : notifications.filter((n) => TAB_TYPE_MAP[activeTab]?.includes(n.type));
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const markRead = async (id) => {
     setNotifications((prev) =>
@@ -2994,19 +1984,14 @@ export default function NotificationsPage() {
     }
   };
 
-  // "Clear" button: marks all in category as read, then deletes them
   const clearCategory = async () => {
     const typesToClear = activeTab === "All" ? null : TAB_TYPE_MAP[activeTab];
     const typeParam = typesToClear ? `?types=${typesToClear.join(",")}` : "";
-
-    // Optimistic update — remove from state immediately
     setNotifications((prev) =>
       typesToClear ? prev.filter((n) => !typesToClear.includes(n.type)) : [],
     );
     setSelected(null);
-
     try {
-      // Mark as read first, then delete
       await fetchData(`/api/notifications/read-all${typeParam}`, {
         method: "POST",
         credentials: "include",
@@ -3021,7 +2006,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // Delete a single notification
   const handleDelete = async (id) => {
     setNotifications((prev) => prev.filter((n) => n._id !== id));
     if (selected?._id === id) setSelected(null);
@@ -3036,7 +2020,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // Accept follow request — mark as accepted (buttons disappear), keep in list
   const handleAccept = async (id) => {
     setNotifications((prev) =>
       prev.map((n) => (n._id === id ? { ...n, status: "accepted" } : n)),
@@ -3050,7 +2033,6 @@ export default function NotificationsPage() {
       });
     } catch (err) {
       if (err.status === 404) {
-        // Sender already cancelled — remove the stale notification silently
         setNotifications((prev) => prev.filter((n) => n._id !== id));
         if (selected?._id === id) setSelected(null);
         return;
@@ -3069,16 +2051,18 @@ export default function NotificationsPage() {
         credentials: "include",
       });
     } catch (err) {
-      if (err.status === 404) {
-        // Sender already cancelled — UI is already correct, nothing to do
-        return;
-      }
+      if (err.status === 404) return;
       console.error("Decline error:", err);
       fetchNotifications();
     }
   };
 
-  // ── Shared list props ──────────────────────────────────────────────────────
+  const pageStyle = {
+    fontFamily: "'DM Sans', -apple-system, sans-serif",
+    background: "#0a0a0a",
+    color: "#e0e0e0",
+  };
+
   const listProps = {
     filtered,
     activeTab,
@@ -3093,31 +2077,29 @@ export default function NotificationsPage() {
     loading,
   };
 
-  const pageStyle = {
-    fontFamily: "'DM Sans', -apple-system, sans-serif",
-    background: "#0a0a0a",
-    color: "#e0e0e0",
-  };
-
-  // ── Error state ────────────────────────────────────────────────────────────
   if (error) {
     return (
       <div
         style={{
           ...pageStyle,
-          minHeight: "100vh",
+          height: availableHeight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <p style={{ color: "#c0392b", fontSize: 14, marginBottom: 12 }}>
+          <p style={{ margin: 0, color: "#c0392b", fontSize: 14 }}>
             Failed to load notifications
           </p>
           <button
             onClick={fetchNotifications}
-            style={{ ...btnStyle("primary"), padding: "8px 20px" }}
+            style={{
+              ...btnStyle("primary"),
+              padding: "8px 20px",
+              marginTop: 12,
+            }}
           >
             Retry
           </button>
@@ -3126,24 +2108,31 @@ export default function NotificationsPage() {
     );
   }
 
-  // ── Mobile ─────────────────────────────────────────────────────────────────
   if (isMobile) {
     return (
-      <div style={{ ...pageStyle, minHeight: "100vh" }}>
-        <div style={{ background: "#0d0d0d", minHeight: "100vh" }}>
+      <div
+        style={{ ...pageStyle, height: availableHeight, overflow: "hidden" }}
+      >
+        <div
+          style={{
+            background: "#0d0d0d",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <NotifList {...listProps} compact={false} />
         </div>
       </div>
     );
   }
 
-  // ── Tablet ─────────────────────────────────────────────────────────────────
   if (isTablet) {
     return (
       <div
         style={{
           ...pageStyle,
-          height: "100vh",
+          height: availableHeight,
           display: "flex",
           overflow: "hidden",
         }}
@@ -3180,12 +2169,11 @@ export default function NotificationsPage() {
     );
   }
 
-  // ── Desktop ────────────────────────────────────────────────────────────────
   return (
     <div
       style={{
         ...pageStyle,
-        height: "100vh",
+        height: availableHeight,
         display: "flex",
         overflow: "hidden",
       }}

@@ -14,6 +14,7 @@ import ProfileView from './components/views/ProfileView.jsx';
 import EditProfile from './pages/EditProfile.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 
 function App() {
   return (
@@ -37,8 +38,9 @@ function App() {
 
           <Route path="/edit-profile" element={<EditProfile />} />
 
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
 
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

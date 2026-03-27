@@ -1697,21 +1697,404 @@
 
 // export default FollowersFollowingModal;
 
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { X } from "lucide-react";
+// import fetchData from "../utils/fetchData";
+
+// // Receives: open, onClose, title, userId, type ("followers" | "following")
+// function FollowersFollowingModal({ open, onClose, title, userId, type }) {
+//   const navigate = useNavigate();
+//   const [users, setUsers] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+
+//   useEffect(() => {
+//     if (!open || !userId || !type) return;
+
+//     const fetchList = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+//         const res = await fetchData(`/api/users/${userId}/${type}`, {
+//           credentials: "include",
+//         });
+//         if (!res.ok) throw new Error("Failed to fetch list");
+//         const data = await res.json();
+//         setUsers(data);
+//       } catch (err) {
+//         console.error(err);
+//         setError("Could not load list.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchList();
+
+//     // Reset when closed
+//     return () => setUsers([]);
+//   }, [open, userId, type]);
+
+//   if (!open) return null;
+
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+//       <div className="bg-[#111] border border-white/10 rounded-2xl shadow-2xl w-[340px] max-h-[480px] flex flex-col overflow-hidden">
+//         {/* Header */}
+//         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+//           <p className="text-[15px] font-semibold text-white">{title}</p>
+//           <button
+//             onClick={onClose}
+//             className="text-white/40 hover:text-white transition-colors duration-100"
+//             aria-label="Close"
+//           >
+//             <X size={18} />
+//           </button>
+//         </div>
+
+//         {/* List */}
+//         <div className="overflow-y-auto flex-1 py-2">
+//           {loading ? (
+//             <div className="flex flex-col gap-3 px-4 py-3">
+//               {[...Array(4)].map((_, i) => (
+//                 <div key={i} className="flex items-center gap-3">
+//                   <div className="w-9 h-9 rounded-full bg-white/6 flex-shrink-0" />
+//                   <div className="flex flex-col gap-1.5 flex-1">
+//                     <div className="h-3 w-28 rounded bg-white/6" />
+//                     <div className="h-2.5 w-20 rounded bg-white/4" />
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           ) : error ? (
+//             <p className="text-center text-[13px] text-white/30 py-10">
+//               {error}
+//             </p>
+//           ) : users.length === 0 ? (
+//             <p className="text-center text-[13px] text-white/30 py-10">
+//               {type === "followers"
+//                 ? "No followers yet"
+//                 : "Not following anyone yet"}
+//             </p>
+//           ) : (
+//             users.map((u) => (
+//               <button
+//                 key={u._id}
+//                 onClick={() => {
+//                   onClose();
+//                   navigate(`/profile/${u.username}`);
+//                 }}
+//                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors duration-100"
+//               >
+//                 {/* Avatar */}
+//                 <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+//                   {u.profilePicture ? (
+//                     <img
+//                       src={u.profilePicture}
+//                       alt={u.username}
+//                       className="w-full h-full object-cover"
+//                     />
+//                   ) : (
+//                     <span className="text-sm font-semibold text-white">
+//                       {u.username?.[0]?.toUpperCase() || "?"}
+//                     </span>
+//                   )}
+//                 </div>
+
+//                 {/* Info */}
+//                 <div className="flex flex-col items-start min-w-0">
+//                   <span className="text-[13px] font-semibold text-white truncate">
+//                     {u.username}
+//                   </span>
+//                   {u.fullName && (
+//                     <span className="text-[12px] text-white/40 truncate">
+//                       {u.fullName}
+//                     </span>
+//                   )}
+//                 </div>
+//               </button>
+//             ))
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default FollowersFollowingModal;
+
+// import { useEffect, useState } from "react";
+// import { createPortal } from "react-dom";
+// import { useNavigate } from "react-router-dom";
+// import { X } from "lucide-react";
+// import fetchData from "../utils/fetchData";
+
+// function FollowersFollowingModal({ open, onClose, title, userId, type }) {
+//   const navigate = useNavigate();
+//   const [users, setUsers] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [visible, setVisible] = useState(false);
+
+//   // Scroll lock
+//   useEffect(() => {
+//     if (open) {
+//       document.body.style.overflow = "hidden";
+//     }
+//     return () => {
+//       document.body.style.overflow = "";
+//     };
+//   }, [open]);
+
+//   // Animate in
+//   useEffect(() => {
+//     if (open) {
+//       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+//     } else {
+//       setVisible(false);
+//     }
+//   }, [open]);
+
+//   // Fetch list
+//   useEffect(() => {
+//     if (!open || !userId || !type) return;
+
+//     const fetchList = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+//         const res = await fetchData(`/api/users/${userId}/${type}`, {
+//           credentials: "include",
+//         });
+//         if (!res.ok) throw new Error("Failed to fetch list");
+//         const data = await res.json();
+//         setUsers(data);
+//       } catch (err) {
+//         console.error(err);
+//         setError("Could not load list.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchList();
+//     return () => setUsers([]);
+//   }, [open, userId, type]);
+
+//   if (!open) return null;
+
+//   // Avatar colors based on first letter
+//   const avatarColors = [
+//     "from-indigo-500 to-purple-600",
+//     "from-pink-500 to-rose-600",
+//     "from-emerald-500 to-teal-600",
+//     "from-orange-500 to-amber-600",
+//     "from-blue-500 to-cyan-600",
+//   ];
+
+//   const getAvatarColor = (username) => {
+//     const index = (username?.charCodeAt(0) ?? 0) % avatarColors.length;
+//     return avatarColors[index];
+//   };
+
+//   return createPortal(
+//     <div
+//       onClick={(e) => e.target === e.currentTarget && onClose()}
+//       className="fixed inset-0 z-[999] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm"
+//       style={{
+//         opacity: visible ? 1 : 0,
+//         transition: "opacity 0.2s ease",
+//       }}
+//     >
+//       <div
+//         className="bg-[#111] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm max-h-[480px] flex flex-col overflow-hidden"
+//         style={{
+//           transform: visible
+//             ? "translateY(0) scale(1)"
+//             : "translateY(16px) scale(0.97)",
+//           transition: "transform 0.25s ease, opacity 0.25s ease",
+//           opacity: visible ? 1 : 0,
+//         }}
+//       >
+//         {/* Header */}
+//         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+//           <p className="text-[15px] font-semibold text-white">{title}</p>
+//           <button
+//             onClick={onClose}
+//             className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
+//           >
+//             <X size={13} strokeWidth={2.5} />
+//           </button>
+//         </div>
+
+//         {/* List */}
+//         <div className="overflow-y-auto flex-1 py-2">
+//           {loading ? (
+//             <div className="flex flex-col gap-3 px-4 py-3">
+//               {[...Array(4)].map((_, i) => (
+//                 <div key={i} className="flex items-center gap-3 animate-pulse">
+//                   <div className="w-10 h-10 rounded-full bg-white/8 flex-shrink-0" />
+//                   <div className="flex flex-col gap-1.5 flex-1">
+//                     <div className="h-3 w-28 rounded-full bg-white/8" />
+//                     <div className="h-2.5 w-20 rounded-full bg-white/5" />
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           ) : error ? (
+//             <p className="text-center text-[13px] text-white/30 py-10">
+//               {error}
+//             </p>
+//           ) : users.length === 0 ? (
+//             <p className="text-center text-[13px] text-white/30 py-10">
+//               {type === "followers"
+//                 ? "No followers yet"
+//                 : "Not following anyone yet"}
+//             </p>
+//           ) : (
+//             users.map((u) => (
+//               <button
+//                 key={u._id}
+//                 onClick={() => {
+//                   onClose();
+//                   navigate(`/profile/${u.username}`);
+//                 }}
+//                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/8 active:scale-[0.99] transition-all duration-100 text-left"
+//               >
+//                 {/* Avatar */}
+//                 <div
+//                   className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br ${getAvatarColor(u.username)} flex items-center justify-center flex-shrink-0 ring-[1.5px] ring-white/10`}
+//                 >
+//                   {u.profilePicture ? (
+//                     <img
+//                       src={u.profilePicture}
+//                       alt={u.username}
+//                       className="w-full h-full object-cover"
+//                       onError={(e) => {
+//                         e.target.style.display = "none";
+//                         e.target.nextSibling.style.display = "flex";
+//                       }}
+//                     />
+//                   ) : null}
+//                   <span
+//                     className="text-[14px] font-bold text-white items-center justify-center"
+//                     style={{ display: u.profilePicture ? "none" : "flex" }}
+//                   >
+//                     {u.username?.[0]?.toUpperCase() || "?"}
+//                   </span>
+//                 </div>
+
+//                 {/* Info */}
+//                 <div className="flex flex-col items-start min-w-0">
+//                   <span className="text-[13px] font-semibold text-white truncate">
+//                     {u.username}
+//                   </span>
+//                   <span className="text-[12px] text-white/40 truncate">
+//                     {u.fullName || `@${u.username}`}
+//                   </span>
+//                 </div>
+//               </button>
+//             ))
+//           )}
+//         </div>
+//       </div>
+//     </div>,
+//     document.body,
+//   );
+// }
+
+// export default FollowersFollowingModal;
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import fetchData from "../utils/fetchData";
 
-// Receives: open, onClose, title, userId, type ("followers" | "following")
-function FollowersFollowingModal({ open, onClose, title, userId, type }) {
+function SkeletonRow({ delay = 0 }) {
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-3"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="w-10 h-10 rounded-full flex-shrink-0 bg-white/8 overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+      </div>
+      <div className="flex flex-col gap-2 flex-1">
+        <div
+          className="h-3 rounded-full bg-white/8 overflow-hidden relative"
+          style={{ width: `${120 + (delay % 3) * 20}px` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+        </div>
+        <div className="h-2.5 w-16 rounded-full bg-white/5 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FollowersFollowingModal({
+  open,
+  onClose,
+  title,
+  userId,
+  type,
+  loggedInUser, // the currently logged-in user object
+  onMessage, // callback: (user) => void — handle message/DM action
+}) {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [myFollowing, setMyFollowing] = useState([]);
+  const [followingUsers, setFollowingUsers] = useState({}); // per-user follow loading state
 
   useEffect(() => {
-    if (!open || !userId || !type) return;
+    if (open) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setVisible(true)),
+      );
+    } else {
+      setVisible(false);
+    }
+  }, [open]);
+
+  // Fetch logged-in user's following list when modal opens
+  useEffect(() => {
+    if (!open || !loggedInUser?._id) return;
+    const fetchMyFollowing = async () => {
+      try {
+        const res = await fetchData(
+          `/api/users/${loggedInUser._id}/following`,
+          {
+            credentials: "include",
+          },
+        );
+        const data = await res.json();
+        setMyFollowing(data.map((u) => u._id));
+      } catch (err) {
+        console.error("Failed to fetch following list", err);
+      }
+    };
+    fetchMyFollowing();
+    return () => setMyFollowing([]);
+  }, [open, loggedInUser?._id]);
+
+  // Fetch the followers/following list
+  useEffect(() => {
+    if (!open || !userId || !type) return;
     const fetchList = async () => {
       try {
         setLoading(true);
@@ -1729,96 +2112,187 @@ function FollowersFollowingModal({ open, onClose, title, userId, type }) {
         setLoading(false);
       }
     };
-
     fetchList();
-
-    // Reset when closed
     return () => setUsers([]);
   }, [open, userId, type]);
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#111] border border-white/10 rounded-2xl shadow-2xl w-[340px] max-h-[480px] flex flex-col overflow-hidden">
+  const avatarColors = [
+    "from-indigo-500 to-purple-600",
+    "from-pink-500 to-rose-600",
+    "from-emerald-500 to-teal-600",
+    "from-orange-500 to-amber-600",
+    "from-blue-500 to-cyan-600",
+  ];
+
+  const getAvatarColor = (username) => {
+    const index = (username?.charCodeAt(0) ?? 0) % avatarColors.length;
+    return avatarColors[index];
+  };
+
+  const isFollowingUser = (targetId) => myFollowing.includes(targetId);
+
+  // Self-contained follow handler — has access to setMyFollowing
+  const handleFollow = async (targetId) => {
+    if (followingUsers[targetId]) return;
+    try {
+      setFollowingUsers((prev) => ({ ...prev, [targetId]: true }));
+      await fetchData(`/api/users/${targetId}/follow`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      // Optimistically switch button to Message
+      setMyFollowing((prev) => [...prev, targetId]);
+    } catch (err) {
+      console.error("Follow error:", err);
+    } finally {
+      setFollowingUsers((prev) => ({ ...prev, [targetId]: false }));
+    }
+  };
+
+  return createPortal(
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="fixed inset-0 z-[999] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm"
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.25s ease",
+      }}
+    >
+      <div
+        className="bg-[#111] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden"
+        style={{
+          height: "420px",
+          opacity: visible ? 1 : 0,
+          transform: visible
+            ? "translateY(0) scale(1)"
+            : "translateY(24px) scale(0.95)",
+          transition:
+            "opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 flex-shrink-0">
           <p className="text-[15px] font-semibold text-white">{title}</p>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors duration-100"
-            aria-label="Close"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
           >
-            <X size={18} />
+            <X size={13} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* List */}
         <div className="overflow-y-auto flex-1 py-2">
           {loading ? (
-            <div className="flex flex-col gap-3 px-4 py-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-white/6 flex-shrink-0" />
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <div className="h-3 w-28 rounded bg-white/6" />
-                    <div className="h-2.5 w-20 rounded bg-white/4" />
-                  </div>
-                </div>
+            <>
+              {[...Array(5)].map((_, i) => (
+                <SkeletonRow key={i} delay={i * 100} />
               ))}
-            </div>
+            </>
           ) : error ? (
-            <p className="text-center text-[13px] text-white/30 py-10">
-              {error}
-            </p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-[13px] text-white/30">{error}</p>
+            </div>
           ) : users.length === 0 ? (
-            <p className="text-center text-[13px] text-white/30 py-10">
-              {type === "followers"
-                ? "No followers yet"
-                : "Not following anyone yet"}
-            </p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-[13px] text-white/30">
+                {type === "followers"
+                  ? "No followers yet"
+                  : "Not following anyone yet"}
+              </p>
+            </div>
           ) : (
-            users.map((u) => (
-              <button
-                key={u._id}
-                onClick={() => {
-                  onClose();
-                  navigate(`/profile/${u.username}`);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors duration-100"
-              >
-                {/* Avatar */}
-                <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  {u.profilePicture ? (
-                    <img
-                      src={u.profilePicture}
-                      alt={u.username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-white">
-                      {u.username?.[0]?.toUpperCase() || "?"}
-                    </span>
-                  )}
-                </div>
+            users.map((u, i) => {
+              const isOwnProfile = u._id === loggedInUser?._id;
+              const isFollowing = isFollowingUser(u._id);
+              const isLoadingFollow = !!followingUsers[u._id];
 
-                {/* Info */}
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="text-[13px] font-semibold text-white truncate">
-                    {u.username}
-                  </span>
-                  {u.fullName && (
-                    <span className="text-[12px] text-white/40 truncate">
-                      {u.fullName}
+              return (
+                <div
+                  key={u._id}
+                  className="w-full flex items-center gap-3 px-4 py-3"
+                  style={{
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? "translateY(0)" : "translateY(6px)",
+                    transition: `opacity 0.25s ease ${80 + i * 35}ms, transform 0.25s ease ${80 + i * 35}ms`,
+                  }}
+                >
+                  {/* Clickable avatar + name */}
+                  <button
+                    onClick={() => {
+                      onClose();
+                      navigate(`/profile/${u.username}`);
+                    }}
+                    className="flex items-center gap-3 flex-1 text-left min-w-0 hover:opacity-80 active:opacity-60 transition-opacity duration-150"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br ${getAvatarColor(u.username)} flex items-center justify-center flex-shrink-0 ring-[1.5px] ring-white/10`}
+                    >
+                      {u.profilePicture ? (
+                        <img
+                          src={u.profilePicture}
+                          alt={u.username}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextSibling.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className="text-[14px] font-bold text-white items-center justify-center"
+                        style={{ display: u.profilePicture ? "none" : "flex" }}
+                      >
+                        {u.username?.[0]?.toUpperCase() || "?"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-start min-w-0">
+                      <span className="text-[13px] font-semibold text-white truncate">
+                        {u.username}
+                      </span>
+                      <span className="text-[12px] text-white/40 truncate">
+                        {u.fullName || `@${u.username}`}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Action button */}
+                  {isOwnProfile ? (
+                    <span className="flex-shrink-0 text-[12px] text-white/30 px-1">
+                      You
                     </span>
+                  ) : isFollowing ? (
+                    <button
+                      onClick={() =>
+                        onMessage
+                          ? onMessage(u)
+                          : navigate(`/messages/${u._id}`)
+                      }
+                      className="flex-shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 text-white transition-colors duration-150"
+                    >
+                      Message
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleFollow(u._id)}
+                      disabled={isLoadingFollow}
+                      className="flex-shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingFollow ? "..." : "Follow"}
+                    </button>
                   )}
                 </div>
-              </button>
-            ))
+              );
+            })
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

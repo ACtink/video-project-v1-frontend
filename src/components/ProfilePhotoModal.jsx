@@ -1,48 +1,20 @@
-// function ProfilePhotoModal({ open, onClose, onUpload, onRemove }) {
-//   if (!open) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-//       <div className="w-[90%] max-w-sm rounded-xl bg-neutral-900 text-white shadow-lg">
-//         <div className="border-b border-white/10 px-4 py-3 text-center text-lg font-semibold">
-//           Change Profile Photo
-//         </div>
-
-//         <div className="flex flex-col divide-y divide-white/10">
-//           <button
-//             onClick={onUpload}
-//             className="py-3 text-blue-400 hover:bg-white/5 transition"
-//           >
-//             Upload New Photo
-//           </button>
-
-//           <button
-//             onClick={onRemove}
-//             className="py-3 text-red-500 hover:bg-white/5 transition"
-//           >
-//             Remove Current Photo
-//           </button>
-
-//           <button
-//             onClick={onClose}
-//             className="py-3 hover:bg-white/5 transition"
-//           >
-//             Cancel
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default ProfilePhotoModal;
-
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Upload, Trash2 } from "lucide-react";
 
 function ProfilePhotoModal({ open, onClose, onUpload, onRemove }) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       className="fixed inset-0 z-[999] flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm"
@@ -108,7 +80,8 @@ function ProfilePhotoModal({ open, onClose, onUpload, onRemove }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -1406,8 +1406,8 @@ function ChatOptionsPopup({
     setBlockLoading(true);
     setBlockError(null);
     try {
-      const res = await fetchData(`/api/users/${otherUserId}/unblock`, {
-        method: "POST",
+      const res = await fetchData(`/api/users/${otherUserId}/block`, {
+        method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });

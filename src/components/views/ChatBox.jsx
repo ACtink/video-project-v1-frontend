@@ -5049,6 +5049,7 @@ import { useAuth } from "../../hooks/useAuth";
 import fetchData from "../../utils/fetchData";
 import MessageBubble from "../MessageBubble";
 import ChatOptionsPopup from "../ChatOptionsPopup";
+import { useNavigate } from "react-router-dom";
 
 const EMOJI_LIST = [
   "😀",
@@ -5231,6 +5232,8 @@ function ChatBox({ chat, onBack, onNewMessage, onClearMessages }) {
     bg: "#0a0a0a",
   });
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const navigate = useNavigate();
 
   const myUserId = user._id;
   const messagesContainerRef = useRef(null);
@@ -5508,7 +5511,10 @@ function ChatBox({ chat, onBack, onNewMessage, onClearMessages }) {
         >
           <ArrowLeft size={18} />
         </button>
-        <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center shrink-0 ring-2 ring-white/10">
+        <div
+          onClick={() => navigate(`/profile/${otherUser.username}`)}
+          className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 ... cursor-pointer hover:opacity-80 transition-opacity duration-150"
+        >
           {otherUser.profilePicture ? (
             <img
               src={otherUser.profilePicture}
@@ -5522,7 +5528,10 @@ function ChatBox({ chat, onBack, onNewMessage, onClearMessages }) {
           )}
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <h3 className="font-semibold text-sm text-white truncate">
+          <h3
+            onClick={() => navigate(`/profile/${otherUser.username}`)}
+            className="font-semibold text-sm text-white truncate cursor-pointer hover:text-white/70 transition-colors duration-150"
+          >
             {otherUser.username}
           </h3>
           {isBlocked && (
