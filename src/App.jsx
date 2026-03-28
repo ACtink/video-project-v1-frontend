@@ -15,6 +15,8 @@ import EditProfile from './pages/EditProfile.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import BlockedUsersPage from './pages/BlockedUsersPage .jsx';
+import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 
 function App() {
   return (
@@ -39,6 +41,12 @@ function App() {
           <Route path="/edit-profile" element={<EditProfile />} />
 
           <Route path="/settings" element={<SettingsPage />} />
+
+          <Route path="/settings/blocked" element={<BlockedUsersPage />} />
+          <Route
+            path="/settings/change-password"
+            element={<ChangePasswordPage />}
+          />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

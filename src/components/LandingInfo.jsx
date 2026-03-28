@@ -144,6 +144,1119 @@
 
 // export default LandingInfo;
 
+// import React, { useEffect, useRef } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { Video, Shield, Users } from "lucide-react";
+
+// // ─── Canvas background ────────────────────────────────────────────────────────
+// function AnimatedBackground() {
+//   const canvasRef = useRef(null);
+
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     const ctx = canvas.getContext("2d");
+
+//     let W,
+//       H,
+//       nodes = [];
+//     let animId;
+//     let mouse = { x: -999, y: -999 };
+
+//     const COUNT = 55;
+//     const MAX_DIST = 160;
+//     const COLORS = [
+//       [99, 102, 241], // indigo
+//       [167, 139, 250], // violet
+//       [244, 114, 182], // pink
+//       [79, 70, 229], // deep indigo
+//       [139, 92, 246], // purple
+//     ];
+
+//     const nebulae = [
+//       { x: 0.15, y: 0.2, rx: 0.3, ry: 0.25, c: [79, 46, 200] },
+//       { x: 0.85, y: 0.75, rx: 0.28, ry: 0.22, c: [120, 40, 160] },
+//       { x: 0.5, y: 0.5, rx: 0.2, ry: 0.15, c: [60, 60, 220] },
+//       { x: 0.3, y: 0.8, rx: 0.22, ry: 0.18, c: [180, 50, 120] },
+//     ];
+
+//     const rand = (a, b) => a + Math.random() * (b - a);
+
+//     function createNode() {
+//       const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+//       const isFrame = Math.random() < 0.08;
+//       return {
+//         x: rand(0, W),
+//         y: rand(0, H),
+//         vx: rand(-0.25, 0.25) * (isFrame ? 0.4 : 1),
+//         vy: rand(-0.25, 0.25) * (isFrame ? 0.4 : 1),
+//         r: isFrame ? rand(16, 28) : rand(2, 5),
+//         color: c,
+//         alpha: rand(0.3, 0.9),
+//         pulseSpeed: rand(0.008, 0.02),
+//         pulsePhase: rand(0, Math.PI * 2),
+//         isFrame,
+//       };
+//     }
+
+//     function resize() {
+//       W = canvas.width = canvas.offsetWidth;
+//       H = canvas.height = canvas.offsetHeight;
+//     }
+
+//     function init() {
+//       resize();
+//       nodes = Array.from({ length: COUNT }, createNode);
+//     }
+
+//     function drawBg() {
+//       ctx.fillStyle = "#050508";
+//       ctx.fillRect(0, 0, W, H);
+
+//       nebulae.forEach((nb) => {
+//         const gx = nb.x * W,
+//           gy = nb.y * H;
+//         const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, nb.rx * W);
+//         grad.addColorStop(0, `rgba(${nb.c[0]},${nb.c[1]},${nb.c[2]},0.13)`);
+//         grad.addColorStop(0.5, `rgba(${nb.c[0]},${nb.c[1]},${nb.c[2]},0.05)`);
+//         grad.addColorStop(1, "rgba(0,0,0,0)");
+//         ctx.fillStyle = grad;
+//         ctx.beginPath();
+//         ctx.ellipse(gx, gy, nb.rx * W, nb.ry * H, 0, 0, Math.PI * 2);
+//         ctx.fill();
+//       });
+//     }
+
+//     let tick = 0;
+//     function draw() {
+//       tick++;
+//       drawBg();
+
+//       // Connections between nodes
+//       for (let i = 0; i < nodes.length; i++) {
+//         for (let j = i + 1; j < nodes.length; j++) {
+//           const a = nodes[i],
+//             b = nodes[j];
+//           if (a.isFrame || b.isFrame) continue;
+//           const dx = a.x - b.x,
+//             dy = a.y - b.y;
+//           const dist = Math.sqrt(dx * dx + dy * dy);
+//           if (dist < MAX_DIST) {
+//             const t = 1 - dist / MAX_DIST;
+//             const cr = Math.round((a.color[0] + b.color[0]) / 2);
+//             const cg = Math.round((a.color[1] + b.color[1]) / 2);
+//             const cb = Math.round((a.color[2] + b.color[2]) / 2);
+//             ctx.beginPath();
+//             ctx.moveTo(a.x, a.y);
+//             ctx.lineTo(b.x, b.y);
+//             ctx.strokeStyle = `rgba(${cr},${cg},${cb},${t * 0.25})`;
+//             ctx.lineWidth = t * 1.2;
+//             ctx.stroke();
+//           }
+//         }
+//       }
+
+//       // Mouse connections
+//       nodes.forEach((n) => {
+//         if (n.isFrame) return;
+//         const dx = mouse.x - n.x,
+//           dy = mouse.y - n.y;
+//         const dist = Math.sqrt(dx * dx + dy * dy);
+//         if (dist < 180) {
+//           const t = 1 - dist / 180;
+//           ctx.beginPath();
+//           ctx.moveTo(n.x, n.y);
+//           ctx.lineTo(mouse.x, mouse.y);
+//           ctx.strokeStyle = `rgba(167,139,250,${t * 0.4})`;
+//           ctx.lineWidth = t * 1.5;
+//           ctx.stroke();
+//         }
+//       });
+
+//       // Draw nodes
+//       nodes.forEach((n) => {
+//         const pulse = Math.sin(tick * n.pulseSpeed + n.pulsePhase) * 0.3 + 0.7;
+//         const [r, g, b] = n.color;
+
+//         if (n.isFrame) {
+//           const fw = n.r * 4.5,
+//             fh = n.r * 3.5;
+//           ctx.save();
+//           ctx.globalAlpha = 0.18 * pulse;
+//           ctx.strokeStyle = `rgb(${r},${g},${b})`;
+//           ctx.lineWidth = 1.5;
+//           ctx.shadowColor = `rgb(${r},${g},${b})`;
+//           ctx.shadowBlur = 12;
+//           const rr = 5;
+//           ctx.beginPath();
+//           ctx.moveTo(n.x - fw / 2 + rr, n.y - fh / 2);
+//           ctx.lineTo(n.x + fw / 2 - rr, n.y - fh / 2);
+//           ctx.quadraticCurveTo(
+//             n.x + fw / 2,
+//             n.y - fh / 2,
+//             n.x + fw / 2,
+//             n.y - fh / 2 + rr,
+//           );
+//           ctx.lineTo(n.x + fw / 2, n.y + fh / 2 - rr);
+//           ctx.quadraticCurveTo(
+//             n.x + fw / 2,
+//             n.y + fh / 2,
+//             n.x + fw / 2 - rr,
+//             n.y + fh / 2,
+//           );
+//           ctx.lineTo(n.x - fw / 2 + rr, n.y + fh / 2);
+//           ctx.quadraticCurveTo(
+//             n.x - fw / 2,
+//             n.y + fh / 2,
+//             n.x - fw / 2,
+//             n.y + fh / 2 - rr,
+//           );
+//           ctx.lineTo(n.x - fw / 2, n.y - fh / 2 + rr);
+//           ctx.quadraticCurveTo(
+//             n.x - fw / 2,
+//             n.y - fh / 2,
+//             n.x - fw / 2 + rr,
+//             n.y - fh / 2,
+//           );
+//           ctx.closePath();
+//           ctx.stroke();
+//           ctx.globalAlpha = 0.06 * pulse;
+//           ctx.fillStyle = `rgb(${r},${g},${b})`;
+//           ctx.fill();
+//           ctx.restore();
+//         } else {
+//           const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 4);
+//           glow.addColorStop(0, `rgba(${r},${g},${b},${0.6 * pulse * n.alpha})`);
+//           glow.addColorStop(
+//             0.4,
+//             `rgba(${r},${g},${b},${0.15 * pulse * n.alpha})`,
+//           );
+//           glow.addColorStop(1, `rgba(${r},${g},${b},0)`);
+//           ctx.beginPath();
+//           ctx.arc(n.x, n.y, n.r * 4, 0, Math.PI * 2);
+//           ctx.fillStyle = glow;
+//           ctx.fill();
+//           ctx.beginPath();
+//           ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+//           ctx.fillStyle = `rgba(${r},${g},${b},${0.9 * pulse})`;
+//           ctx.fill();
+//         }
+
+//         // Move & wrap
+//         n.x += n.vx;
+//         n.y += n.vy;
+//         if (n.x < -50) n.x = W + 50;
+//         if (n.x > W + 50) n.x = -50;
+//         if (n.y < -50) n.y = H + 50;
+//         if (n.y > H + 50) n.y = -50;
+//       });
+
+//       // Vignette
+//       const vig = ctx.createRadialGradient(
+//         W / 2,
+//         H / 2,
+//         0,
+//         W / 2,
+//         H / 2,
+//         Math.max(W, H) * 0.72,
+//       );
+//       vig.addColorStop(0, "rgba(0,0,0,0)");
+//       vig.addColorStop(1, "rgba(0,0,10,0.55)");
+//       ctx.fillStyle = vig;
+//       ctx.fillRect(0, 0, W, H);
+
+//       animId = requestAnimationFrame(draw);
+//     }
+
+//     const onMouseMove = (e) => {
+//       const rect = canvas.getBoundingClientRect();
+//       mouse.x = e.clientX - rect.left;
+//       mouse.y = e.clientY - rect.top;
+//     };
+//     const onTouchMove = (e) => {
+//       const rect = canvas.getBoundingClientRect();
+//       mouse.x = e.touches[0].clientX - rect.left;
+//       mouse.y = e.touches[0].clientY - rect.top;
+//     };
+//     const onResize = () => {
+//       resize();
+//       nodes.forEach((n) => {
+//         n.x = rand(0, W);
+//         n.y = rand(0, H);
+//       });
+//     };
+
+//     window.addEventListener("mousemove", onMouseMove);
+//     window.addEventListener("touchmove", onTouchMove);
+//     window.addEventListener("resize", onResize);
+
+//     init();
+//     draw();
+
+//     return () => {
+//       cancelAnimationFrame(animId);
+//       window.removeEventListener("mousemove", onMouseMove);
+//       window.removeEventListener("touchmove", onTouchMove);
+//       window.removeEventListener("resize", onResize);
+//     };
+//   }, []);
+
+//   return (
+//     <canvas
+//       ref={canvasRef}
+//       style={{
+//         position: "absolute",
+//         inset: 0,
+//         width: "100%",
+//         height: "100%",
+//         display: "block",
+//       }}
+//     />
+//   );
+// }
+
+// // ─── Main component ───────────────────────────────────────────────────────────
+// function LandingInfo() {
+//   const navigate = useNavigate();
+
+//   return (
+//     <div
+//       style={{
+//         position: "fixed",
+//         inset: 0,
+//         background: "#050508",
+//         overflow: "hidden",
+//       }}
+//     >
+//       {/* Animated canvas background */}
+//       <AnimatedBackground />
+
+//       {/* Foreground content */}
+//       <main className="relative z-10 h-full flex items-center justify-center px-4 py-12">
+//         <div className="w-full max-w-2xl text-center flex flex-col items-center gap-8">
+//           {/* BADGE */}
+//           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+//             <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+//             <span className="text-[12px] text-indigo-300 font-medium tracking-wide">
+//               Live video chat — meet someone new
+//             </span>
+//           </div>
+
+//           {/* HEADLINE */}
+//           <div className="space-y-4">
+//             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight text-white">
+//               Meet Strangers
+//               <br />
+//               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+//                 on Live Video
+//               </span>
+//             </h1>
+//             <p className="text-[15px] sm:text-base text-white/50 leading-relaxed max-w-lg mx-auto">
+//               HelloStranger connects you with real people through random video
+//               chats. Accounts help us keep the space safe and respectful.
+//             </p>
+//           </div>
+
+//           {/* BUTTONS */}
+//           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+//             <button
+//               onClick={() => navigate("/join")}
+//               className="
+//                 px-8 py-3 rounded-xl
+//                 text-[14px] font-semibold text-white tracking-wide
+//                 bg-indigo-600 hover:bg-indigo-500
+//                 shadow-[0_0_28px_rgba(99,102,241,0.35)]
+//                 hover:shadow-[0_0_36px_rgba(99,102,241,0.5)]
+//                 active:scale-[0.97] transition-all duration-200
+//               "
+//             >
+//               Join Now
+//             </button>
+//             <button
+//               onClick={() => navigate("/login")}
+//               className="
+//                 px-8 py-3 rounded-xl
+//                 text-[14px] font-semibold text-white/70 hover:text-white tracking-wide
+//                 border border-white/10 hover:bg-white/8
+//                 active:scale-[0.97] transition-all duration-200
+//               "
+//             >
+//               Login
+//             </button>
+//           </div>
+
+//           {/* FEATURE PILLS */}
+//           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+//             {[
+//               { icon: Video, label: "Random video chat" },
+//               { icon: Shield, label: "Registered users only" },
+//               { icon: Users, label: "Real connections" },
+//             ].map(({ icon: Icon, label }) => (
+//               <div
+//                 key={label}
+//                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/8"
+//               >
+//                 <Icon size={12} className="text-white/40" />
+//                 <span className="text-[12px] text-white/40 tracking-wide">
+//                   {label}
+//                 </span>
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+
+// export default LandingInfo;
+
+// // // import React, { useEffect, useRef, useState } from "react";
+// // // import { useNavigate } from "react-router-dom";
+
+// // // // ─── Wavy SVG background with floating blobs ─────────────────────────────────
+// // // function WavyBackground() {
+// // //   const ref = useRef(null);
+
+// // //   useEffect(() => {
+// // //     let t = 0;
+// // //     let id;
+// // //     const el = ref.current;
+// // //     if (!el) return;
+
+// // //     const paths = el.querySelectorAll(".wave-path");
+
+// // //     function tick() {
+// // //       t += 0.012;
+// // //       paths.forEach((p, i) => {
+// // //         const phase = i * 1.1;
+// // //         const amp = 28 + i * 10;
+// // //         const freq = 0.0018 + i * 0.0004;
+// // //         const W = window.innerWidth;
+// // //         const yBase = 0.55 + i * 0.09;
+// // //         const H = window.innerHeight;
+// // //         const y = yBase * H;
+
+// // //         // Build a smooth wave path across the full width
+// // //         const pts = [];
+// // //         const steps = 24;
+// // //         for (let s = 0; s <= steps; s++) {
+// // //           const x = (s / steps) * W;
+// // //           const dy =
+// // //             Math.sin(x * freq + t + phase) * amp +
+// // //             Math.sin(x * freq * 1.7 + t * 0.7 + phase) * (amp * 0.4);
+// // //           pts.push([x, y + dy]);
+// // //         }
+
+// // //         const d = [
+// // //           `M 0 ${H}`,
+// // //           `L 0 ${pts[0][1]}`,
+// // //           ...pts.slice(1).map(([x, y]) => `L ${x} ${y}`),
+// // //           `L ${W} ${H}`,
+// // //           "Z",
+// // //         ].join(" ");
+
+// // //         p.setAttribute("d", d);
+// // //       });
+
+// // //       id = requestAnimationFrame(tick);
+// // //     }
+// // //     tick();
+// // //     return () => cancelAnimationFrame(id);
+// // //   }, []);
+
+// // //   return (
+// // //     <svg
+// // //       ref={ref}
+// // //       style={{
+// // //         position: "absolute",
+// // //         inset: 0,
+// // //         width: "100%",
+// // //         height: "100%",
+// // //         pointerEvents: "none",
+// // //       }}
+// // //       preserveAspectRatio="none"
+// // //     >
+// // //       <defs>
+// // //         <linearGradient id="w0" x1="0" y1="0" x2="1" y2="0">
+// // //           <stop offset="0%" stopColor="#f9a8d4" stopOpacity="0.18" />
+// // //           <stop offset="50%" stopColor="#c084fc" stopOpacity="0.22" />
+// // //           <stop offset="100%" stopColor="#818cf8" stopOpacity="0.18" />
+// // //         </linearGradient>
+// // //         <linearGradient id="w1" x1="0" y1="0" x2="1" y2="0">
+// // //           <stop offset="0%" stopColor="#fde68a" stopOpacity="0.13" />
+// // //           <stop offset="50%" stopColor="#fb923c" stopOpacity="0.16" />
+// // //           <stop offset="100%" stopColor="#f472b6" stopOpacity="0.13" />
+// // //         </linearGradient>
+// // //         <linearGradient id="w2" x1="0" y1="0" x2="1" y2="0">
+// // //           <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.1" />
+// // //           <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.14" />
+// // //           <stop offset="100%" stopColor="#818cf8" stopOpacity="0.1" />
+// // //         </linearGradient>
+// // //       </defs>
+// // //       <path className="wave-path" fill="url(#w0)" />
+// // //       <path className="wave-path" fill="url(#w1)" />
+// // //       <path className="wave-path" fill="url(#w2)" />
+// // //     </svg>
+// // //   );
+// // // }
+
+// // // // ─── Floating emoji orbs ──────────────────────────────────────────────────────
+// // // const FLOATERS = [
+// // //   { e: "👋", size: 36, x: 8, y: 18, dur: 7, delay: 0 },
+// // //   { e: "🎉", size: 28, x: 88, y: 12, dur: 9, delay: 1.2 },
+// // //   { e: "🌍", size: 32, x: 75, y: 72, dur: 8, delay: 0.5 },
+// // //   { e: "✨", size: 22, x: 14, y: 68, dur: 6, delay: 2 },
+// // //   { e: "🤩", size: 30, x: 92, y: 44, dur: 10, delay: 0.8 },
+// // //   { e: "💬", size: 26, x: 5, y: 45, dur: 8.5, delay: 1.6 },
+// // //   { e: "🔥", size: 24, x: 52, y: 88, dur: 7.5, delay: 3 },
+// // //   { e: "🎊", size: 20, x: 35, y: 8, dur: 9.5, delay: 0.3 },
+// // //   { e: "💫", size: 18, x: 65, y: 6, dur: 6.5, delay: 2.5 },
+// // //   { e: "🫶", size: 28, x: 80, y: 88, dur: 8, delay: 1 },
+// // // ];
+
+// // // function FloatingEmojis() {
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         position: "absolute",
+// // //         inset: 0,
+// // //         pointerEvents: "none",
+// // //         overflow: "hidden",
+// // //       }}
+// // //     >
+// // //       <style>{`
+// // //         @keyframes floatBob {
+// // //           0%, 100% { transform: translateY(0px) rotate(-4deg); }
+// // //           50% { transform: translateY(-18px) rotate(4deg); }
+// // //         }
+// // //       `}</style>
+// // //       {FLOATERS.map((f, i) => (
+// // //         <div
+// // //           key={i}
+// // //           style={{
+// // //             position: "absolute",
+// // //             left: `${f.x}%`,
+// // //             top: `${f.y}%`,
+// // //             fontSize: f.size,
+// // //             animation: `floatBob ${f.dur}s ease-in-out ${f.delay}s infinite`,
+// // //             opacity: 0.55,
+// // //             filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))",
+// // //             userSelect: "none",
+// // //           }}
+// // //         >
+// // //           {f.e}
+// // //         </div>
+// // //       ))}
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ─── Blob mesh background ─────────────────────────────────────────────────────
+// // // function BlobMesh() {
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         position: "absolute",
+// // //         inset: 0,
+// // //         overflow: "hidden",
+// // //         pointerEvents: "none",
+// // //       }}
+// // //     >
+// // //       <style>{`
+// // //         @keyframes blobMove1 {
+// // //           0%,100% { transform: translate(0,0) scale(1); }
+// // //           33% { transform: translate(40px,-30px) scale(1.08); }
+// // //           66% { transform: translate(-20px,20px) scale(0.95); }
+// // //         }
+// // //         @keyframes blobMove2 {
+// // //           0%,100% { transform: translate(0,0) scale(1); }
+// // //           33% { transform: translate(-50px,20px) scale(1.05); }
+// // //           66% { transform: translate(30px,-40px) scale(0.97); }
+// // //         }
+// // //         @keyframes blobMove3 {
+// // //           0%,100% { transform: translate(0,0) scale(1); }
+// // //           50% { transform: translate(20px,30px) scale(1.1); }
+// // //         }
+// // //       `}</style>
+// // //       {/* Blob 1 — peach/coral top-left */}
+// // //       <div
+// // //         style={{
+// // //           position: "absolute",
+// // //           top: "-10%",
+// // //           left: "-10%",
+// // //           width: 520,
+// // //           height: 520,
+// // //           borderRadius: "60% 40% 70% 30% / 50% 60% 40% 50%",
+// // //           background:
+// // //             "radial-gradient(circle at 40% 40%, #fecaca 0%, #fda4af 40%, #f9a8d4 100%)",
+// // //           opacity: 0.28,
+// // //           animation: "blobMove1 14s ease-in-out infinite",
+// // //           filter: "blur(40px)",
+// // //         }}
+// // //       />
+// // //       {/* Blob 2 — lavender top-right */}
+// // //       <div
+// // //         style={{
+// // //           position: "absolute",
+// // //           top: "-15%",
+// // //           right: "-12%",
+// // //           width: 580,
+// // //           height: 480,
+// // //           borderRadius: "40% 60% 30% 70% / 60% 40% 60% 40%",
+// // //           background:
+// // //             "radial-gradient(circle at 60% 30%, #e9d5ff 0%, #c4b5fd 50%, #a78bfa 100%)",
+// // //           opacity: 0.25,
+// // //           animation: "blobMove2 17s ease-in-out infinite",
+// // //           filter: "blur(50px)",
+// // //         }}
+// // //       />
+// // //       {/* Blob 3 — mint bottom center */}
+// // //       <div
+// // //         style={{
+// // //           position: "absolute",
+// // //           bottom: "-15%",
+// // //           left: "30%",
+// // //           width: 480,
+// // //           height: 400,
+// // //           borderRadius: "50% 50% 40% 60% / 40% 60% 40% 60%",
+// // //           background:
+// // //             "radial-gradient(circle at 50% 70%, #a7f3d0 0%, #6ee7b7 50%, #34d399 100%)",
+// // //           opacity: 0.18,
+// // //           animation: "blobMove3 12s ease-in-out infinite",
+// // //           filter: "blur(45px)",
+// // //         }}
+// // //       />
+// // //       {/* Blob 4 — yellow bottom-left */}
+// // //       <div
+// // //         style={{
+// // //           position: "absolute",
+// // //           bottom: "-8%",
+// // //           left: "-8%",
+// // //           width: 380,
+// // //           height: 380,
+// // //           borderRadius: "70% 30% 50% 50% / 30% 70% 30% 70%",
+// // //           background:
+// // //             "radial-gradient(circle at 30% 60%, #fef08a 0%, #fde047 60%, #facc15 100%)",
+// // //           opacity: 0.18,
+// // //           animation: "blobMove2 19s ease-in-out 2s infinite",
+// // //           filter: "blur(40px)",
+// // //         }}
+// // //       />
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ─── Avatar stack (fake preview of "people online") ──────────────────────────
+// // // const AVATARS = [
+// // //   { emoji: "🧑‍🦱", bg: "#fde68a" },
+// // //   { emoji: "👩‍🦰", bg: "#fca5a5" },
+// // //   { emoji: "🧔", bg: "#a5b4fc" },
+// // //   { emoji: "👩‍🦳", bg: "#6ee7b7" },
+// // //   { emoji: "🧑‍🦲", bg: "#fdba74" },
+// // // ];
+
+// // // function AvatarStack() {
+// // //   return (
+// // //     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+// // //       <div style={{ display: "flex" }}>
+// // //         {AVATARS.map((a, i) => (
+// // //           <div
+// // //             key={i}
+// // //             style={{
+// // //               width: 32,
+// // //               height: 32,
+// // //               borderRadius: "50%",
+// // //               background: a.bg,
+// // //               border: "2.5px solid #fff",
+// // //               display: "flex",
+// // //               alignItems: "center",
+// // //               justifyContent: "center",
+// // //               fontSize: 16,
+// // //               marginLeft: i === 0 ? 0 : -10,
+// // //               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+// // //               zIndex: AVATARS.length - i,
+// // //               position: "relative",
+// // //             }}
+// // //           >
+// // //             {a.emoji}
+// // //           </div>
+// // //         ))}
+// // //       </div>
+// // //       <div>
+// // //         <div
+// // //           style={{
+// // //             fontSize: 12,
+// // //             fontWeight: 700,
+// // //             color: "#1e1b4b",
+// // //             letterSpacing: "-0.01em",
+// // //           }}
+// // //         >
+// // //           2,400+ online
+// // //         </div>
+// // //         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+// // //           <div
+// // //             style={{
+// // //               width: 6,
+// // //               height: 6,
+// // //               borderRadius: "50%",
+// // //               background: "#22c55e",
+// // //               boxShadow: "0 0 0 2px rgba(34,197,94,0.25)",
+// // //             }}
+// // //           />
+// // //           <span style={{ fontSize: 11, color: "#6b7280" }}>
+// // //             Meeting right now
+// // //           </span>
+// // //         </div>
+// // //       </div>
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ─── Animated chat bubble preview ─────────────────────────────────────────────
+// // // const MESSAGES = [
+// // //   { side: "left", text: "hey! where are you from? 👋", delay: 0 },
+// // //   { side: "right", text: "Tokyo! you? 🗼", delay: 1.4 },
+// // //   { side: "left", text: "NYC 🗽 this is so cool", delay: 2.8 },
+// // //   { side: "right", text: "ikr! first time trying this 😄", delay: 4.2 },
+// // //   { side: "left", text: "same! let's keep chatting ✨", delay: 5.6 },
+// // // ];
+
+// // // function ChatPreview() {
+// // //   const [visible, setVisible] = useState([]);
+
+// // //   useEffect(() => {
+// // //     MESSAGES.forEach((_, i) => {
+// // //       setTimeout(
+// // //         () => {
+// // //           setVisible((v) => [...v, i]);
+// // //         },
+// // //         MESSAGES[i].delay * 1000 + 600,
+// // //       );
+// // //     });
+// // //   }, []);
+
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         background: "rgba(255,255,255,0.82)",
+// // //         backdropFilter: "blur(20px)",
+// // //         borderRadius: 20,
+// // //         border: "1px solid rgba(255,255,255,0.9)",
+// // //         boxShadow:
+// // //           "0 8px 40px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset",
+// // //         padding: "16px 14px",
+// // //         width: "100%",
+// // //         maxWidth: 280,
+// // //       }}
+// // //     >
+// // //       {/* Chat header */}
+// // //       <div
+// // //         style={{
+// // //           display: "flex",
+// // //           alignItems: "center",
+// // //           gap: 8,
+// // //           marginBottom: 14,
+// // //           paddingBottom: 12,
+// // //           borderBottom: "1px solid rgba(0,0,0,0.06)",
+// // //         }}
+// // //       >
+// // //         <div style={{ fontSize: 22 }}>💬</div>
+// // //         <div>
+// // //           <div style={{ fontSize: 12, fontWeight: 700, color: "#1e1b4b" }}>
+// // //             Live chats happening
+// // //           </div>
+// // //           <div style={{ fontSize: 11, color: "#9ca3af" }}>
+// // //             right now around the world
+// // //           </div>
+// // //         </div>
+// // //       </div>
+// // //       {/* Messages */}
+// // //       <div
+// // //         style={{
+// // //           display: "flex",
+// // //           flexDirection: "column",
+// // //           gap: 8,
+// // //           minHeight: 140,
+// // //         }}
+// // //       >
+// // //         {MESSAGES.map((m, i) => (
+// // //           <div
+// // //             key={i}
+// // //             style={{
+// // //               display: "flex",
+// // //               justifyContent: m.side === "right" ? "flex-end" : "flex-start",
+// // //               opacity: visible.includes(i) ? 1 : 0,
+// // //               transform: visible.includes(i)
+// // //                 ? "translateY(0) scale(1)"
+// // //                 : `translateY(8px) scale(0.95)`,
+// // //               transition: "opacity 0.35s ease, transform 0.35s ease",
+// // //             }}
+// // //           >
+// // //             <div
+// // //               style={{
+// // //                 background:
+// // //                   m.side === "left"
+// // //                     ? "linear-gradient(135deg, #f3f4f6, #e9ecef)"
+// // //                     : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+// // //                 color: m.side === "left" ? "#1f2937" : "#fff",
+// // //                 borderRadius:
+// // //                   m.side === "left"
+// // //                     ? "14px 14px 14px 4px"
+// // //                     : "14px 14px 4px 14px",
+// // //                 padding: "8px 12px",
+// // //                 fontSize: 12.5,
+// // //                 fontWeight: 500,
+// // //                 maxWidth: "82%",
+// // //                 lineHeight: 1.4,
+// // //                 boxShadow:
+// // //                   m.side === "right"
+// // //                     ? "0 4px 12px rgba(99,102,241,0.3)"
+// // //                     : "0 2px 6px rgba(0,0,0,0.06)",
+// // //               }}
+// // //             >
+// // //               {m.text}
+// // //             </div>
+// // //           </div>
+// // //         ))}
+// // //       </div>
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ─── Feature pill ─────────────────────────────────────────────────────────────
+// // // function Pill({ emoji, label }) {
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         display: "inline-flex",
+// // //         alignItems: "center",
+// // //         gap: 6,
+// // //         padding: "7px 14px",
+// // //         borderRadius: 99,
+// // //         background: "rgba(255,255,255,0.7)",
+// // //         border: "1px solid rgba(255,255,255,0.9)",
+// // //         backdropFilter: "blur(8px)",
+// // //         boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+// // //         fontSize: 12.5,
+// // //         fontWeight: 600,
+// // //         color: "#374151",
+// // //         whiteSpace: "nowrap",
+// // //       }}
+// // //     >
+// // //       <span style={{ fontSize: 15 }}>{emoji}</span>
+// // //       {label}
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ─── Main component ───────────────────────────────────────────────────────────
+// // // export default function LandingInfo() {
+// // //   const navigate = useNavigate();
+// // //   const [mounted, setMounted] = useState(false);
+
+// // //   useEffect(() => {
+// // //     setTimeout(() => setMounted(true), 80);
+// // //   }, []);
+
+// // //   const anim = (delay = 0) => ({
+// // //     opacity: mounted ? 1 : 0,
+// // //     transform: mounted ? "none" : "translateY(18px)",
+// // //     transition: `opacity 0.55s ease ${delay}s, transform 0.55s ease ${delay}s`,
+// // //   });
+
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         position: "fixed",
+// // //         inset: 0,
+// // //         background:
+// // //           "linear-gradient(160deg, #fdf4ff 0%, #fef9ee 35%, #f0f9ff 65%, #f5f3ff 100%)",
+// // //         overflowY: "auto",
+// // //         overflowX: "hidden",
+// // //         WebkitOverflowScrolling: "touch",
+// // //         fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
+// // //       }}
+// // //     >
+// // //       <style>{`
+// // //         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+// // //         @keyframes shimmerBtn {
+// // //           0%   { background-position: -200% center; }
+// // //           100% { background-position: 200% center; }
+// // //         }
+
+// // //         /* --- Buttons --- */
+// // //         .btn-primary {
+// // //           width: 100%;
+// // //           padding: 15px 28px;
+// // //           border-radius: 14px;
+// // //           border: none;
+// // //           cursor: pointer;
+// // //           font-size: 15px;
+// // //           font-weight: 800;
+// // //           color: #fff;
+// // //           letter-spacing: -0.01em;
+// // //           background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+// // //           background-size: 200% auto;
+// // //           box-shadow: 0 4px 24px rgba(99,102,241,0.4), 0 1px 0 rgba(255,255,255,0.2) inset;
+// // //           transition: transform 0.18s ease, box-shadow 0.18s ease;
+// // //           font-family: inherit;
+// // //           -webkit-tap-highlight-color: transparent;
+// // //           touch-action: manipulation;
+// // //         }
+// // //         .btn-primary:hover {
+// // //           transform: translateY(-2px) scale(1.02);
+// // //           box-shadow: 0 8px 32px rgba(99,102,241,0.5), 0 1px 0 rgba(255,255,255,0.2) inset;
+// // //           animation: shimmerBtn 1.4s linear infinite;
+// // //         }
+// // //         .btn-primary:active { transform: scale(0.97); }
+
+// // //         .btn-secondary {
+// // //           width: 100%;
+// // //           padding: 15px 28px;
+// // //           border-radius: 14px;
+// // //           border: 1.5px solid rgba(99,102,241,0.25);
+// // //           cursor: pointer;
+// // //           font-size: 15px;
+// // //           font-weight: 700;
+// // //           color: #6366f1;
+// // //           background: rgba(255,255,255,0.7);
+// // //           backdrop-filter: blur(8px);
+// // //           transition: all 0.18s ease;
+// // //           font-family: inherit;
+// // //           letter-spacing: -0.01em;
+// // //           -webkit-tap-highlight-color: transparent;
+// // //           touch-action: manipulation;
+// // //         }
+// // //         .btn-secondary:hover {
+// // //           background: rgba(255,255,255,0.95);
+// // //           border-color: rgba(99,102,241,0.5);
+// // //           box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+// // //         }
+// // //         .btn-secondary:active { transform: scale(0.97); }
+
+// // //         /* --- Layout grid --- */
+// // //         .landing-grid {
+// // //           display: flex;
+// // //           flex-direction: column;
+// // //           align-items: center;
+// // //           gap: 32px;
+// // //         }
+// // //         .landing-text { width: 100%; text-align: center; }
+// // //         .landing-chat { display: none; }
+
+// // //         /* --- Tablet+ (≥700px): side by side --- */
+// // //         @media (min-width: 700px) {
+// // //           .landing-grid {
+// // //             flex-direction: row;
+// // //             align-items: center;
+// // //             justify-content: center;
+// // //             gap: 48px;
+// // //             text-align: left;
+// // //           }
+// // //           .landing-text { text-align: left; flex: 1; max-width: 520px; }
+// // //           .landing-chat { display: block; flex-shrink: 0; }
+// // //           .btn-primary, .btn-secondary { width: auto; }
+// // //           .btn-row { justify-content: flex-start !important; }
+// // //           .pill-row { justify-content: flex-start !important; }
+// // //           .badge-wrap { margin: 0 !important; }
+// // //           .avatar-wrap { justify-content: flex-start !important; }
+// // //         }
+// // //       `}</style>
+
+// // //       {/* Background layers — pointer-events none so scroll works */}
+// // //       <div
+// // //         style={{
+// // //           position: "fixed",
+// // //           inset: 0,
+// // //           pointerEvents: "none",
+// // //           zIndex: 0,
+// // //         }}
+// // //       >
+// // //         <BlobMesh />
+// // //         <WavyBackground />
+// // //         <FloatingEmojis />
+// // //         {/* Grain */}
+// // //         <div
+// // //           style={{
+// // //             position: "absolute",
+// // //             inset: 0,
+// // //             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`,
+// // //             opacity: 0.4,
+// // //           }}
+// // //         />
+// // //       </div>
+
+// // //       {/* Scrollable content */}
+// // //       <main
+// // //         style={{
+// // //           position: "relative",
+// // //           zIndex: 10,
+// // //           minHeight: "100%",
+// // //           display: "flex",
+// // //           alignItems: "center",
+// // //           justifyContent: "center",
+// // //           padding: "48px 20px 56px",
+// // //           boxSizing: "border-box",
+// // //         }}
+// // //       >
+// // //         <div style={{ width: "100%", maxWidth: 960 }} className="landing-grid">
+// // //           {/* ── Text column ── */}
+// // //           <div
+// // //             className="landing-text"
+// // //             style={{ display: "flex", flexDirection: "column", gap: 20 }}
+// // //           >
+// // //             {/* Badge */}
+// // //             <div
+// // //               style={{ display: "flex", justifyContent: "center" }}
+// // //               className="badge-wrap"
+// // //             >
+// // //               <div
+// // //                 style={{
+// // //                   ...anim(0),
+// // //                   display: "inline-flex",
+// // //                   alignItems: "center",
+// // //                   gap: 7,
+// // //                   padding: "7px 14px",
+// // //                   borderRadius: 99,
+// // //                   background: "rgba(255,255,255,0.75)",
+// // //                   border: "1px solid rgba(255,255,255,0.95)",
+// // //                   backdropFilter: "blur(12px)",
+// // //                   boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+// // //                 }}
+// // //               >
+// // //                 <span style={{ fontSize: 14 }}>🌐</span>
+// // //                 <span
+// // //                   style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}
+// // //                 >
+// // //                   Random video chat for real people
+// // //                 </span>
+// // //                 <div
+// // //                   style={{
+// // //                     width: 7,
+// // //                     height: 7,
+// // //                     borderRadius: "50%",
+// // //                     background: "#22c55e",
+// // //                     boxShadow: "0 0 0 3px rgba(34,197,94,0.2)",
+// // //                   }}
+// // //                 />
+// // //               </div>
+// // //             </div>
+
+// // //             {/* Headline */}
+// // //             <div style={anim(0.1)}>
+// // //               <h1
+// // //                 style={{
+// // //                   margin: 0,
+// // //                   fontSize: "clamp(34px, 8vw, 72px)",
+// // //                   fontWeight: 900,
+// // //                   lineHeight: 1.06,
+// // //                   letterSpacing: "-0.03em",
+// // //                   color: "#0f0a1e",
+// // //                 }}
+// // //               >
+// // //                 Meet your next
+// // //                 <br />
+// // //                 <span
+// // //                   style={{
+// // //                     background:
+// // //                       "linear-gradient(135deg, #6366f1 0%, #a855f7 45%, #ec4899 100%)",
+// // //                     WebkitBackgroundClip: "text",
+// // //                     WebkitTextFillColor: "transparent",
+// // //                     backgroundClip: "text",
+// // //                   }}
+// // //                 >
+// // //                   stranger
+// // //                 </span>
+// // //                 <span style={{ marginLeft: 10 }}>👋</span>
+// // //               </h1>
+// // //               <p
+// // //                 style={{
+// // //                   margin: "14px 0 0",
+// // //                   fontSize: "clamp(14px, 3.5vw, 17px)",
+// // //                   lineHeight: 1.65,
+// // //                   color: "#6b7280",
+// // //                   fontWeight: 500,
+// // //                   maxWidth: 400,
+// // //                   marginLeft: "auto",
+// // //                   marginRight: "auto",
+// // //                 }}
+// // //               >
+// // //                 Spontaneous video chats with real people from around the world.
+// // //                 No algorithms. No feeds. Just a conversation. ✨
+// // //               </p>
+// // //             </div>
+
+// // //             {/* Avatar stack */}
+// // //             <div
+// // //               style={{
+// // //                 ...anim(0.2),
+// // //                 display: "flex",
+// // //                 justifyContent: "center",
+// // //               }}
+// // //               className="avatar-wrap"
+// // //             >
+// // //               <AvatarStack />
+// // //             </div>
+
+// // //             {/* CTA buttons — full width stacked on mobile, inline on desktop */}
+// // //             <div
+// // //               className="btn-row"
+// // //               style={{
+// // //                 ...anim(0.3),
+// // //                 display: "flex",
+// // //                 flexDirection: "column",
+// // //                 gap: 10,
+// // //                 justifyContent: "center",
+// // //               }}
+// // //             >
+// // //               <button className="btn-primary" onClick={() => navigate("/join")}>
+// // //                 Start chatting — it&apos;s free 🚀
+// // //               </button>
+// // //               <button
+// // //                 className="btn-secondary"
+// // //                 onClick={() => navigate("/login")}
+// // //               >
+// // //                 Login
+// // //               </button>
+// // //             </div>
+
+// // //             {/* Feature pills */}
+// // //             <div
+// // //               className="pill-row"
+// // //               style={{
+// // //                 ...anim(0.4),
+// // //                 display: "flex",
+// // //                 gap: 8,
+// // //                 flexWrap: "wrap",
+// // //                 justifyContent: "center",
+// // //               }}
+// // //             >
+// // //               <Pill emoji="🎥" label="Live video" />
+// // //               <Pill emoji="🛡️" label="Safe & registered" />
+// // //               <Pill emoji="🌍" label="50+ countries" />
+// // //               <Pill emoji="⚡" label="Instant match" />
+// // //             </div>
+// // //           </div>
+
+// // //           {/* ── Chat preview (hidden on mobile, shown on ≥700px) ── */}
+// // //           <div
+// // //             className="landing-chat"
+// // //             style={{
+// // //               ...anim(0.25),
+// // //               transform: mounted ? "rotate(-2deg)" : "rotate(-2deg) scale(0.9)",
+// // //               transition:
+// // //                 "opacity 0.65s ease 0.25s, transform 0.65s ease 0.25s",
+// // //             }}
+// // //           >
+// // //             <ChatPreview />
+// // //           </div>
+// // //         </div>
+// // //       </main>
+// // //     </div>
+// // //   );
+// // // }
+
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Video, Shield, Users } from "lucide-react";
