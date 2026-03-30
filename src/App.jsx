@@ -17,6 +17,8 @@ import NotFoundPage from './pages/NotFoundPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import BlockedUsersPage from './pages/BlockedUsersPage .jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+import HiddenPostsPage from './pages/HiddenPostsPage.jsx';
 
 function App() {
   return (
@@ -26,6 +28,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/join" element={<JoinPage />} />
           <Route path="/login" element={<LoginPage />} />
+
+          <Route path="/admin" element={<AdminPage />} />
+
           {/* <Route path="/test" element={<TestPage />} /> */}
 
           <Route path="/video" element={<VideoView />} />
@@ -47,6 +52,8 @@ function App() {
             path="/settings/change-password"
             element={<ChangePasswordPage />}
           />
+
+          <Route path="/settings/hidden-posts" element={<HiddenPostsPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

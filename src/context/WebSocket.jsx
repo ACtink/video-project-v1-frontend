@@ -1566,6 +1566,383 @@
 //   );
 // };
 
+// import React, {
+//   createContext,
+//   useContext,
+//   useEffect,
+//   useRef,
+//   useState,
+// } from "react";
+
+// import { webRTCContext } from "./WebRTC";
+// import { useAuth } from "../hooks/useAuth";
+
+// export const websocketContext = createContext(null);
+
+// export const WebSocketProvider = ({ children }) => {
+//   const socketRef = useRef(null);
+//   const handlersRef = useRef({});
+//   const sendQueueRef = useRef([]);
+//   const pingIntervalRef = useRef(null);
+//   const reconnectTimeoutRef = useRef(null);
+//   const isIntentionalClose = useRef(false);
+
+//   const [wsConnected, setWsConnected] = useState(false);
+//   const [messages, setMessages] = useState({});
+
+//   const { user } = useAuth();
+
+//   const currentConversationIdRef = useRef(null);
+
+//   const setCurrentConversation = (conversationId) => {
+//     currentConversationIdRef.current = conversationId;
+//   };
+
+//   const {
+//     setVideoCallLoader,
+//     cleanupFull,
+//     cleanupRemotePeer,
+//     manualCleanupRef,
+//   } = useContext(webRTCContext);
+
+//   const [uiState, setUistate] = useState("idle");
+
+//   const userIdRef = useRef(null);
+
+//   useEffect(() => {
+//     userIdRef.current = user?._id;
+//   }, [user]);
+
+//   /* ============================================
+//      HANDLE INCOMING MESSAGE
+//   ============================================ */
+//   function handleIncomingMessage(message) {
+//     const msg = message.message;
+//     const convId = msg.conversationId;
+
+//     setMessages((prev) => {
+//       const existing = prev[convId] || [];
+//       const exists = existing.some((m) => m.messageId === msg.messageId);
+//       if (exists) return prev;
+
+//       return {
+//         ...prev,
+//         [convId]: [
+//           ...existing,
+//           {
+//             messageId: msg.messageId,
+//             conversationId: convId,
+//             from: msg.from,
+//             to: userIdRef.current,
+//             text: msg.text,
+//             status: "delivered",
+//             createdAt: new Date(msg.createdAt).getTime(),
+//           },
+//         ],
+//       };
+//     });
+//   }
+
+//   /* ============================================
+//      HANDLE ACK (sent / delivered / read)
+//   ============================================ */
+//   function handleAck({ messageId, status, conversationId }) {
+//     console.log("handleAck called:", { messageId, status, conversationId });
+
+//     setMessages((prev) => {
+//       const updated = { ...prev };
+
+//       if (status === "read" && conversationId) {
+//         if (updated[conversationId]) {
+//           updated[conversationId] = updated[conversationId].map((msg) =>
+//             msg.from === userIdRef.current && msg.status !== "read"
+//               ? { ...msg, status: "read" }
+//               : msg,
+//           );
+//         }
+//         return updated;
+//       }
+
+//       for (const convId in updated) {
+//         updated[convId] = updated[convId].map((msg) =>
+//           msg.messageId === messageId ? { ...msg, status } : msg,
+//         );
+//       }
+//       return updated;
+//     });
+//   }
+
+//   /* ============================================
+//      HANDLE MESSAGE BLOCKED
+//   ============================================ */
+// function handleMessageBlocked({ messageId, reason }) {
+//   console.warn("Message blocked:", messageId, reason);
+
+//   setMessages((prev) => {
+//     const updated = { ...prev };
+//     for (const convId in updated) {
+//       updated[convId] = updated[convId].filter(
+//         (msg) => msg.messageId !== messageId,
+//       );
+//     }
+//     return updated;
+//   });
+// }
+
+//   /* ============================================
+//      MARK CONVERSATION AS READ
+//   ============================================ */
+//   const markAsRead = (conversationId) => {
+//     sendSignal({ type: "read", conversationId });
+
+//     setMessages((prev) => {
+//       const existing = prev[conversationId] || [];
+//       return {
+//         ...prev,
+//         [conversationId]: existing.map((msg) =>
+//           msg.status !== "read" ? { ...msg, status: "read" } : msg,
+//         ),
+//       };
+//     });
+//   };
+
+//   /* ============================================
+//      SCHEDULE RECONNECT
+//   ============================================ */
+//   function scheduleReconnect() {
+//     if (reconnectTimeoutRef.current) {
+//       clearTimeout(reconnectTimeoutRef.current);
+//     }
+//     reconnectTimeoutRef.current = setTimeout(() => {
+//       if (user?._id && !isIntentionalClose.current) {
+//         console.log("Attempting reconnect...");
+//         connectToWebSocketServer();
+//       }
+//     }, 2000);
+//   }
+
+//   /* ============================================
+//      CONNECT FUNCTION
+//   ============================================ */
+//   function connectToWebSocketServer() {
+//     if (socketRef.current?.readyState === WebSocket.OPEN)
+//       return socketRef.current;
+
+//     if (socketRef.current?.readyState === WebSocket.CONNECTING)
+//       return socketRef.current;
+
+//     isIntentionalClose.current = false;
+
+//     const WS_URL = import.meta.env.VITE_WS_URL;
+//     const socket = new WebSocket(WS_URL);
+//     socketRef.current = socket;
+
+//     socket.onopen = () => {
+//       console.log("WebSocket connected");
+//       setWsConnected(true);
+
+//       if (reconnectTimeoutRef.current) {
+//         clearTimeout(reconnectTimeoutRef.current);
+//         reconnectTimeoutRef.current = null;
+//       }
+
+//       sendQueueRef.current.forEach((msg) => socket.send(JSON.stringify(msg)));
+//       sendQueueRef.current = [];
+
+//       clearInterval(pingIntervalRef.current);
+//       pingIntervalRef.current = setInterval(() => {
+//         if (socket.readyState === WebSocket.OPEN) {
+//           socket.send(JSON.stringify({ type: "ping" }));
+//         }
+//       }, 25000);
+//     };
+
+//     socket.onmessage = async (event) => {
+//       try {
+//         const message = JSON.parse(event.data);
+
+//         switch (message.type) {
+//           case "chat_deliver":
+//             handleIncomingMessage(message);
+//             if (socketRef.current?.readyState === WebSocket.OPEN) {
+//               socketRef.current.send(
+//                 JSON.stringify({
+//                   type: "ack",
+//                   messageId: message.message.messageId,
+//                   status: "delivered",
+//                 }),
+//               );
+
+//               const incomingConvId = message.message.conversationId?.toString();
+//               if (
+//                 incomingConvId &&
+//                 currentConversationIdRef.current === incomingConvId
+//               ) {
+//                 socketRef.current.send(
+//                   JSON.stringify({
+//                     type: "read",
+//                     conversationId: incomingConvId,
+//                   }),
+//                 );
+//               }
+//             }
+//             break;
+
+//           case "ack":
+//             handleAck(message);
+//             break;
+
+//           case "read_ack":
+//             handleAck({
+//               messageId: message.messageId,
+//               conversationId: message.conversationId,
+//               status: "read",
+//             });
+//             break;
+
+//           // ── BLOCK ──────────────────────────────────────
+//           case "message_blocked":
+//             handleMessageBlocked(message);
+//             break;
+//           // ───────────────────────────────────────────────
+
+//           case "queued_ack":
+//             if (message.success === "ok") setUistate("successfully_queued");
+//             break;
+
+//           case "matched_ack":
+//             if (message.success === "ok") setUistate("successfully_matched");
+//             break;
+
+//           case "close_ack":
+//             if (message.success === "ok") setUistate("successfully_closed");
+//             break;
+
+//           case "queued_and_searching_next_for_you":
+//             setUistate("successfully_skipped_and_searching");
+//             setVideoCallLoader(true);
+//             manualCleanupRef.current = true;
+//             cleanupRemotePeer();
+//             break;
+
+//           case "successfully_ended_call":
+//             setUistate("idle");
+//             cleanupFull();
+//             break;
+
+//           case "pong":
+//             break;
+//         }
+
+//         handlersRef.current[message.type]?.(message);
+//       } catch {
+//         console.warn("Invalid WS message");
+//       }
+//     };
+
+//     socket.onerror = (error) => {
+//       console.error("WebSocket error:", error);
+//     };
+
+//     socket.onclose = (event) => {
+//       console.log("WebSocket closed:", event.code, event.reason);
+//       clearInterval(pingIntervalRef.current);
+//       setWsConnected(false);
+
+//       if (!isIntentionalClose.current) {
+//         scheduleReconnect();
+//       }
+//     };
+
+//     return socket;
+//   }
+
+//   /* ============================================
+//      CONNECT WHEN USER READY
+//   ============================================ */
+//   useEffect(() => {
+//     if (!user?._id) return;
+
+//     connectToWebSocketServer();
+
+//     return () => {
+//       isIntentionalClose.current = true;
+//       clearTimeout(reconnectTimeoutRef.current);
+//       clearInterval(pingIntervalRef.current);
+//       if (socketRef.current?.readyState === WebSocket.OPEN) {
+//         socketRef.current.close();
+//       }
+//     };
+//   }, [user]);
+
+//   /* ============================================
+//      RECONNECT ON TAB FOCUS / NETWORK RESTORE
+//   ============================================ */
+//   useEffect(() => {
+//     const handleVisibility = () => {
+//       if (!document.hidden && user?._id) {
+//         const state = socketRef.current?.readyState;
+//         if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
+//           console.log("Reconnecting websocket after tab focus");
+//           connectToWebSocketServer();
+//         }
+//       }
+//     };
+
+//     const handleOnline = () => {
+//       if (user?._id) {
+//         const state = socketRef.current?.readyState;
+//         if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
+//           console.log("Reconnecting websocket after network restore");
+//           connectToWebSocketServer();
+//         }
+//       }
+//     };
+
+//     document.addEventListener("visibilitychange", handleVisibility);
+//     window.addEventListener("online", handleOnline);
+
+//     return () => {
+//       document.removeEventListener("visibilitychange", handleVisibility);
+//       window.removeEventListener("online", handleOnline);
+//     };
+//   }, [user]);
+
+//   /* ============================================
+//      SEND SIGNAL
+//   ============================================ */
+//   const sendSignal = (msg) => {
+//     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+//       console.log("Queued message:", msg);
+//       sendQueueRef.current.push(msg);
+//       return;
+//     }
+//     socketRef.current.send(JSON.stringify(msg));
+//   };
+
+//   const registerHandlers = (handlers) => {
+//     handlersRef.current = handlers;
+//   };
+
+//   return (
+//     <websocketContext.Provider
+//       value={{
+//         sendSignal,
+//         registerHandlers,
+//         wsConnected,
+//         uiState,
+//         setUistate,
+//         messages,
+//         setMessages,
+//         markAsRead,
+//         setCurrentConversation,
+//       }}
+//     >
+//       {children}
+//     </websocketContext.Provider>
+//   );
+// };
+
 import React, {
   createContext,
   useContext,
@@ -1615,10 +1992,19 @@ export const WebSocketProvider = ({ children }) => {
 
   /* ============================================
      HANDLE INCOMING MESSAGE
+     
+     FIX: If the incoming message belongs to the conversation the user currently
+     has open, we set its status to "read" immediately (no flicker from
+     "delivered" → "read") and send both the "delivered" and "read" signals.
+     Otherwise we set it to "delivered" so the sender sees double grey ticks.
   ============================================ */
   function handleIncomingMessage(message) {
     const msg = message.message;
-    const convId = msg.conversationId;
+    const convId = msg.conversationId?.toString();
+    const isCurrentlyOpen = currentConversationIdRef.current === convId;
+
+    // Decide the initial local status for the incoming message
+    const initialStatus = isCurrentlyOpen ? "read" : "delivered";
 
     setMessages((prev) => {
       const existing = prev[convId] || [];
@@ -1635,7 +2021,7 @@ export const WebSocketProvider = ({ children }) => {
             from: msg.from,
             to: userIdRef.current,
             text: msg.text,
-            status: "delivered",
+            status: initialStatus,
             createdAt: new Date(msg.createdAt).getTime(),
           },
         ],
@@ -1645,13 +2031,20 @@ export const WebSocketProvider = ({ children }) => {
 
   /* ============================================
      HANDLE ACK (sent / delivered / read)
+
+     ACK types from the server:
+       type "ack"      → { messageId, status: "sent" | "delivered" }
+                         Updates a single message by messageId.
+       type "read_ack" → { conversationId, status: "read" }
+                         Bulk-marks all YOUR outgoing messages in that
+                         conversation as "read" (blue ticks).
   ============================================ */
   function handleAck({ messageId, status, conversationId }) {
-    console.log("handleAck called:", { messageId, status, conversationId });
-
     setMessages((prev) => {
       const updated = { ...prev };
 
+      // "read_ack" — the other user has read all messages in this conversation.
+      // Only flip OUR outgoing messages (from === myUserId) to "read".
       if (status === "read" && conversationId) {
         if (updated[conversationId]) {
           updated[conversationId] = updated[conversationId].map((msg) =>
@@ -1663,9 +2056,36 @@ export const WebSocketProvider = ({ children }) => {
         return updated;
       }
 
+      // "ack" with a specific messageId — update that single message.
+      // This handles "sending" → "sent" and "sent" → "delivered" transitions.
+      if (messageId) {
+        for (const convId in updated) {
+          updated[convId] = updated[convId].map((msg) =>
+            msg.messageId === messageId ? { ...msg, status } : msg,
+          );
+        }
+      }
+
+      return updated;
+    });
+  }
+
+  /* ============================================
+     HANDLE MESSAGE BLOCKED
+
+     FIX: Previously this removed the message from state entirely, which made
+     the UI silently swallow failed sends. Now we mark the message as "blocked"
+     so MessageStatus can render the red "Not delivered" indicator. The message
+     stays visible so the user knows it didn't go through.
+  ============================================ */
+  function handleMessageBlocked({ messageId, reason }) {
+    console.warn("Message blocked:", messageId, reason);
+
+    setMessages((prev) => {
+      const updated = { ...prev };
       for (const convId in updated) {
         updated[convId] = updated[convId].map((msg) =>
-          msg.messageId === messageId ? { ...msg, status } : msg,
+          msg.messageId === messageId ? { ...msg, status: "blocked" } : msg,
         );
       }
       return updated;
@@ -1673,34 +2093,31 @@ export const WebSocketProvider = ({ children }) => {
   }
 
   /* ============================================
-     HANDLE MESSAGE BLOCKED
-  ============================================ */
-function handleMessageBlocked({ messageId, reason }) {
-  console.warn("Message blocked:", messageId, reason);
-
-  setMessages((prev) => {
-    const updated = { ...prev };
-    for (const convId in updated) {
-      updated[convId] = updated[convId].filter(
-        (msg) => msg.messageId !== messageId,
-      );
-    }
-    return updated;
-  });
-}
-
-  /* ============================================
      MARK CONVERSATION AS READ
+
+     FIX: Previously this marked ALL messages (including your own outgoing ones)
+     as "read", which corrupted the tick state on sent messages. Now it only
+     flips incoming messages (from !== myUserId) that aren't already "read".
+     The sendSignal fires the WS "read" event so the sender gets blue ticks.
   ============================================ */
   const markAsRead = (conversationId) => {
     sendSignal({ type: "read", conversationId });
 
     setMessages((prev) => {
       const existing = prev[conversationId] || [];
+      const myId = userIdRef.current;
+      const hasUnread = existing.some(
+        (msg) => msg.from !== myId && msg.status !== "read",
+      );
+      if (!hasUnread) return prev; // nothing to do — avoid a re-render
+
       return {
         ...prev,
         [conversationId]: existing.map((msg) =>
-          msg.status !== "read" ? { ...msg, status: "read" } : msg,
+          // Only mark INCOMING messages (from the other user) as read
+          msg.from !== myId && msg.status !== "read"
+            ? { ...msg, status: "read" }
+            : msg,
         ),
       };
     });
@@ -1762,9 +2179,13 @@ function handleMessageBlocked({ messageId, reason }) {
         const message = JSON.parse(event.data);
 
         switch (message.type) {
-          case "chat_deliver":
+          case "chat_deliver": {
             handleIncomingMessage(message);
+
+            const incomingConvId = message.message.conversationId?.toString();
+
             if (socketRef.current?.readyState === WebSocket.OPEN) {
+              // Always ACK delivery so the sender gets double grey ticks
               socketRef.current.send(
                 JSON.stringify({
                   type: "ack",
@@ -1773,7 +2194,8 @@ function handleMessageBlocked({ messageId, reason }) {
                 }),
               );
 
-              const incomingConvId = message.message.conversationId?.toString();
+              // If the user has this conversation open, immediately send "read"
+              // so the sender gets blue ticks without waiting for a PATCH call.
               if (
                 incomingConvId &&
                 currentConversationIdRef.current === incomingConvId
@@ -1787,12 +2209,16 @@ function handleMessageBlocked({ messageId, reason }) {
               }
             }
             break;
+          }
 
           case "ack":
+            // Server confirmed our sent message was stored → "sending" → "sent"
+            // Server may also push "delivered" here when the recipient ACKs
             handleAck(message);
             break;
 
           case "read_ack":
+            // Recipient opened the chat → flip our messages to "read" (blue ticks)
             handleAck({
               messageId: message.messageId,
               conversationId: message.conversationId,
@@ -1800,11 +2226,9 @@ function handleMessageBlocked({ messageId, reason }) {
             });
             break;
 
-          // ── BLOCK ──────────────────────────────────────
           case "message_blocked":
             handleMessageBlocked(message);
             break;
-          // ───────────────────────────────────────────────
 
           case "queued_ack":
             if (message.success === "ok") setUistate("successfully_queued");
