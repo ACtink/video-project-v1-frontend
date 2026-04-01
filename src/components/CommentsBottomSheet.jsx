@@ -7823,6 +7823,679 @@
 
 // export default CommentsBottomSheet;
 
+// import { useEffect, useRef, useState, useCallback } from "react";
+// import fetchData from "../utils/fetchData";
+// import { useAuth } from "../hooks/useAuth";
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // THE ONLY TRICK THIS COMPONENT USES:
+// //
+// // Set interactive-widget=resizes-content on the viewport meta.
+// // This tells the browser: "when the keyboard opens, shrink the layout viewport."
+// // Now position:fixed elements naturally sit above the keyboard — no JS needed.
+// // dvh (dynamic viewport height) tracks that shrunk space.
+// // Works on iOS Safari 15.4+ and Android Chrome 108+. Degrades gracefully below.
+// //
+// // White strip fix: no backdropFilter anywhere near the keyboard boundary.
+// // blur() creates a GPU compositing layer; the seam between that layer and the
+// // keyboard surface shows white. Flat rgba colours have no such boundary.
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const DISMISS_THRESHOLD = 120;
+
+// function setViewportMeta() {
+//   let meta = document.querySelector('meta[name="viewport"]');
+//   if (!meta) {
+//     meta = document.createElement("meta");
+//     meta.name = "viewport";
+//     document.head.appendChild(meta);
+//   }
+//   const prev = meta.getAttribute("content") ?? "";
+//   meta.setAttribute(
+//     "content",
+//     "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+//   );
+//   return () => meta.setAttribute("content", prev);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Avatar
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const Avatar = ({ username, profilePicture, size = 32 }) => (
+//   <div
+//     style={{
+//       width: size,
+//       height: size,
+//       borderRadius: "50%",
+//       flexShrink: 0,
+//       overflow: "hidden",
+//     }}
+//   >
+//     {profilePicture ? (
+//       <img
+//         src={profilePicture}
+//         alt={username}
+//         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+//       />
+//     ) : (
+//       <div
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           background: `hsl(${(username?.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "center",
+//           fontSize: size * 0.38,
+//           fontWeight: 700,
+//           color: "#fff",
+//         }}
+//       >
+//         {username?.charAt(0).toUpperCase()}
+//       </div>
+//     )}
+//   </div>
+// );
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // CommentsBottomSheet
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function CommentsBottomSheet({
+//   post,
+//   onClose,
+//   onCommentAdded,
+//   onCommentDeleted,
+// }) {
+//   const { user } = useAuth();
+
+//   const [comments, setComments] = useState([]);
+//   const [blockedSet, setBlockedSet] = useState(() => new Set());
+//   const [loading, setLoading] = useState(true);
+//   const [comment, setComment] = useState("");
+//   const [visible, setVisible] = useState(false);
+//   const [activeMenu, setActiveMenu] = useState(null);
+//   const [dragY, setDragY] = useState(0);
+//   const [isDragging, setIsDragging] = useState(false);
+
+//   const listRef = useRef(null);
+//   const inputRef = useRef(null);
+//   const dragStartY = useRef(null);
+//   const savedScrollY = useRef(0);
+
+//   // ── Viewport meta ──────────────────────────────────────────────────────────
+//   useEffect(() => setViewportMeta(), []);
+
+//   // ── Entry animation ────────────────────────────────────────────────────────
+//   useEffect(() => {
+//     requestAnimationFrame(() => setVisible(true));
+//   }, []);
+
+//   // ── Body scroll lock ───────────────────────────────────────────────────────
+//   useEffect(() => {
+//     savedScrollY.current = window.scrollY;
+//     document.body.style.overflow = "hidden";
+//     return () => {
+//       document.body.style.overflow = "";
+//       window.scrollTo(0, savedScrollY.current);
+//     };
+//   }, []);
+
+//   // ── Fetch blocked users ────────────────────────────────────────────────────
+//   useEffect(() => {
+//     fetchData("/api/users/blocked", { credentials: "include" })
+//       .then((r) => r.json())
+//       .then((data) => {
+//         if (Array.isArray(data))
+//           setBlockedSet(new Set(data.map((u) => String(u._id))));
+//       })
+//       .catch(() => {});
+//   }, []);
+
+//   // ── Fetch comments ─────────────────────────────────────────────────────────
+//   useEffect(() => {
+//     fetchData(`/api/posts/${post._id}/comments`, { credentials: "include" })
+//       .then((r) => r.json())
+//       .then((data) => setComments(data.comments || []))
+//       .catch(() => {})
+//       .finally(() => setLoading(false));
+//   }, [post._id]);
+
+//   // ── Scroll to bottom when comments load ───────────────────────────────────
+//   useEffect(() => {
+//     if (!loading && listRef.current)
+//       listRef.current.scrollTop = listRef.current.scrollHeight;
+//   }, [loading]);
+
+//   // ── Close menu on outside tap ──────────────────────────────────────────────
+//   useEffect(() => {
+//     const h = (e) => {
+//       if (!e.target.closest("[data-menu]")) setActiveMenu(null);
+//     };
+//     document.addEventListener("mousedown", h);
+//     document.addEventListener("touchstart", h, { passive: true });
+//     return () => {
+//       document.removeEventListener("mousedown", h);
+//       document.removeEventListener("touchstart", h);
+//     };
+//   }, []);
+
+//   // ── Close ──────────────────────────────────────────────────────────────────
+//   const handleClose = useCallback(() => {
+//     inputRef.current?.blur();
+//     setVisible(false);
+//     setTimeout(onClose, 320);
+//   }, [onClose]);
+
+//   // ── Post comment ───────────────────────────────────────────────────────────
+//   const handlePost = useCallback(async () => {
+//     if (!comment.trim()) return;
+//     try {
+//       const res = await fetchData(`/api/posts/${post._id}/comments`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({ text: comment }),
+//       });
+//       const data = await res.json();
+//       setComments((prev) => [...prev, data.comment]);
+//       setComment("");
+//       onCommentAdded?.();
+//       requestAnimationFrame(() => {
+//         if (listRef.current)
+//           listRef.current.scrollTop = listRef.current.scrollHeight;
+//       });
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   }, [comment, post._id, onCommentAdded]);
+
+//   // ── Delete comment ─────────────────────────────────────────────────────────
+//   const handleDelete = useCallback(
+//     async (commentId) => {
+//       try {
+//         const res = await fetchData(
+//           `/api/posts/${post._id}/comments/${commentId}`,
+//           { method: "DELETE", credentials: "include" },
+//         );
+//         const data = await res.json();
+//         if (data.success) {
+//           setComments((prev) => prev.filter((c) => c._id !== commentId));
+//           onCommentDeleted?.();
+//         }
+//       } catch (err) {
+//         console.error(err);
+//       }
+//     },
+//     [post._id, onCommentDeleted],
+//   );
+
+//   // ── Drag to dismiss ────────────────────────────────────────────────────────
+//   const onTouchStart = (e) => {
+//     dragStartY.current = e.touches[0].clientY;
+//     setIsDragging(true);
+//   };
+//   const onTouchMove = (e) => {
+//     const d = e.touches[0].clientY - dragStartY.current;
+//     if (d > 0) setDragY(d);
+//   };
+//   const onTouchEnd = () => {
+//     if (dragY > DISMISS_THRESHOLD) handleClose();
+//     else setDragY(0);
+//     setIsDragging(false);
+//     dragStartY.current = null;
+//   };
+
+//   const visibleComments = comments.filter(
+//     (c) => c.user?._id && !blockedSet.has(String(c.user._id)),
+//   );
+
+//   return (
+//     <>
+//       <style>{CSS}</style>
+//       <div className="cbs-root md:hidden">
+//         {/* Backdrop — flat colour only, no blur (blur causes white strip on Android) */}
+//         <div
+//           className="cbs-backdrop"
+//           style={{ opacity: visible ? 1 : 0 }}
+//           onClick={handleClose}
+//         />
+
+//         {/* Sheet */}
+//         <div
+//           className="cbs-sheet"
+//           style={{
+//             transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
+//             transition: isDragging
+//               ? "none"
+//               : "transform 0.32s cubic-bezier(0.32,0.72,0,1)",
+//           }}
+//         >
+//           {/* Drag handle + header */}
+//           <div
+//             className="cbs-header"
+//             onTouchStart={onTouchStart}
+//             onTouchMove={onTouchMove}
+//             onTouchEnd={onTouchEnd}
+//           >
+//             <div className="cbs-pill" />
+//             <div className="cbs-title-row">
+//               <span className="cbs-title">Comments</span>
+//               <button className="cbs-close-btn" onClick={handleClose}>
+//                 <svg
+//                   width="10"
+//                   height="10"
+//                   viewBox="0 0 24 24"
+//                   fill="none"
+//                   stroke="rgba(255,255,255,0.6)"
+//                   strokeWidth="2.5"
+//                   strokeLinecap="round"
+//                 >
+//                   <line x1="18" y1="6" x2="6" y2="18" />
+//                   <line x1="6" y1="6" x2="18" y2="18" />
+//                 </svg>
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* List */}
+//           <div ref={listRef} className="cbs-list">
+//             {loading ? (
+//               <Skeleton />
+//             ) : visibleComments.length === 0 ? (
+//               <Empty />
+//             ) : (
+//               visibleComments.map((c, i) => {
+//                 const isMe = String(user?._id) === String(c.user?._id);
+//                 return (
+//                   <div
+//                     key={c._id}
+//                     className="cbs-row"
+//                     style={{ animationDelay: `${i * 35}ms` }}
+//                   >
+//                     <Avatar
+//                       username={c.user?.username}
+//                       profilePicture={c.user?.profilePicture}
+//                       size={32}
+//                     />
+//                     <div style={{ flex: 1, minWidth: 0 }}>
+//                       <p className="cbs-comment-text">
+//                         <span className="cbs-username">{c.user?.username}</span>
+//                         {c.text}
+//                       </p>
+//                       <p className="cbs-date">
+//                         {new Date(c.createdAt).toLocaleDateString("en-US", {
+//                           month: "short",
+//                           day: "numeric",
+//                         })}
+//                       </p>
+//                     </div>
+//                     {isMe && (
+//                       <div
+//                         style={{ position: "relative", flexShrink: 0 }}
+//                         data-menu
+//                       >
+//                         <button
+//                           className="cbs-menu-btn"
+//                           onClick={(e) => {
+//                             e.stopPropagation();
+//                             setActiveMenu(activeMenu === c._id ? null : c._id);
+//                           }}
+//                         >
+//                           <svg
+//                             width="14"
+//                             height="14"
+//                             viewBox="0 0 24 24"
+//                             fill="none"
+//                             stroke="currentColor"
+//                             strokeWidth="2"
+//                           >
+//                             <circle cx="5" cy="12" r="1" />
+//                             <circle cx="12" cy="12" r="1" />
+//                             <circle cx="19" cy="12" r="1" />
+//                           </svg>
+//                         </button>
+//                         {activeMenu === c._id && (
+//                           <div className="cbs-dropdown" data-menu>
+//                             <button
+//                               className="cbs-delete-btn"
+//                               onClick={() => {
+//                                 handleDelete(c._id);
+//                                 setActiveMenu(null);
+//                               }}
+//                             >
+//                               <svg
+//                                 width="13"
+//                                 height="13"
+//                                 viewBox="0 0 24 24"
+//                                 fill="none"
+//                                 stroke="currentColor"
+//                                 strokeWidth="2"
+//                                 strokeLinecap="round"
+//                                 strokeLinejoin="round"
+//                               >
+//                                 <polyline points="3 6 5 6 21 6" />
+//                                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+//                                 <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+//                               </svg>
+//                               Delete
+//                             </button>
+//                           </div>
+//                         )}
+//                       </div>
+//                     )}
+//                   </div>
+//                 );
+//               })
+//             )}
+//           </div>
+
+//           {/* Input bar */}
+//           <div className="cbs-input-bar">
+//             <Avatar
+//               username={user?.username || "?"}
+//               profilePicture={user?.profilePicture}
+//               size={32}
+//             />
+//             <div className="cbs-input-wrap">
+//               <input
+//                 ref={inputRef}
+//                 value={comment}
+//                 onChange={(e) => setComment(e.target.value)}
+//                 onKeyDown={(e) => {
+//                   if (e.key === "Enter" && !e.shiftKey) {
+//                     e.preventDefault();
+//                     handlePost();
+//                   }
+//                 }}
+//                 placeholder="Add a comment…"
+//                 className="cbs-input"
+//                 autoComplete="off"
+//                 autoCorrect="off"
+//                 autoCapitalize="sentences"
+//                 inputMode="text"
+//                 style={{ fontSize: 16 }}
+//               />
+//               {comment.trim() && (
+//                 <button className="cbs-post-btn" onClick={handlePost}>
+//                   Post
+//                 </button>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Small pure components
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const Skeleton = () => (
+//   <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+//     {[
+//       ["40%", "70%"],
+//       ["55%", "85%"],
+//       ["45%", "60%"],
+//       ["50%", "75%"],
+//     ].map(([a, b], i) => (
+//       <div key={i} style={{ display: "flex", gap: 12 }}>
+//         <div
+//           className="sk"
+//           style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }}
+//         />
+//         <div
+//           style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}
+//         >
+//           <div
+//             className="sk"
+//             style={{ height: 11, borderRadius: 6, width: a }}
+//           />
+//           <div
+//             className="sk"
+//             style={{ height: 11, borderRadius: 6, width: b }}
+//           />
+//         </div>
+//       </div>
+//     ))}
+//   </div>
+// );
+
+// const Empty = () => (
+//   <div
+//     style={{
+//       display: "flex",
+//       flexDirection: "column",
+//       alignItems: "center",
+//       paddingTop: 60,
+//       gap: 8,
+//     }}
+//   >
+//     <svg
+//       width="36"
+//       height="36"
+//       viewBox="0 0 24 24"
+//       fill="none"
+//       stroke="rgba(255,255,255,0.12)"
+//       strokeWidth="1.5"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//     >
+//       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+//     </svg>
+//     <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13, margin: 0 }}>
+//       No comments yet
+//     </p>
+//     <p style={{ color: "rgba(255,255,255,0.15)", fontSize: 12, margin: 0 }}>
+//       Be the first to comment
+//     </p>
+//   </div>
+// );
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // All CSS in one place
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const CSS = `
+//   @keyframes shimmer {
+//     from { background-position: -400px 0; }
+//     to   { background-position:  400px 0; }
+//   }
+//   @keyframes fadeUp {
+//     from { opacity: 0; transform: translateY(6px); }
+//     to   { opacity: 1; transform: translateY(0); }
+//   }
+
+//   .sk {
+//     background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+//     background-size: 400px 100%;
+//     animation: shimmer 1.4s ease infinite;
+//   }
+
+//   /*
+//    * Root overlay.
+//    * position:fixed + resizes-content = browser lifts this above the keyboard.
+//    * padding-bottom:400px + margin-bottom:-400px extends the black background
+//    * behind the keyboard so the white strip never appears during animation.
+//    */
+//   .cbs-root {
+//     position: fixed;
+//     inset: 0;
+//     padding-bottom: 400px;
+//     margin-bottom: -400px;
+//     display: flex;
+//     flex-direction: column;
+//     justify-content: flex-end;
+//     z-index: 9999;
+//     pointer-events: none;
+//     background: #000;
+//   }
+
+//   /* Flat colour — NO backdropFilter, which causes a white compositor seam */
+//   .cbs-backdrop {
+//     position: absolute;
+//     top: 0; left: 0; right: 0; bottom: -400px;
+//     background: rgba(0, 0, 0, 0.65);
+//     pointer-events: all;
+//     transition: opacity 0.3s ease;
+//   }
+
+//   .cbs-sheet {
+//     position: relative;
+//     width: 100%;
+//     max-width: 470px;
+//     margin: 0 auto;
+//     height: 72dvh;
+//     max-height: 100%;
+//     display: flex;
+//     flex-direction: column;
+//     background: #141414;
+//     border-radius: 16px 16px 0 0;
+//     border-top: 0.5px solid rgba(255,255,255,0.08);
+//     box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+//     pointer-events: all;
+//     overflow: hidden;
+//     box-sizing: border-box;
+//   }
+
+//   .cbs-header {
+//     flex-shrink: 0;
+//     padding: 12px 16px 0;
+//     user-select: none;
+//   }
+
+//   .cbs-pill {
+//     width: 36px; height: 4px;
+//     border-radius: 99px;
+//     background: rgba(255,255,255,0.15);
+//     margin: 0 auto 12px;
+//   }
+
+//   .cbs-title-row {
+//     display: flex;
+//     align-items: center;
+//     justify-content: space-between;
+//     padding-bottom: 12px;
+//     border-bottom: 0.5px solid rgba(255,255,255,0.07);
+//   }
+
+//   .cbs-title { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
+
+//   .cbs-close-btn {
+//     width: 28px; height: 28px;
+//     min-width: 44px; min-height: 44px;
+//     display: flex; align-items: center; justify-content: center;
+//     border-radius: 50%;
+//     background: rgba(255,255,255,0.07);
+//     border: 0.5px solid rgba(255,255,255,0.1);
+//     cursor: pointer;
+//     margin-right: -8px;
+//     -webkit-tap-highlight-color: transparent;
+//   }
+
+//   .cbs-list {
+//     flex: 1;
+//     min-height: 0;
+//     overflow-y: auto;
+//     overscroll-behavior: contain;
+//     -webkit-overflow-scrolling: touch;
+//     padding: 12px 16px 8px;
+//     display: flex;
+//     flex-direction: column;
+//     gap: 20px;
+//   }
+
+//   .cbs-row {
+//     display: flex;
+//     gap: 12px;
+//     align-items: flex-start;
+//     animation: fadeUp 0.22s ease forwards;
+//     opacity: 0;
+//   }
+
+//   .cbs-comment-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.8); margin: 0; word-break: break-word; }
+//   .cbs-username     { font-weight: 600; color: #fff; margin-right: 6px; }
+//   .cbs-date         { font-size: 11px; color: rgba(255,255,255,0.25); margin: 4px 0 0; }
+
+//   .cbs-menu-btn {
+//     width: 44px; height: 44px;
+//     display: flex; align-items: center; justify-content: center;
+//     background: transparent; border: none; cursor: pointer;
+//     color: rgba(255,255,255,0.3);
+//     margin-right: -10px;
+//     -webkit-tap-highlight-color: transparent;
+//   }
+
+//   .cbs-dropdown {
+//     position: absolute; right: 0; top: 36px;
+//     z-index: 50; width: 148px;
+//     border-radius: 12px;
+//     background: #1f1f1f;
+//     border: 0.5px solid rgba(255,255,255,0.1);
+//     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+//     overflow: hidden;
+//   }
+
+//   .cbs-delete-btn {
+//     width: 100%; min-height: 44px;
+//     display: flex; align-items: center; gap: 8px;
+//     padding: 10px 12px;
+//     font-size: 13px; font-weight: 500; color: #f87171;
+//     background: transparent; border: none; cursor: pointer; text-align: left;
+//     -webkit-tap-highlight-color: transparent;
+//   }
+
+//   /* Input bar — flat background, NO backdropFilter */
+//   .cbs-input-bar {
+//     flex-shrink: 0;
+//     display: flex;
+//     align-items: center;
+//     gap: 10px;
+//     padding: 10px 12px;
+//     padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+//     border-top: 0.5px solid rgba(255,255,255,0.07);
+//     background: #141414;
+//     box-sizing: border-box;
+//   }
+
+//   .cbs-input-wrap {
+//     flex: 1;
+//     display: flex;
+//     align-items: center;
+//     gap: 8px;
+//     background: rgba(255,255,255,0.06);
+//     border-radius: 24px;
+//     border: 0.5px solid rgba(255,255,255,0.08);
+//     padding: 8px 14px;
+//     min-width: 0;
+//   }
+
+//   .cbs-input {
+//     flex: 1;
+//     background: transparent;
+//     border: none;
+//     outline: none;
+//     line-height: 1.4;
+//     color: rgba(255,255,255,0.85);
+//     caret-color: #60a5fa;
+//     min-width: 0;
+//   }
+//   .cbs-input::placeholder { color: rgba(255,255,255,0.3); }
+
+//   .cbs-post-btn {
+//     font-size: 13px; font-weight: 600; color: #60a5fa;
+//     background: transparent; border: none; cursor: pointer;
+//     white-space: nowrap; padding: 4px 0; flex-shrink: 0;
+//     min-height: 44px; display: flex; align-items: center;
+//     -webkit-tap-highlight-color: transparent;
+//   }
+// `;
+
+// export default CommentsBottomSheet;
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import fetchData from "../utils/fetchData";
 import { useAuth } from "../hooks/useAuth";
@@ -8348,7 +9021,14 @@ const CSS = `
     width: 100%;
     max-width: 470px;
     margin: 0 auto;
-    height: 72dvh;
+    /*
+     * height:72dvh is the resting size (keyboard closed).
+     * max-height:100% clamps to the root's available space — which shrinks
+     * when the keyboard opens via resizes-content. So the sheet compresses
+     * as the keyboard rises, keeping the input bar always visible.
+     * The list (flex:1 + overflow-y:auto) absorbs the height change silently.
+     */
+    height: 92dvh;
     max-height: 100%;
     display: flex;
     flex-direction: column;
