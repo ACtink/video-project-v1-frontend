@@ -6444,55 +6444,1422 @@
 
 // export default CommentsBottomSheet;
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+// import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+// import fetchData from "../utils/fetchData";
+// import { useAuth } from "../hooks/useAuth";
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Constants
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const SHEET_HEIGHT_PERCENT = 72;
+// const DISMISS_THRESHOLD = 120;
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Platform detection — runs once, never changes during a session.
+// //
+// // WHY separate Android / iOS paths?
+// //   iOS Safari  : innerHeight shrinks once (post-animation), fixed elements
+// //                 anchor to the visual viewport automatically, safe-area-inset
+// //                 clears the home bar and disappears when keyboard is open.
+// //   Android Chrome: clientHeight shrinks (with interactive-widget=resizes-content),
+// //                 visualViewport fires 30-60x during keyboard animation,
+// //                 position:fixed is anchored to the LAYOUT viewport (not visual),
+// //                 so the sheet can end up BEHIND the keyboard mid-animation.
+// //
+// // Trying to patch one component for both creates an arms race of hacks.
+// // The correct engineering answer is: detect once → fork the rendering strategy.
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const UA = typeof navigator !== "undefined" ? navigator.userAgent : "";
+
+// const IS_IOS = /iPad|iPhone|iPod/.test(UA) && !window.MSStream;
+
+// // Android detection: covers Chrome, Samsung Internet, WebView, Firefox for Android
+// const IS_ANDROID = /Android/i.test(UA);
+
+// // Detect if the browser supports the CSS dvh unit (dynamic viewport height).
+// // dvh = "dynamic viewport height" that accounts for browser chrome collapsing.
+// // Supported in Chrome 108+, Safari 15.4+, Firefox 109+.
+// const SUPPORTS_DVH = (() => {
+//   try {
+//     const el = document.createElement("div");
+//     el.style.height = "1dvh";
+//     return el.style.height === "1dvh";
+//   } catch {
+//     return false;
+//   }
+// })();
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Shared sub-components
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const Avatar = ({ username, profilePicture, size = 32 }) => (
+//   <div
+//     style={{
+//       width: size,
+//       height: size,
+//       borderRadius: "50%",
+//       flexShrink: 0,
+//       overflow: "hidden",
+//     }}
+//   >
+//     {profilePicture ? (
+//       <img
+//         src={profilePicture}
+//         alt={username}
+//         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+//       />
+//     ) : (
+//       <div
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           background: `hsl(${(username?.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "center",
+//           fontSize: size * 0.38,
+//           fontWeight: 700,
+//           color: "#fff",
+//         }}
+//       >
+//         {username?.charAt(0).toUpperCase()}
+//       </div>
+//     )}
+//   </div>
+// );
+
+// // Shimmer skeleton row (shared)
+// const SkeletonRow = ({ widths }) => (
+//   <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+//     <div
+//       className="cbs-skeleton"
+//       style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }}
+//     />
+//     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+//       <div
+//         className="cbs-skeleton"
+//         style={{ height: 11, borderRadius: 6, width: widths[0] }}
+//       />
+//       <div
+//         className="cbs-skeleton"
+//         style={{ height: 11, borderRadius: 6, width: widths[1] }}
+//       />
+//       <div
+//         className="cbs-skeleton"
+//         style={{ height: 9, borderRadius: 6, width: "25%", marginTop: 2 }}
+//       />
+//     </div>
+//   </div>
+// );
+
+// const SKELETON_WIDTHS = [
+//   ["40%", "70%"],
+//   ["55%", "85%"],
+//   ["45%", "60%"],
+//   ["50%", "75%"],
+// ];
+
+// // Empty state (shared)
+// const EmptyComments = () => (
+//   <div
+//     style={{
+//       display: "flex",
+//       flexDirection: "column",
+//       alignItems: "center",
+//       justifyContent: "center",
+//       gap: 8,
+//       paddingTop: 60,
+//       paddingBottom: 40,
+//     }}
+//   >
+//     <svg
+//       width="36"
+//       height="36"
+//       viewBox="0 0 24 24"
+//       fill="none"
+//       stroke="rgba(255,255,255,0.12)"
+//       strokeWidth="1.5"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//     >
+//       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+//     </svg>
+//     <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13, margin: 0 }}>
+//       No comments yet
+//     </p>
+//     <p style={{ color: "rgba(255,255,255,0.15)", fontSize: 12, margin: 0 }}>
+//       Be the first to comment
+//     </p>
+//   </div>
+// );
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Shared CSS string (injected once by whichever variant mounts)
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const SHARED_CSS = `
+//   @keyframes cbs-shimmer {
+//     0%   { background-position: -400px 0; }
+//     100% { background-position:  400px 0; }
+//   }
+//   .cbs-skeleton {
+//     background: linear-gradient(90deg,
+//       rgba(255,255,255,0.04) 25%,
+//       rgba(255,255,255,0.09) 50%,
+//       rgba(255,255,255,0.04) 75%
+//     );
+//     background-size: 400px 100%;
+//     animation: cbs-shimmer 1.4s ease infinite;
+//   }
+//   @keyframes cbs-fadeSlideIn {
+//     from { opacity:0; transform:translateY(8px); }
+//     to   { opacity:1; transform:translateY(0); }
+//   }
+//   .cbs-comment-row {
+//     opacity: 0;
+//     animation: cbs-fadeSlideIn 0.25s ease forwards;
+//   }
+//   .cbs-touch-btn {
+//     -webkit-tap-highlight-color: transparent;
+//     touch-action: manipulation;
+//     user-select: none;
+//   }
+// `;
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Shared hook: fetch comments + blocked set + post/delete actions
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function useComments(post, onCommentAdded, onCommentDeleted) {
+//   const [blockedSet, setBlockedSet] = useState(() => new Set());
+//   const [comments, setComments] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [contentVisible, setContentVisible] = useState(false);
+
+//   useEffect(() => {
+//     fetchData("/api/users/blocked", { credentials: "include" })
+//       .then((r) => r.json())
+//       .then((data) => {
+//         if (Array.isArray(data))
+//           setBlockedSet(new Set(data.map((u) => String(u._id))));
+//       })
+//       .catch(() => {});
+//   }, []);
+
+//   useEffect(() => {
+//     fetchData(`/api/posts/${post._id}/comments`, { credentials: "include" })
+//       .then((r) => r.json())
+//       .then((data) => {
+//         setComments(data.comments || []);
+//         setTimeout(() => {
+//           setLoading(false);
+//           requestAnimationFrame(() => setContentVisible(true));
+//         }, 300);
+//       })
+//       .catch(() => {
+//         setLoading(false);
+//         requestAnimationFrame(() => setContentVisible(true));
+//       });
+//   }, [post._id]);
+
+//   const postComment = useCallback(
+//     async (text, onSuccess) => {
+//       if (!text.trim()) return;
+//       try {
+//         const res = await fetchData(`/api/posts/${post._id}/comments`, {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           credentials: "include",
+//           body: JSON.stringify({ text }),
+//         });
+//         const data = await res.json();
+//         setComments((prev) => [...prev, data.comment]);
+//         onCommentAdded?.();
+//         onSuccess?.();
+//       } catch (err) {
+//         console.error("Post comment error:", err);
+//       }
+//     },
+//     [post._id, onCommentAdded],
+//   );
+
+//   const deleteComment = useCallback(
+//     async (commentId) => {
+//       try {
+//         const res = await fetchData(
+//           `/api/posts/${post._id}/comments/${commentId}`,
+//           { method: "DELETE", credentials: "include" },
+//         );
+//         const data = await res.json();
+//         if (data.success) {
+//           setComments((prev) => prev.filter((c) => c._id !== commentId));
+//           onCommentDeleted?.();
+//         }
+//       } catch (err) {
+//         console.error("Delete comment error:", err);
+//       }
+//     },
+//     [post._id, onCommentDeleted],
+//   );
+
+//   return {
+//     blockedSet,
+//     comments,
+//     loading,
+//     contentVisible,
+//     postComment,
+//     deleteComment,
+//   };
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Shared: comment list content (both variants render the same list DOM)
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function CommentList({
+//   loading,
+//   contentVisible,
+//   comments,
+//   blockedSet,
+//   userId,
+//   activeCommentMenu,
+//   setActiveCommentMenu,
+//   deleteComment,
+// }) {
+//   if (loading) {
+//     return (
+//       <div
+//         style={{
+//           display: "flex",
+//           flexDirection: "column",
+//           gap: 20,
+//           paddingTop: 4,
+//         }}
+//       >
+//         {SKELETON_WIDTHS.map((w, i) => (
+//           <SkeletonRow key={i} widths={w} />
+//         ))}
+//       </div>
+//     );
+//   }
+
+//   const visible = comments
+//     .filter((c) => c.user?._id)
+//     .filter((c) => !blockedSet.has(String(c.user?._id)));
+
+//   return (
+//     <div
+//       style={{
+//         opacity: contentVisible ? 1 : 0,
+//         transform: contentVisible ? "translateY(0)" : "translateY(8px)",
+//         transition: "opacity 0.35s ease, transform 0.35s ease",
+//         display: "flex",
+//         flexDirection: "column",
+//         gap: 20,
+//         paddingTop: 4,
+//         paddingBottom: 4,
+//       }}
+//     >
+//       {visible.length === 0 ? (
+//         <EmptyComments />
+//       ) : (
+//         visible.map((c, i) => {
+//           const isMyComment = String(userId) === String(c.user?._id);
+//           return (
+//             <div
+//               key={c._id}
+//               className="cbs-comment-row"
+//               style={{
+//                 animationDelay: `${i * 40}ms`,
+//                 display: "flex",
+//                 gap: 12,
+//                 alignItems: "flex-start",
+//                 position: "relative",
+//               }}
+//             >
+//               <Avatar
+//                 username={c.user?.username}
+//                 profilePicture={c.user?.profilePicture}
+//                 size={32}
+//               />
+//               <div style={{ flex: 1, minWidth: 0 }}>
+//                 <p
+//                   style={{
+//                     fontSize: 13,
+//                     lineHeight: 1.5,
+//                     color: "rgba(255,255,255,0.8)",
+//                     margin: 0,
+//                     wordBreak: "break-word",
+//                   }}
+//                 >
+//                   <span
+//                     style={{ fontWeight: 600, color: "#fff", marginRight: 6 }}
+//                   >
+//                     {c.user?.username}
+//                   </span>
+//                   {c.text}
+//                 </p>
+//                 <p
+//                   style={{
+//                     fontSize: 11,
+//                     color: "rgba(255,255,255,0.25)",
+//                     margin: "4px 0 0",
+//                   }}
+//                 >
+//                   {new Date(c.createdAt).toLocaleDateString("en-US", {
+//                     month: "short",
+//                     day: "numeric",
+//                   })}
+//                 </p>
+//               </div>
+
+//               {isMyComment && (
+//                 <div
+//                   style={{ position: "relative", flexShrink: 0 }}
+//                   data-comment-menu
+//                 >
+//                   <button
+//                     className="cbs-touch-btn"
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       setActiveCommentMenu(
+//                         activeCommentMenu === c._id ? null : c._id,
+//                       );
+//                     }}
+//                     style={{
+//                       width: 44,
+//                       height: 44,
+//                       display: "flex",
+//                       alignItems: "center",
+//                       justifyContent: "center",
+//                       background: "transparent",
+//                       border: "none",
+//                       cursor: "pointer",
+//                       color: "rgba(255,255,255,0.3)",
+//                       marginRight: -10,
+//                     }}
+//                   >
+//                     <svg
+//                       width="14"
+//                       height="14"
+//                       viewBox="0 0 24 24"
+//                       fill="none"
+//                       stroke="currentColor"
+//                       strokeWidth="2"
+//                     >
+//                       <circle cx="5" cy="12" r="1" />
+//                       <circle cx="12" cy="12" r="1" />
+//                       <circle cx="19" cy="12" r="1" />
+//                     </svg>
+//                   </button>
+//                   {activeCommentMenu === c._id && (
+//                     <div
+//                       data-comment-menu
+//                       style={{
+//                         position: "absolute",
+//                         right: 0,
+//                         top: 36,
+//                         zIndex: 50,
+//                         width: 148,
+//                         borderRadius: 12,
+//                         background: "#1f1f1f",
+//                         border: "0.5px solid rgba(255,255,255,0.1)",
+//                         boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+//                         overflow: "hidden",
+//                       }}
+//                     >
+//                       <button
+//                         className="cbs-touch-btn"
+//                         onClick={() => {
+//                           deleteComment(c._id);
+//                           setActiveCommentMenu(null);
+//                         }}
+//                         style={{
+//                           width: "100%",
+//                           minHeight: 44,
+//                           display: "flex",
+//                           alignItems: "center",
+//                           gap: 8,
+//                           padding: "10px 12px",
+//                           fontSize: 13,
+//                           fontWeight: 500,
+//                           color: "#f87171",
+//                           background: "transparent",
+//                           border: "none",
+//                           cursor: "pointer",
+//                           textAlign: "left",
+//                         }}
+//                       >
+//                         <svg
+//                           width="13"
+//                           height="13"
+//                           viewBox="0 0 24 24"
+//                           fill="none"
+//                           stroke="currentColor"
+//                           strokeWidth="2"
+//                           strokeLinecap="round"
+//                           strokeLinejoin="round"
+//                         >
+//                           <polyline points="3 6 5 6 21 6" />
+//                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+//                           <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+//                         </svg>
+//                         Delete comment
+//                       </button>
+//                     </div>
+//                   )}
+//                 </div>
+//               )}
+//             </div>
+//           );
+//         })
+//       )}
+//     </div>
+//   );
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // ██████████████████████████████████████████████████████████████████████████████
+// // iOS VARIANT
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Strategy:
+// //   • Use position:fixed on the root overlay — Safari correctly anchors fixed
+// //     elements to the visual viewport, so when the keyboard opens the sheet
+// //     rises naturally without any JS.
+// //   • Listen to visualViewport.resize ONCE (fires after keyboard animation ends)
+// //     to apply a CSS transition-friendly paddingBottom adjustment.
+// //   • Use env(safe-area-inset-bottom) on the input bar for home bar clearance.
+// //   • Use dvh (or vh fallback) for sheet height.
+// //   • Body scroll lock via position:fixed trick (standard for iOS).
+// // ██████████████████████████████████████████████████████████████████████████████
+
+// function CommentsBottomSheetIOS({
+//   post,
+//   onClose,
+//   onCommentAdded,
+//   onCommentDeleted,
+// }) {
+//   const { user } = useAuth();
+//   const {
+//     blockedSet,
+//     comments,
+//     loading,
+//     contentVisible,
+//     postComment,
+//     deleteComment,
+//   } = useComments(post, onCommentAdded, onCommentDeleted);
+
+//   const [comment, setComment] = useState("");
+//   const [visible, setVisible] = useState(false);
+//   const [activeCommentMenu, setActiveCommentMenu] = useState(null);
+//   const [isDragging, setIsDragging] = useState(false);
+//   const [dragY, setDragY] = useState(0);
+//   const [keyboardPadding, setKeyboardPadding] = useState(0);
+
+//   const rootRef = useRef(null);
+//   const listRef = useRef(null);
+//   const inputRef = useRef(null);
+//   const dragStartY = useRef(null);
+//   const savedScrollY = useRef(0);
+
+//   // Entry animation
+//   useEffect(() => {
+//     requestAnimationFrame(() => setVisible(true));
+//   }, []);
+
+//   // Body scroll lock — iOS standard approach
+//   useEffect(() => {
+//     savedScrollY.current = window.scrollY;
+//     document.body.style.cssText = `overflow:hidden;position:fixed;top:${-savedScrollY.current}px;left:0;right:0;width:100%;`;
+//     return () => {
+//       document.body.style.cssText = "";
+//       window.scrollTo(0, savedScrollY.current);
+//     };
+//   }, []);
+
+//   // Viewport meta — iOS needs interactive-widget=resizes-visual (not resizes-content)
+//   // so that the layout viewport does NOT shrink; the visual viewport shrinks instead,
+//   // and position:fixed elements follow it automatically.
+//   useEffect(() => {
+//     let meta = document.querySelector('meta[name="viewport"]');
+//     const prev = meta?.getAttribute("content") ?? "";
+//     if (!meta) {
+//       meta = document.createElement("meta");
+//       meta.name = "viewport";
+//       document.head.appendChild(meta);
+//     }
+//     meta.setAttribute(
+//       "content",
+//       "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual",
+//     );
+//     return () => meta.setAttribute("content", prev);
+//   }, []);
+
+//   // iOS keyboard handler:
+//   // visualViewport fires ONCE after keyboard animation → safe to use CSS transition.
+//   // We use innerHeight (not clientHeight) because on iOS they're identical and
+//   // innerHeight is the most reliable pre-change value.
+//   useEffect(() => {
+//     if (!window.visualViewport) return;
+//     const onResize = () => {
+//       const vv = window.visualViewport;
+//       // On iOS with resizes-visual, innerHeight stays the same (layout unchanged).
+//       // The visual viewport shrinks by keyboard height.
+//       const gap = window.innerHeight - vv.height;
+//       setKeyboardPadding(Math.max(0, gap));
+//       if (gap > 0 && listRef.current) {
+//         // Single rAF is fine — iOS fires after animation
+//         requestAnimationFrame(() => {
+//           if (listRef.current)
+//             listRef.current.scrollTop = listRef.current.scrollHeight;
+//         });
+//       }
+//     };
+//     window.visualViewport.addEventListener("resize", onResize);
+//     // Initial call in case keyboard is somehow already open
+//     onResize();
+//     return () => window.visualViewport.removeEventListener("resize", onResize);
+//   }, []);
+
+//   // Scroll to bottom when comments load
+//   useEffect(() => {
+//     if (!loading && listRef.current)
+//       listRef.current.scrollTop = listRef.current.scrollHeight;
+//   }, [comments, loading]);
+
+//   // Close comment menus on outside tap
+//   useEffect(() => {
+//     const h = (e) => {
+//       if (!e.target.closest("[data-comment-menu]")) setActiveCommentMenu(null);
+//     };
+//     document.addEventListener("mousedown", h);
+//     document.addEventListener("touchstart", h, { passive: true });
+//     return () => {
+//       document.removeEventListener("mousedown", h);
+//       document.removeEventListener("touchstart", h);
+//     };
+//   }, []);
+
+//   const handleClose = useCallback(() => {
+//     inputRef.current?.blur();
+//     setVisible(false);
+//     setTimeout(onClose, 350);
+//   }, [onClose]);
+
+//   const handlePost = useCallback(async () => {
+//     await postComment(comment, () => {
+//       setComment("");
+//       setTimeout(
+//         () =>
+//           requestAnimationFrame(() => {
+//             if (listRef.current)
+//               listRef.current.scrollTop = listRef.current.scrollHeight;
+//           }),
+//         50,
+//       ); // 50ms is fine on iOS — one rAF after single visualViewport event
+//     });
+//   }, [comment, postComment]);
+
+//   // Drag to dismiss
+//   const handleTouchStart = (e) => {
+//     dragStartY.current = e.touches[0].clientY;
+//     setIsDragging(true);
+//   };
+//   const handleTouchMove = (e) => {
+//     if (dragStartY.current === null) return;
+//     const d = e.touches[0].clientY - dragStartY.current;
+//     if (d > 0) setDragY(d);
+//   };
+//   const handleTouchEnd = () => {
+//     if (dragY > DISMISS_THRESHOLD) handleClose();
+//     else setDragY(0);
+//     setIsDragging(false);
+//     dragStartY.current = null;
+//   };
+
+//   return (
+//     <>
+//       <style>{SHARED_CSS}</style>
+//       <style>{`
+//         .cbs-ios-root {
+//           position: fixed;
+//           inset: 0;
+//           display: flex;
+//           flex-direction: column;
+//           justify-content: flex-end;
+//           z-index: 9999;
+//           pointer-events: none;
+//           box-sizing: border-box;
+//           /* iOS: transition on paddingBottom is fine — visualViewport fires once */
+//           transition: padding-bottom 0.25s ease;
+//         }
+//         .cbs-ios-sheet {
+//           position: relative;
+//           width: 100%;
+//           max-width: 470px;
+//           margin: 0 auto;
+//           height: ${SUPPORTS_DVH ? `${SHEET_HEIGHT_PERCENT}dvh` : `${SHEET_HEIGHT_PERCENT}vh`};
+//           max-height: 100%;
+//           display: flex;
+//           flex-direction: column;
+//           background: #141414;
+//           border-radius: 16px 16px 0 0;
+//           border-top: 0.5px solid rgba(255,255,255,0.08);
+//           box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+//           pointer-events: all;
+//           overflow: hidden;
+//           will-change: transform;
+//           box-sizing: border-box;
+//         }
+//         .cbs-ios-list {
+//           flex: 1;
+//           min-height: 0;
+//           overflow-y: auto;
+//           -webkit-overflow-scrolling: touch;
+//           overscroll-behavior: contain;
+//           padding: 12px 16px 8px;
+//         }
+//         .cbs-ios-input-bar {
+//           flex-shrink: 0;
+//           border-top: 0.5px solid rgba(255,255,255,0.07);
+//           padding: 10px 12px;
+//           /* iOS safe-area: home bar clears without double-padding the keyboard,
+//              because we use resizes-visual (layout unchanged, fixed elements follow visual vp). */
+//           padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+//           background: #141414;
+//           box-sizing: border-box;
+//         }
+//       `}</style>
+
+//       <div
+//         className="cbs-ios-root md:hidden"
+//         ref={rootRef}
+//         style={{
+//           paddingBottom: keyboardPadding > 0 ? keyboardPadding : undefined,
+//         }}
+//       >
+//         {/* Backdrop */}
+//         <div
+//           style={{
+//             position: "absolute",
+//             inset: 0,
+//             background: "rgba(0,0,0,0.55)",
+//             backdropFilter: "blur(2px)",
+//             WebkitBackdropFilter: "blur(2px)",
+//             pointerEvents: "all",
+//             transition: "opacity 0.3s ease",
+//             opacity: visible ? 1 : 0,
+//           }}
+//           onClick={handleClose}
+//         />
+
+//         {/* Sheet */}
+//         <div
+//           className="cbs-ios-sheet"
+//           style={{
+//             transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
+//             transition: isDragging
+//               ? "none"
+//               : "transform 0.35s cubic-bezier(0.32,0.72,0,1)",
+//           }}
+//         >
+//           {/* Header + drag handle */}
+//           <div
+//             style={{
+//               flexShrink: 0,
+//               padding: "12px 16px 0",
+//               userSelect: "none",
+//             }}
+//             onTouchStart={handleTouchStart}
+//             onTouchMove={handleTouchMove}
+//             onTouchEnd={handleTouchEnd}
+//           >
+//             <div
+//               style={{
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 marginBottom: 12,
+//               }}
+//             >
+//               <div
+//                 style={{
+//                   width: 36,
+//                   height: 4,
+//                   borderRadius: 99,
+//                   background: "rgba(255,255,255,0.15)",
+//                 }}
+//               />
+//             </div>
+//             <div
+//               style={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 justifyContent: "space-between",
+//                 paddingBottom: 12,
+//                 borderBottom: "0.5px solid rgba(255,255,255,0.07)",
+//               }}
+//             >
+//               <span
+//                 style={{
+//                   fontSize: 15,
+//                   fontWeight: 600,
+//                   color: "#fff",
+//                   letterSpacing: "0.01em",
+//                 }}
+//               >
+//                 Comments
+//               </span>
+//               <button
+//                 className="cbs-touch-btn"
+//                 onClick={handleClose}
+//                 style={{
+//                   width: 28,
+//                   height: 28,
+//                   minWidth: 44,
+//                   minHeight: 44,
+//                   display: "flex",
+//                   alignItems: "center",
+//                   justifyContent: "center",
+//                   borderRadius: "50%",
+//                   background: "rgba(255,255,255,0.07)",
+//                   border: "0.5px solid rgba(255,255,255,0.1)",
+//                   cursor: "pointer",
+//                   marginRight: -8,
+//                 }}
+//               >
+//                 <svg
+//                   width="10"
+//                   height="10"
+//                   viewBox="0 0 24 24"
+//                   fill="none"
+//                   stroke="rgba(255,255,255,0.6)"
+//                   strokeWidth="2.5"
+//                   strokeLinecap="round"
+//                 >
+//                   <line x1="18" y1="6" x2="6" y2="18" />
+//                   <line x1="6" y1="6" x2="18" y2="18" />
+//                 </svg>
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* List */}
+//           <div ref={listRef} className="cbs-ios-list">
+//             <CommentList
+//               loading={loading}
+//               contentVisible={contentVisible}
+//               comments={comments}
+//               blockedSet={blockedSet}
+//               userId={user?._id}
+//               activeCommentMenu={activeCommentMenu}
+//               setActiveCommentMenu={setActiveCommentMenu}
+//               deleteComment={deleteComment}
+//             />
+//           </div>
+
+//           {/* Input bar */}
+//           <div className="cbs-ios-input-bar">
+//             <InputBar
+//               inputRef={inputRef}
+//               user={user}
+//               comment={comment}
+//               setComment={setComment}
+//               onPost={handlePost}
+//             />
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // ██████████████████████████████████████████████████████████████████████████████
+// // ANDROID VARIANT
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Strategy:
+// //   • Use interactive-widget=resizes-content so the browser SHRINKS the layout
+// //     viewport when the keyboard opens. This means our entire fixed-position
+// //     root already sits above the keyboard without any JS intervention.
+// //   • Because resizes-content already moves everything, we do NOT add extra
+// //     paddingBottom from visualViewport math (that would double-compensate).
+// //   • We still listen to visualViewport to detect keyboard-open state (to scroll
+// //     the list) but we do NOT mutate layout from it.
+// //   • No CSS transitions on padding — Android fires vv.resize continuously
+// //     during keyboard animation (see original code comments). Instead the layout
+// //     simply reflows instantly because the browser itself resizes the viewport.
+// //   • Sheet height uses dvh so it's relative to the (already-shrunk) viewport.
+// //   • Safe-area on input bar: Android safe-area-inset-bottom behaves differently
+// //     (it persists when keyboard is open on gesture-nav devices), so we use
+// //     a JS flag to zero it out when keyboard is open.
+// //   • overscroll-behavior: contain prevents the Android pull-to-refresh
+// //     from triggering inside the sheet.
+// // ██████████████████████████████████████████████████████████████████████████████
+
+// function CommentsBottomSheetAndroid({
+//   post,
+//   onClose,
+//   onCommentAdded,
+//   onCommentDeleted,
+// }) {
+//   const { user } = useAuth();
+//   const {
+//     blockedSet,
+//     comments,
+//     loading,
+//     contentVisible,
+//     postComment,
+//     deleteComment,
+//   } = useComments(post, onCommentAdded, onCommentDeleted);
+
+//   const [comment, setComment] = useState("");
+//   const [visible, setVisible] = useState(false);
+//   const [activeCommentMenu, setActiveCommentMenu] = useState(null);
+//   const [isDragging, setIsDragging] = useState(false);
+//   const [dragY, setDragY] = useState(0);
+//   const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+//   const listRef = useRef(null);
+//   const inputRef = useRef(null);
+//   const dragStartY = useRef(null);
+//   const savedScrollY = useRef(0);
+
+//   // Entry animation
+//   useEffect(() => {
+//     requestAnimationFrame(() => setVisible(true));
+//   }, []);
+
+//   // Body scroll lock.
+//   // On Android with resizes-content, position:fixed layout is already adjusted
+//   // by the browser. We still lock the body to prevent background scroll.
+//   // We do NOT use the position:fixed+top trick here because it interacts badly
+//   // with resizes-content on some Samsung devices.
+//   useEffect(() => {
+//     savedScrollY.current = window.scrollY;
+//     const prev = document.body.style.overflow;
+//     document.body.style.overflow = "hidden";
+//     // Also prevent touchmove on body (Android pull-to-refresh protection)
+//     const preventBodyScroll = (e) => {
+//       // Allow scroll inside the sheet — it has its own scrollable area
+//       if (!e.target.closest(".cbs-android-list")) e.preventDefault();
+//     };
+//     document.addEventListener("touchmove", preventBodyScroll, {
+//       passive: false,
+//     });
+//     return () => {
+//       document.body.style.overflow = prev;
+//       document.removeEventListener("touchmove", preventBodyScroll);
+//     };
+//   }, []);
+
+//   // Viewport meta — CRITICAL difference from iOS.
+//   // resizes-content: the browser shrinks the layout viewport.
+//   // This means position:fixed elements are naturally above the keyboard.
+//   // No JS paddingBottom needed — the browser does the work.
+//   useEffect(() => {
+//     let meta = document.querySelector('meta[name="viewport"]');
+//     const prev = meta?.getAttribute("content") ?? "";
+//     if (!meta) {
+//       meta = document.createElement("meta");
+//       meta.name = "viewport";
+//       document.head.appendChild(meta);
+//     }
+//     meta.setAttribute(
+//       "content",
+//       "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+//     );
+//     return () => meta.setAttribute("content", prev);
+//   }, []);
+
+//   // Android keyboard detection.
+//   // With resizes-content, clientHeight shrinks when keyboard opens.
+//   // We use this ONLY to:
+//   //   1. Know whether keyboard is open (for safe-area conditional)
+//   //   2. Scroll the list to bottom after layout settles
+//   // We do NOT set paddingBottom from here — that would double-compensate.
+//   useEffect(() => {
+//     if (!window.visualViewport) return;
+
+//     // Store the initial height so we can detect keyboard open/close
+//     const baseHeight = document.documentElement.clientHeight;
+//     let scrollTimeout = null;
+
+//     const onResize = () => {
+//       const currentHeight = document.documentElement.clientHeight;
+//       // Keyboard is open when the viewport has shrunk by more than 150px
+//       const isOpen = baseHeight - currentHeight > 150;
+//       setKeyboardOpen(isOpen);
+
+//       // Scroll to bottom after keyboard finishes animating.
+//       // We debounce because Android fires this continuously during animation.
+//       // 200ms after the LAST resize event, keyboard has settled.
+//       if (isOpen) {
+//         clearTimeout(scrollTimeout);
+//         scrollTimeout = setTimeout(() => {
+//           requestAnimationFrame(() => {
+//             if (listRef.current)
+//               listRef.current.scrollTop = listRef.current.scrollHeight;
+//           });
+//         }, 200);
+//       }
+//     };
+
+//     window.visualViewport.addEventListener("resize", onResize, {
+//       passive: true,
+//     });
+//     return () => {
+//       window.visualViewport.removeEventListener("resize", onResize);
+//       clearTimeout(scrollTimeout);
+//     };
+//   }, []);
+
+//   // Scroll to bottom when comments load
+//   useEffect(() => {
+//     if (!loading && listRef.current)
+//       listRef.current.scrollTop = listRef.current.scrollHeight;
+//   }, [comments, loading]);
+
+//   // Close comment menus on outside tap
+//   useEffect(() => {
+//     const h = (e) => {
+//       if (!e.target.closest("[data-comment-menu]")) setActiveCommentMenu(null);
+//     };
+//     document.addEventListener("mousedown", h);
+//     document.addEventListener("touchstart", h, { passive: true });
+//     return () => {
+//       document.removeEventListener("mousedown", h);
+//       document.removeEventListener("touchstart", h);
+//     };
+//   }, []);
+
+//   const handleClose = useCallback(() => {
+//     inputRef.current?.blur();
+//     setVisible(false);
+//     setTimeout(onClose, 350);
+//   }, [onClose]);
+
+//   const handlePost = useCallback(async () => {
+//     await postComment(comment, () => {
+//       setComment("");
+//       // On Android, after posting, wait for vv to fire (debounced to 200ms above)
+//       // then rAF to read the settled scrollHeight.
+//       setTimeout(
+//         () =>
+//           requestAnimationFrame(() => {
+//             if (listRef.current)
+//               listRef.current.scrollTop = listRef.current.scrollHeight;
+//           }),
+//         250,
+//       );
+//     });
+//   }, [comment, postComment]);
+
+//   // Drag to dismiss
+//   const handleTouchStart = (e) => {
+//     dragStartY.current = e.touches[0].clientY;
+//     setIsDragging(true);
+//   };
+//   const handleTouchMove = (e) => {
+//     if (dragStartY.current === null) return;
+//     const d = e.touches[0].clientY - dragStartY.current;
+//     if (d > 0) setDragY(d);
+//   };
+//   const handleTouchEnd = () => {
+//     if (dragY > DISMISS_THRESHOLD) handleClose();
+//     else setDragY(0);
+//     setIsDragging(false);
+//     dragStartY.current = null;
+//   };
+
+//   return (
+//     <>
+//       <style>{SHARED_CSS}</style>
+//       <style>{`
+//         .cbs-android-root {
+//           /*
+//            * position:fixed with resizes-content: the browser already
+//            * shrinks the layout viewport (and thus this fixed container)
+//            * when the keyboard opens. No JS padding needed.
+//            * NO transition here — Android fires vv.resize 30-60x during
+//            * keyboard animation; any transition would chase a moving target.
+//            */
+//           position: fixed;
+//           inset: 0;
+//           display: flex;
+//           flex-direction: column;
+//           justify-content: flex-end;
+//           z-index: 9999;
+//           pointer-events: none;
+//           box-sizing: border-box;
+//         }
+//         .cbs-android-sheet {
+//           position: relative;
+//           width: 100%;
+//           max-width: 470px;
+//           margin: 0 auto;
+//           /*
+//            * dvh: "dynamic viewport height" — respects browser chrome (address bar).
+//            * On Android with resizes-content, dvh also respects the keyboard,
+//            * so the sheet never overflows behind the keyboard.
+//            * Fallback to vh for older Android browsers (Chrome < 108).
+//            */
+//           height: ${SUPPORTS_DVH ? `${SHEET_HEIGHT_PERCENT}dvh` : `${SHEET_HEIGHT_PERCENT}vh`};
+//           max-height: 100%;
+//           display: flex;
+//           flex-direction: column;
+//           background: #141414;
+//           border-radius: 16px 16px 0 0;
+//           border-top: 0.5px solid rgba(255,255,255,0.08);
+//           box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+//           pointer-events: all;
+//           overflow: hidden;
+//           will-change: transform;
+//           box-sizing: border-box;
+//         }
+//         .cbs-android-list {
+//           flex: 1;
+//           min-height: 0;
+//           overflow-y: auto;
+//           /*
+//            * overscroll-behavior:contain prevents Android pull-to-refresh
+//            * from triggering when scrolling the comment list.
+//            * -webkit-overflow-scrolling:touch is still useful on older
+//            * Android WebView (pre-Chromium-based browsers).
+//            */
+//           overscroll-behavior: contain;
+//           -webkit-overflow-scrolling: touch;
+//           padding: 12px 16px 8px;
+//         }
+//         .cbs-android-input-bar {
+//           flex-shrink: 0;
+//           border-top: 0.5px solid rgba(255,255,255,0.07);
+//           padding: 10px 12px;
+//           /*
+//            * Android safe-area behavior:
+//            * On gesture-nav Android, safe-area-inset-bottom can be non-zero
+//            * AND stays non-zero when the keyboard opens (unlike iOS where it
+//            * goes to zero with the home bar). With resizes-content the keyboard
+//            * is already handled by browser, so we ONLY apply safe-area when
+//            * the keyboard is NOT open — otherwise it adds phantom extra space
+//            * at the bottom of the input bar.
+//            * We use a CSS custom property set by JS to toggle this.
+//            */
+//           padding-bottom: var(--cbs-safe-bottom, 12px);
+//           background: #141414;
+//           box-sizing: border-box;
+//         }
+//       `}</style>
+
+//       {/* Apply safe-area conditional via inline style on root */}
+//       <div
+//         className="cbs-android-root md:hidden"
+//         style={{
+//           // When keyboard is open, zero out safe-area inset (browser already compensated).
+//           // When keyboard is closed, respect device safe area.
+//           "--cbs-safe-bottom": keyboardOpen
+//             ? "12px"
+//             : "max(12px, calc(12px + env(safe-area-inset-bottom, 0px)))",
+//         }}
+//       >
+//         {/* Backdrop */}
+//         <div
+//           style={{
+//             position: "absolute",
+//             inset: 0,
+//             background: "rgba(0,0,0,0.55)",
+//             backdropFilter: "blur(2px)",
+//             WebkitBackdropFilter: "blur(2px)",
+//             pointerEvents: "all",
+//             transition: "opacity 0.3s ease",
+//             opacity: visible ? 1 : 0,
+//           }}
+//           onClick={handleClose}
+//         />
+
+//         {/* Sheet */}
+//         <div
+//           className="cbs-android-sheet"
+//           style={{
+//             transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
+//             transition: isDragging
+//               ? "none"
+//               : "transform 0.35s cubic-bezier(0.32,0.72,0,1)",
+//           }}
+//         >
+//           {/* Header + drag handle */}
+//           <div
+//             style={{
+//               flexShrink: 0,
+//               padding: "12px 16px 0",
+//               userSelect: "none",
+//             }}
+//             onTouchStart={handleTouchStart}
+//             onTouchMove={handleTouchMove}
+//             onTouchEnd={handleTouchEnd}
+//           >
+//             <div
+//               style={{
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 marginBottom: 12,
+//               }}
+//             >
+//               <div
+//                 style={{
+//                   width: 36,
+//                   height: 4,
+//                   borderRadius: 99,
+//                   background: "rgba(255,255,255,0.15)",
+//                 }}
+//               />
+//             </div>
+//             <div
+//               style={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 justifyContent: "space-between",
+//                 paddingBottom: 12,
+//                 borderBottom: "0.5px solid rgba(255,255,255,0.07)",
+//               }}
+//             >
+//               <span
+//                 style={{
+//                   fontSize: 15,
+//                   fontWeight: 600,
+//                   color: "#fff",
+//                   letterSpacing: "0.01em",
+//                 }}
+//               >
+//                 Comments
+//               </span>
+//               <button
+//                 className="cbs-touch-btn"
+//                 onClick={handleClose}
+//                 style={{
+//                   width: 28,
+//                   height: 28,
+//                   minWidth: 44,
+//                   minHeight: 44,
+//                   display: "flex",
+//                   alignItems: "center",
+//                   justifyContent: "center",
+//                   borderRadius: "50%",
+//                   background: "rgba(255,255,255,0.07)",
+//                   border: "0.5px solid rgba(255,255,255,0.1)",
+//                   cursor: "pointer",
+//                   marginRight: -8,
+//                 }}
+//               >
+//                 <svg
+//                   width="10"
+//                   height="10"
+//                   viewBox="0 0 24 24"
+//                   fill="none"
+//                   stroke="rgba(255,255,255,0.6)"
+//                   strokeWidth="2.5"
+//                   strokeLinecap="round"
+//                 >
+//                   <line x1="18" y1="6" x2="6" y2="18" />
+//                   <line x1="6" y1="6" x2="18" y2="18" />
+//                 </svg>
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* List */}
+//           <div ref={listRef} className="cbs-android-list">
+//             <CommentList
+//               loading={loading}
+//               contentVisible={contentVisible}
+//               comments={comments}
+//               blockedSet={blockedSet}
+//               userId={user?._id}
+//               activeCommentMenu={activeCommentMenu}
+//               setActiveCommentMenu={setActiveCommentMenu}
+//               deleteComment={deleteComment}
+//             />
+//           </div>
+
+//           {/* Input bar */}
+//           <div className="cbs-android-input-bar">
+//             <InputBar
+//               inputRef={inputRef}
+//               user={user}
+//               comment={comment}
+//               setComment={setComment}
+//               onPost={handlePost}
+//             />
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Shared InputBar (identical UI, different parent layout)
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function InputBar({ inputRef, user, comment, setComment, onPost }) {
+//   return (
+//     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+//       <Avatar
+//         username={user?.username || "?"}
+//         profilePicture={user?.profilePicture}
+//         size={32}
+//       />
+//       <div
+//         style={{
+//           flex: 1,
+//           display: "flex",
+//           alignItems: "center",
+//           background: "rgba(255,255,255,0.06)",
+//           borderRadius: 24,
+//           border: "0.5px solid rgba(255,255,255,0.08)",
+//           padding: "8px 14px",
+//           gap: 8,
+//           minWidth: 0,
+//         }}
+//         onFocus={(e) =>
+//           (e.currentTarget.style.border = "0.5px solid rgba(96,165,250,0.4)")
+//         }
+//         onBlur={(e) =>
+//           (e.currentTarget.style.border = "0.5px solid rgba(255,255,255,0.08)")
+//         }
+//       >
+//         <input
+//           ref={inputRef}
+//           value={comment}
+//           onChange={(e) => setComment(e.target.value)}
+//           onKeyDown={(e) => {
+//             if (e.key === "Enter" && !e.shiftKey) {
+//               e.preventDefault();
+//               onPost();
+//             }
+//           }}
+//           onFocus={(e) =>
+//             (e.currentTarget.parentElement.style.border =
+//               "0.5px solid rgba(96,165,250,0.4)")
+//           }
+//           onBlur={(e) =>
+//             (e.currentTarget.parentElement.style.border =
+//               "0.5px solid rgba(255,255,255,0.08)")
+//           }
+//           placeholder="Add a comment…"
+//           style={{
+//             flex: 1,
+//             background: "transparent",
+//             border: "none",
+//             outline: "none",
+//             fontSize: 16,
+//             lineHeight: 1.4,
+//             color: "rgba(255,255,255,0.85)",
+//             caretColor: "#60a5fa",
+//             minWidth: 0,
+//           }}
+//           autoComplete="new-password"
+//           autoCorrect="off"
+//           autoCapitalize="sentences"
+//           spellCheck={false}
+//           inputMode="text"
+//           data-form-type="other"
+//         />
+//         {comment.trim() && (
+//           <button
+//             className="cbs-touch-btn"
+//             onClick={onPost}
+//             style={{
+//               fontSize: 13,
+//               fontWeight: 600,
+//               color: "#60a5fa",
+//               background: "transparent",
+//               border: "none",
+//               cursor: "pointer",
+//               whiteSpace: "nowrap",
+//               padding: "4px 0",
+//               flexShrink: 0,
+//               minHeight: 44,
+//               display: "flex",
+//               alignItems: "center",
+//             }}
+//           >
+//             Post
+//           </button>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // ██████████████████████████████████████████████████████████████████████████████
+// // Public export — selects the right variant at module load time
+// //
+// // Why at module load and not inside the component?
+// //   - The platform never changes mid-session.
+// //   - Detecting in the component body would re-run on every render.
+// //   - This also means React never mounts both variants simultaneously,
+// //     avoiding any risk of the two different viewport meta tags fighting.
+// //
+// // The fallback for unknown platforms uses the iOS strategy because:
+// //   - Desktop browsers have no keyboard, so all keyboard logic is a no-op.
+// //   - Other mobile browsers (Firefox Android, Samsung Internet) partially
+// //     support the iOS model OR the resizes-content model.
+// //   - The iOS path degrades more gracefully when its assumptions are wrong.
+// // ██████████████████████████████████████████████████████████████████████████████
+
+// function CommentsBottomSheet(props) {
+//   const Variant = useMemo(() => {
+//     if (IS_ANDROID) return CommentsBottomSheetAndroid;
+//     // iOS, desktop, unknown → iOS strategy (graceful degradation)
+//     return CommentsBottomSheetIOS;
+//   }, []); // empty deps — platform never changes
+
+//   return <Variant {...props} />;
+// }
+
+// export default CommentsBottomSheet;
+
+import { useEffect, useRef, useState, useCallback } from "react";
 import fetchData from "../utils/fetchData";
 import { useAuth } from "../hooks/useAuth";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Constants
+// THE ONLY TRICK THIS COMPONENT USES:
+//
+// Set interactive-widget=resizes-content on the viewport meta.
+// This tells the browser: "when the keyboard opens, shrink the layout viewport."
+// Now position:fixed elements naturally sit above the keyboard — no JS needed.
+// dvh (dynamic viewport height) tracks that shrunk space.
+// Works on iOS Safari 15.4+ and Android Chrome 108+. Degrades gracefully below.
+//
+// White strip fix: no backdropFilter anywhere near the keyboard boundary.
+// blur() creates a GPU compositing layer; the seam between that layer and the
+// keyboard surface shows white. Flat rgba colours have no such boundary.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SHEET_HEIGHT_PERCENT = 72;
 const DISMISS_THRESHOLD = 120;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Platform detection — runs once, never changes during a session.
-//
-// WHY separate Android / iOS paths?
-//   iOS Safari  : innerHeight shrinks once (post-animation), fixed elements
-//                 anchor to the visual viewport automatically, safe-area-inset
-//                 clears the home bar and disappears when keyboard is open.
-//   Android Chrome: clientHeight shrinks (with interactive-widget=resizes-content),
-//                 visualViewport fires 30-60x during keyboard animation,
-//                 position:fixed is anchored to the LAYOUT viewport (not visual),
-//                 so the sheet can end up BEHIND the keyboard mid-animation.
-//
-// Trying to patch one component for both creates an arms race of hacks.
-// The correct engineering answer is: detect once → fork the rendering strategy.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const UA = typeof navigator !== "undefined" ? navigator.userAgent : "";
-
-const IS_IOS = /iPad|iPhone|iPod/.test(UA) && !window.MSStream;
-
-// Android detection: covers Chrome, Samsung Internet, WebView, Firefox for Android
-const IS_ANDROID = /Android/i.test(UA);
-
-// Detect if the browser supports the CSS dvh unit (dynamic viewport height).
-// dvh = "dynamic viewport height" that accounts for browser chrome collapsing.
-// Supported in Chrome 108+, Safari 15.4+, Firefox 109+.
-const SUPPORTS_DVH = (() => {
-  try {
-    const el = document.createElement("div");
-    el.style.height = "1dvh";
-    return el.style.height === "1dvh";
-  } catch {
-    return false;
+function setViewportMeta() {
+  let meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "viewport";
+    document.head.appendChild(meta);
   }
-})();
+  const prev = meta.getAttribute("content") ?? "";
+  meta.setAttribute(
+    "content",
+    "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+  );
+  return () => meta.setAttribute("content", prev);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared sub-components
+// Avatar
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Avatar = ({ username, profilePicture, size = 32 }) => (
@@ -6531,48 +7898,380 @@ const Avatar = ({ username, profilePicture, size = 32 }) => (
   </div>
 );
 
-// Shimmer skeleton row (shared)
-const SkeletonRow = ({ widths }) => (
-  <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-    <div
-      className="cbs-skeleton"
-      style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }}
-    />
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-      <div
-        className="cbs-skeleton"
-        style={{ height: 11, borderRadius: 6, width: widths[0] }}
-      />
-      <div
-        className="cbs-skeleton"
-        style={{ height: 11, borderRadius: 6, width: widths[1] }}
-      />
-      <div
-        className="cbs-skeleton"
-        style={{ height: 9, borderRadius: 6, width: "25%", marginTop: 2 }}
-      />
-    </div>
+// ─────────────────────────────────────────────────────────────────────────────
+// CommentsBottomSheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CommentsBottomSheet({
+  post,
+  onClose,
+  onCommentAdded,
+  onCommentDeleted,
+}) {
+  const { user } = useAuth();
+
+  const [comments, setComments] = useState([]);
+  const [blockedSet, setBlockedSet] = useState(() => new Set());
+  const [loading, setLoading] = useState(true);
+  const [comment, setComment] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const listRef = useRef(null);
+  const inputRef = useRef(null);
+  const dragStartY = useRef(null);
+  const savedScrollY = useRef(0);
+
+  // ── Viewport meta ──────────────────────────────────────────────────────────
+  useEffect(() => setViewportMeta(), []);
+
+  // ── Entry animation ────────────────────────────────────────────────────────
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  // ── Body scroll lock ───────────────────────────────────────────────────────
+  useEffect(() => {
+    savedScrollY.current = window.scrollY;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+      window.scrollTo(0, savedScrollY.current);
+    };
+  }, []);
+
+  // ── Fetch blocked users ────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchData("/api/users/blocked", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data))
+          setBlockedSet(new Set(data.map((u) => String(u._id))));
+      })
+      .catch(() => {});
+  }, []);
+
+  // ── Fetch comments ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchData(`/api/posts/${post._id}/comments`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setComments(data.comments || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [post._id]);
+
+  // ── Scroll to bottom when comments load ───────────────────────────────────
+  useEffect(() => {
+    if (!loading && listRef.current)
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [loading]);
+
+  // ── Close menu on outside tap ──────────────────────────────────────────────
+  useEffect(() => {
+    const h = (e) => {
+      if (!e.target.closest("[data-menu]")) setActiveMenu(null);
+    };
+    document.addEventListener("mousedown", h);
+    document.addEventListener("touchstart", h, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", h);
+      document.removeEventListener("touchstart", h);
+    };
+  }, []);
+
+  // ── Close ──────────────────────────────────────────────────────────────────
+  const handleClose = useCallback(() => {
+    inputRef.current?.blur();
+    setVisible(false);
+    setTimeout(onClose, 320);
+  }, [onClose]);
+
+  // ── Post comment ───────────────────────────────────────────────────────────
+  const handlePost = useCallback(async () => {
+    if (!comment.trim()) return;
+    try {
+      const res = await fetchData(`/api/posts/${post._id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ text: comment }),
+      });
+      const data = await res.json();
+      setComments((prev) => [...prev, data.comment]);
+      setComment("");
+      onCommentAdded?.();
+      requestAnimationFrame(() => {
+        if (listRef.current)
+          listRef.current.scrollTop = listRef.current.scrollHeight;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [comment, post._id, onCommentAdded]);
+
+  // ── Delete comment ─────────────────────────────────────────────────────────
+  const handleDelete = useCallback(
+    async (commentId) => {
+      try {
+        const res = await fetchData(
+          `/api/posts/${post._id}/comments/${commentId}`,
+          { method: "DELETE", credentials: "include" },
+        );
+        const data = await res.json();
+        if (data.success) {
+          setComments((prev) => prev.filter((c) => c._id !== commentId));
+          onCommentDeleted?.();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [post._id, onCommentDeleted],
+  );
+
+  // ── Drag to dismiss ────────────────────────────────────────────────────────
+  const onTouchStart = (e) => {
+    dragStartY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+  const onTouchMove = (e) => {
+    const d = e.touches[0].clientY - dragStartY.current;
+    if (d > 0) setDragY(d);
+  };
+  const onTouchEnd = () => {
+    if (dragY > DISMISS_THRESHOLD) handleClose();
+    else setDragY(0);
+    setIsDragging(false);
+    dragStartY.current = null;
+  };
+
+  const visibleComments = comments.filter(
+    (c) => c.user?._id && !blockedSet.has(String(c.user._id)),
+  );
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <div className="cbs-root md:hidden">
+        {/* Backdrop — flat colour only, no blur (blur causes white strip on Android) */}
+        <div
+          className="cbs-backdrop"
+          style={{ opacity: visible ? 1 : 0 }}
+          onClick={handleClose}
+        />
+
+        {/* Sheet */}
+        <div
+          className="cbs-sheet"
+          style={{
+            transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
+            transition: isDragging
+              ? "none"
+              : "transform 0.32s cubic-bezier(0.32,0.72,0,1)",
+          }}
+        >
+          {/* Drag handle + header */}
+          <div
+            className="cbs-header"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <div className="cbs-pill" />
+            <div className="cbs-title-row">
+              <span className="cbs-title">Comments</span>
+              <button className="cbs-close-btn" onClick={handleClose}>
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* List */}
+          <div ref={listRef} className="cbs-list">
+            {loading ? (
+              <Skeleton />
+            ) : visibleComments.length === 0 ? (
+              <Empty />
+            ) : (
+              visibleComments.map((c, i) => {
+                const isMe = String(user?._id) === String(c.user?._id);
+                return (
+                  <div
+                    key={c._id}
+                    className="cbs-row"
+                    style={{ animationDelay: `${i * 35}ms` }}
+                  >
+                    <Avatar
+                      username={c.user?.username}
+                      profilePicture={c.user?.profilePicture}
+                      size={32}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p className="cbs-comment-text">
+                        <span className="cbs-username">{c.user?.username}</span>
+                        {c.text}
+                      </p>
+                      <p className="cbs-date">
+                        {new Date(c.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    {isMe && (
+                      <div
+                        style={{ position: "relative", flexShrink: 0 }}
+                        data-menu
+                      >
+                        <button
+                          className="cbs-menu-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenu(activeMenu === c._id ? null : c._id);
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <circle cx="5" cy="12" r="1" />
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="19" cy="12" r="1" />
+                          </svg>
+                        </button>
+                        {activeMenu === c._id && (
+                          <div className="cbs-dropdown" data-menu>
+                            <button
+                              className="cbs-delete-btn"
+                              onClick={() => {
+                                handleDelete(c._id);
+                                setActiveMenu(null);
+                              }}
+                            >
+                              <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Input bar */}
+          <div className="cbs-input-bar">
+            <Avatar
+              username={user?.username || "?"}
+              profilePicture={user?.profilePicture}
+              size={32}
+            />
+            <div className="cbs-input-wrap">
+              <input
+                ref={inputRef}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handlePost();
+                  }
+                }}
+                placeholder="Add a comment…"
+                className="cbs-input"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                inputMode="text"
+                style={{ fontSize: 16 }}
+              />
+              {comment.trim() && (
+                <button className="cbs-post-btn" onClick={handlePost}>
+                  Post
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Small pure components
+// ─────────────────────────────────────────────────────────────────────────────
+
+const Skeleton = () => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    {[
+      ["40%", "70%"],
+      ["55%", "85%"],
+      ["45%", "60%"],
+      ["50%", "75%"],
+    ].map(([a, b], i) => (
+      <div key={i} style={{ display: "flex", gap: 12 }}>
+        <div
+          className="sk"
+          style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }}
+        />
+        <div
+          style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <div
+            className="sk"
+            style={{ height: 11, borderRadius: 6, width: a }}
+          />
+          <div
+            className="sk"
+            style={{ height: 11, borderRadius: 6, width: b }}
+          />
+        </div>
+      </div>
+    ))}
   </div>
 );
 
-const SKELETON_WIDTHS = [
-  ["40%", "70%"],
-  ["55%", "85%"],
-  ["45%", "60%"],
-  ["50%", "75%"],
-];
-
-// Empty state (shared)
-const EmptyComments = () => (
+const Empty = () => (
   <div
     style={{
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
       paddingTop: 60,
-      paddingBottom: 40,
+      gap: 8,
     }}
   >
     <svg
@@ -6597,1228 +8296,202 @@ const EmptyComments = () => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared CSS string (injected once by whichever variant mounts)
+// All CSS in one place
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SHARED_CSS = `
-  @keyframes cbs-shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position:  400px 0; }
+const CSS = `
+  @keyframes shimmer {
+    from { background-position: -400px 0; }
+    to   { background-position:  400px 0; }
   }
-  .cbs-skeleton {
-    background: linear-gradient(90deg,
-      rgba(255,255,255,0.04) 25%,
-      rgba(255,255,255,0.09) 50%,
-      rgba(255,255,255,0.04) 75%
-    );
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .sk {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
     background-size: 400px 100%;
-    animation: cbs-shimmer 1.4s ease infinite;
+    animation: shimmer 1.4s ease infinite;
   }
-  @keyframes cbs-fadeSlideIn {
-    from { opacity:0; transform:translateY(8px); }
-    to   { opacity:1; transform:translateY(0); }
+
+  /*
+   * Root overlay.
+   * position:fixed + resizes-content = browser lifts this above the keyboard.
+   * padding-bottom:400px + margin-bottom:-400px extends the black background
+   * behind the keyboard so the white strip never appears during animation.
+   */
+  .cbs-root {
+    position: fixed;
+    inset: 0;
+    padding-bottom: 400px;
+    margin-bottom: -400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    z-index: 9999;
+    pointer-events: none;
+    background: #000;
   }
-  .cbs-comment-row {
-    opacity: 0;
-    animation: cbs-fadeSlideIn 0.25s ease forwards;
+
+  /* Flat colour — NO backdropFilter, which causes a white compositor seam */
+  .cbs-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: -400px;
+    background: rgba(0, 0, 0, 0.65);
+    pointer-events: all;
+    transition: opacity 0.3s ease;
   }
-  .cbs-touch-btn {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+
+  .cbs-sheet {
+    position: relative;
+    width: 100%;
+    max-width: 470px;
+    margin: 0 auto;
+    height: 72dvh;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #141414;
+    border-radius: 16px 16px 0 0;
+    border-top: 0.5px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+    pointer-events: all;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .cbs-header {
+    flex-shrink: 0;
+    padding: 12px 16px 0;
     user-select: none;
   }
-`;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared hook: fetch comments + blocked set + post/delete actions
-// ─────────────────────────────────────────────────────────────────────────────
-
-function useComments(post, onCommentAdded, onCommentDeleted) {
-  const [blockedSet, setBlockedSet] = useState(() => new Set());
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [contentVisible, setContentVisible] = useState(false);
-
-  useEffect(() => {
-    fetchData("/api/users/blocked", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data))
-          setBlockedSet(new Set(data.map((u) => String(u._id))));
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetchData(`/api/posts/${post._id}/comments`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        setComments(data.comments || []);
-        setTimeout(() => {
-          setLoading(false);
-          requestAnimationFrame(() => setContentVisible(true));
-        }, 300);
-      })
-      .catch(() => {
-        setLoading(false);
-        requestAnimationFrame(() => setContentVisible(true));
-      });
-  }, [post._id]);
-
-  const postComment = useCallback(
-    async (text, onSuccess) => {
-      if (!text.trim()) return;
-      try {
-        const res = await fetchData(`/api/posts/${post._id}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ text }),
-        });
-        const data = await res.json();
-        setComments((prev) => [...prev, data.comment]);
-        onCommentAdded?.();
-        onSuccess?.();
-      } catch (err) {
-        console.error("Post comment error:", err);
-      }
-    },
-    [post._id, onCommentAdded],
-  );
-
-  const deleteComment = useCallback(
-    async (commentId) => {
-      try {
-        const res = await fetchData(
-          `/api/posts/${post._id}/comments/${commentId}`,
-          { method: "DELETE", credentials: "include" },
-        );
-        const data = await res.json();
-        if (data.success) {
-          setComments((prev) => prev.filter((c) => c._id !== commentId));
-          onCommentDeleted?.();
-        }
-      } catch (err) {
-        console.error("Delete comment error:", err);
-      }
-    },
-    [post._id, onCommentDeleted],
-  );
-
-  return {
-    blockedSet,
-    comments,
-    loading,
-    contentVisible,
-    postComment,
-    deleteComment,
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared: comment list content (both variants render the same list DOM)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function CommentList({
-  loading,
-  contentVisible,
-  comments,
-  blockedSet,
-  userId,
-  activeCommentMenu,
-  setActiveCommentMenu,
-  deleteComment,
-}) {
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-          paddingTop: 4,
-        }}
-      >
-        {SKELETON_WIDTHS.map((w, i) => (
-          <SkeletonRow key={i} widths={w} />
-        ))}
-      </div>
-    );
+  .cbs-pill {
+    width: 36px; height: 4px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.15);
+    margin: 0 auto 12px;
   }
 
-  const visible = comments
-    .filter((c) => c.user?._id)
-    .filter((c) => !blockedSet.has(String(c.user?._id)));
+  .cbs-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  }
 
-  return (
-    <div
-      style={{
-        opacity: contentVisible ? 1 : 0,
-        transform: contentVisible ? "translateY(0)" : "translateY(8px)",
-        transition: "opacity 0.35s ease, transform 0.35s ease",
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        paddingTop: 4,
-        paddingBottom: 4,
-      }}
-    >
-      {visible.length === 0 ? (
-        <EmptyComments />
-      ) : (
-        visible.map((c, i) => {
-          const isMyComment = String(userId) === String(c.user?._id);
-          return (
-            <div
-              key={c._id}
-              className="cbs-comment-row"
-              style={{
-                animationDelay: `${i * 40}ms`,
-                display: "flex",
-                gap: 12,
-                alignItems: "flex-start",
-                position: "relative",
-              }}
-            >
-              <Avatar
-                username={c.user?.username}
-                profilePicture={c.user?.profilePicture}
-                size={32}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    fontSize: 13,
-                    lineHeight: 1.5,
-                    color: "rgba(255,255,255,0.8)",
-                    margin: 0,
-                    wordBreak: "break-word",
-                  }}
-                >
-                  <span
-                    style={{ fontWeight: 600, color: "#fff", marginRight: 6 }}
-                  >
-                    {c.user?.username}
-                  </span>
-                  {c.text}
-                </p>
-                <p
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(255,255,255,0.25)",
-                    margin: "4px 0 0",
-                  }}
-                >
-                  {new Date(c.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
+  .cbs-title { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
 
-              {isMyComment && (
-                <div
-                  style={{ position: "relative", flexShrink: 0 }}
-                  data-comment-menu
-                >
-                  <button
-                    className="cbs-touch-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveCommentMenu(
-                        activeCommentMenu === c._id ? null : c._id,
-                      );
-                    }}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "rgba(255,255,255,0.3)",
-                      marginRight: -10,
-                    }}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <circle cx="5" cy="12" r="1" />
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="19" cy="12" r="1" />
-                    </svg>
-                  </button>
-                  {activeCommentMenu === c._id && (
-                    <div
-                      data-comment-menu
-                      style={{
-                        position: "absolute",
-                        right: 0,
-                        top: 36,
-                        zIndex: 50,
-                        width: 148,
-                        borderRadius: 12,
-                        background: "#1f1f1f",
-                        border: "0.5px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <button
-                        className="cbs-touch-btn"
-                        onClick={() => {
-                          deleteComment(c._id);
-                          setActiveCommentMenu(null);
-                        }}
-                        style={{
-                          width: "100%",
-                          minHeight: 44,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          padding: "10px 12px",
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: "#f87171",
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          textAlign: "left",
-                        }}
-                      >
-                        <svg
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-                        </svg>
-                        Delete comment
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-}
+  .cbs-close-btn {
+    width: 28px; height: 28px;
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    margin-right: -8px;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ██████████████████████████████████████████████████████████████████████████████
-// iOS VARIANT
-// ─────────────────────────────────────────────────────────────────────────────
-// Strategy:
-//   • Use position:fixed on the root overlay — Safari correctly anchors fixed
-//     elements to the visual viewport, so when the keyboard opens the sheet
-//     rises naturally without any JS.
-//   • Listen to visualViewport.resize ONCE (fires after keyboard animation ends)
-//     to apply a CSS transition-friendly paddingBottom adjustment.
-//   • Use env(safe-area-inset-bottom) on the input bar for home bar clearance.
-//   • Use dvh (or vh fallback) for sheet height.
-//   • Body scroll lock via position:fixed trick (standard for iOS).
-// ██████████████████████████████████████████████████████████████████████████████
+  .cbs-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-function CommentsBottomSheetIOS({
-  post,
-  onClose,
-  onCommentAdded,
-  onCommentDeleted,
-}) {
-  const { user } = useAuth();
-  const {
-    blockedSet,
-    comments,
-    loading,
-    contentVisible,
-    postComment,
-    deleteComment,
-  } = useComments(post, onCommentAdded, onCommentDeleted);
+  .cbs-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: fadeUp 0.22s ease forwards;
+    opacity: 0;
+  }
 
-  const [comment, setComment] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [activeCommentMenu, setActiveCommentMenu] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [keyboardPadding, setKeyboardPadding] = useState(0);
+  .cbs-comment-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.8); margin: 0; word-break: break-word; }
+  .cbs-username     { font-weight: 600; color: #fff; margin-right: 6px; }
+  .cbs-date         { font-size: 11px; color: rgba(255,255,255,0.25); margin: 4px 0 0; }
 
-  const rootRef = useRef(null);
-  const listRef = useRef(null);
-  const inputRef = useRef(null);
-  const dragStartY = useRef(null);
-  const savedScrollY = useRef(0);
+  .cbs-menu-btn {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.3);
+    margin-right: -10px;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-  // Entry animation
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
+  .cbs-dropdown {
+    position: absolute; right: 0; top: 36px;
+    z-index: 50; width: 148px;
+    border-radius: 12px;
+    background: #1f1f1f;
+    border: 0.5px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
 
-  // Body scroll lock — iOS standard approach
-  useEffect(() => {
-    savedScrollY.current = window.scrollY;
-    document.body.style.cssText = `overflow:hidden;position:fixed;top:${-savedScrollY.current}px;left:0;right:0;width:100%;`;
-    return () => {
-      document.body.style.cssText = "";
-      window.scrollTo(0, savedScrollY.current);
-    };
-  }, []);
+  .cbs-delete-btn {
+    width: 100%; min-height: 44px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    font-size: 13px; font-weight: 500; color: #f87171;
+    background: transparent; border: none; cursor: pointer; text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-  // Viewport meta — iOS needs interactive-widget=resizes-visual (not resizes-content)
-  // so that the layout viewport does NOT shrink; the visual viewport shrinks instead,
-  // and position:fixed elements follow it automatically.
-  useEffect(() => {
-    let meta = document.querySelector('meta[name="viewport"]');
-    const prev = meta?.getAttribute("content") ?? "";
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "viewport";
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute(
-      "content",
-      "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual",
-    );
-    return () => meta.setAttribute("content", prev);
-  }, []);
+  /* Input bar — flat background, NO backdropFilter */
+  .cbs-input-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+    border-top: 0.5px solid rgba(255,255,255,0.07);
+    background: #141414;
+    box-sizing: border-box;
+  }
 
-  // iOS keyboard handler:
-  // visualViewport fires ONCE after keyboard animation → safe to use CSS transition.
-  // We use innerHeight (not clientHeight) because on iOS they're identical and
-  // innerHeight is the most reliable pre-change value.
-  useEffect(() => {
-    if (!window.visualViewport) return;
-    const onResize = () => {
-      const vv = window.visualViewport;
-      // On iOS with resizes-visual, innerHeight stays the same (layout unchanged).
-      // The visual viewport shrinks by keyboard height.
-      const gap = window.innerHeight - vv.height;
-      setKeyboardPadding(Math.max(0, gap));
-      if (gap > 0 && listRef.current) {
-        // Single rAF is fine — iOS fires after animation
-        requestAnimationFrame(() => {
-          if (listRef.current)
-            listRef.current.scrollTop = listRef.current.scrollHeight;
-        });
-      }
-    };
-    window.visualViewport.addEventListener("resize", onResize);
-    // Initial call in case keyboard is somehow already open
-    onResize();
-    return () => window.visualViewport.removeEventListener("resize", onResize);
-  }, []);
+  .cbs-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 24px;
+    border: 0.5px solid rgba(255,255,255,0.08);
+    padding: 8px 14px;
+    min-width: 0;
+  }
 
-  // Scroll to bottom when comments load
-  useEffect(() => {
-    if (!loading && listRef.current)
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [comments, loading]);
+  .cbs-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.85);
+    caret-color: #60a5fa;
+    min-width: 0;
+  }
+  .cbs-input::placeholder { color: rgba(255,255,255,0.3); }
 
-  // Close comment menus on outside tap
-  useEffect(() => {
-    const h = (e) => {
-      if (!e.target.closest("[data-comment-menu]")) setActiveCommentMenu(null);
-    };
-    document.addEventListener("mousedown", h);
-    document.addEventListener("touchstart", h, { passive: true });
-    return () => {
-      document.removeEventListener("mousedown", h);
-      document.removeEventListener("touchstart", h);
-    };
-  }, []);
-
-  const handleClose = useCallback(() => {
-    inputRef.current?.blur();
-    setVisible(false);
-    setTimeout(onClose, 350);
-  }, [onClose]);
-
-  const handlePost = useCallback(async () => {
-    await postComment(comment, () => {
-      setComment("");
-      setTimeout(
-        () =>
-          requestAnimationFrame(() => {
-            if (listRef.current)
-              listRef.current.scrollTop = listRef.current.scrollHeight;
-          }),
-        50,
-      ); // 50ms is fine on iOS — one rAF after single visualViewport event
-    });
-  }, [comment, postComment]);
-
-  // Drag to dismiss
-  const handleTouchStart = (e) => {
-    dragStartY.current = e.touches[0].clientY;
-    setIsDragging(true);
-  };
-  const handleTouchMove = (e) => {
-    if (dragStartY.current === null) return;
-    const d = e.touches[0].clientY - dragStartY.current;
-    if (d > 0) setDragY(d);
-  };
-  const handleTouchEnd = () => {
-    if (dragY > DISMISS_THRESHOLD) handleClose();
-    else setDragY(0);
-    setIsDragging(false);
-    dragStartY.current = null;
-  };
-
-  return (
-    <>
-      <style>{SHARED_CSS}</style>
-      <style>{`
-        .cbs-ios-root {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          z-index: 9999;
-          pointer-events: none;
-          box-sizing: border-box;
-          /* iOS: transition on paddingBottom is fine — visualViewport fires once */
-          transition: padding-bottom 0.25s ease;
-        }
-        .cbs-ios-sheet {
-          position: relative;
-          width: 100%;
-          max-width: 470px;
-          margin: 0 auto;
-          height: ${SUPPORTS_DVH ? `${SHEET_HEIGHT_PERCENT}dvh` : `${SHEET_HEIGHT_PERCENT}vh`};
-          max-height: 100%;
-          display: flex;
-          flex-direction: column;
-          background: #141414;
-          border-radius: 16px 16px 0 0;
-          border-top: 0.5px solid rgba(255,255,255,0.08);
-          box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
-          pointer-events: all;
-          overflow: hidden;
-          will-change: transform;
-          box-sizing: border-box;
-        }
-        .cbs-ios-list {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 12px 16px 8px;
-        }
-        .cbs-ios-input-bar {
-          flex-shrink: 0;
-          border-top: 0.5px solid rgba(255,255,255,0.07);
-          padding: 10px 12px;
-          /* iOS safe-area: home bar clears without double-padding the keyboard,
-             because we use resizes-visual (layout unchanged, fixed elements follow visual vp). */
-          padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
-          background: #141414;
-          box-sizing: border-box;
-        }
-      `}</style>
-
-      <div
-        className="cbs-ios-root md:hidden"
-        ref={rootRef}
-        style={{
-          paddingBottom: keyboardPadding > 0 ? keyboardPadding : undefined,
-        }}
-      >
-        {/* Backdrop */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)",
-            pointerEvents: "all",
-            transition: "opacity 0.3s ease",
-            opacity: visible ? 1 : 0,
-          }}
-          onClick={handleClose}
-        />
-
-        {/* Sheet */}
-        <div
-          className="cbs-ios-sheet"
-          style={{
-            transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
-            transition: isDragging
-              ? "none"
-              : "transform 0.35s cubic-bezier(0.32,0.72,0,1)",
-          }}
-        >
-          {/* Header + drag handle */}
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "12px 16px 0",
-              userSelect: "none",
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 4,
-                  borderRadius: 99,
-                  background: "rgba(255,255,255,0.15)",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingBottom: 12,
-                borderBottom: "0.5px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#fff",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                Comments
-              </span>
-              <button
-                className="cbs-touch-btn"
-                onClick={handleClose}
-                style={{
-                  width: 28,
-                  height: 28,
-                  minWidth: 44,
-                  minHeight: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,0.07)",
-                  border: "0.5px solid rgba(255,255,255,0.1)",
-                  cursor: "pointer",
-                  marginRight: -8,
-                }}
-              >
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* List */}
-          <div ref={listRef} className="cbs-ios-list">
-            <CommentList
-              loading={loading}
-              contentVisible={contentVisible}
-              comments={comments}
-              blockedSet={blockedSet}
-              userId={user?._id}
-              activeCommentMenu={activeCommentMenu}
-              setActiveCommentMenu={setActiveCommentMenu}
-              deleteComment={deleteComment}
-            />
-          </div>
-
-          {/* Input bar */}
-          <div className="cbs-ios-input-bar">
-            <InputBar
-              inputRef={inputRef}
-              user={user}
-              comment={comment}
-              setComment={setComment}
-              onPost={handlePost}
-            />
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ██████████████████████████████████████████████████████████████████████████████
-// ANDROID VARIANT
-// ─────────────────────────────────────────────────────────────────────────────
-// Strategy:
-//   • Use interactive-widget=resizes-content so the browser SHRINKS the layout
-//     viewport when the keyboard opens. This means our entire fixed-position
-//     root already sits above the keyboard without any JS intervention.
-//   • Because resizes-content already moves everything, we do NOT add extra
-//     paddingBottom from visualViewport math (that would double-compensate).
-//   • We still listen to visualViewport to detect keyboard-open state (to scroll
-//     the list) but we do NOT mutate layout from it.
-//   • No CSS transitions on padding — Android fires vv.resize continuously
-//     during keyboard animation (see original code comments). Instead the layout
-//     simply reflows instantly because the browser itself resizes the viewport.
-//   • Sheet height uses dvh so it's relative to the (already-shrunk) viewport.
-//   • Safe-area on input bar: Android safe-area-inset-bottom behaves differently
-//     (it persists when keyboard is open on gesture-nav devices), so we use
-//     a JS flag to zero it out when keyboard is open.
-//   • overscroll-behavior: contain prevents the Android pull-to-refresh
-//     from triggering inside the sheet.
-// ██████████████████████████████████████████████████████████████████████████████
-
-function CommentsBottomSheetAndroid({
-  post,
-  onClose,
-  onCommentAdded,
-  onCommentDeleted,
-}) {
-  const { user } = useAuth();
-  const {
-    blockedSet,
-    comments,
-    loading,
-    contentVisible,
-    postComment,
-    deleteComment,
-  } = useComments(post, onCommentAdded, onCommentDeleted);
-
-  const [comment, setComment] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [activeCommentMenu, setActiveCommentMenu] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-
-  const listRef = useRef(null);
-  const inputRef = useRef(null);
-  const dragStartY = useRef(null);
-  const savedScrollY = useRef(0);
-
-  // Entry animation
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
-
-  // Body scroll lock.
-  // On Android with resizes-content, position:fixed layout is already adjusted
-  // by the browser. We still lock the body to prevent background scroll.
-  // We do NOT use the position:fixed+top trick here because it interacts badly
-  // with resizes-content on some Samsung devices.
-  useEffect(() => {
-    savedScrollY.current = window.scrollY;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    // Also prevent touchmove on body (Android pull-to-refresh protection)
-    const preventBodyScroll = (e) => {
-      // Allow scroll inside the sheet — it has its own scrollable area
-      if (!e.target.closest(".cbs-android-list")) e.preventDefault();
-    };
-    document.addEventListener("touchmove", preventBodyScroll, {
-      passive: false,
-    });
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("touchmove", preventBodyScroll);
-    };
-  }, []);
-
-  // Viewport meta — CRITICAL difference from iOS.
-  // resizes-content: the browser shrinks the layout viewport.
-  // This means position:fixed elements are naturally above the keyboard.
-  // No JS paddingBottom needed — the browser does the work.
-  useEffect(() => {
-    let meta = document.querySelector('meta[name="viewport"]');
-    const prev = meta?.getAttribute("content") ?? "";
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "viewport";
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute(
-      "content",
-      "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
-    );
-    return () => meta.setAttribute("content", prev);
-  }, []);
-
-  // Android keyboard detection.
-  // With resizes-content, clientHeight shrinks when keyboard opens.
-  // We use this ONLY to:
-  //   1. Know whether keyboard is open (for safe-area conditional)
-  //   2. Scroll the list to bottom after layout settles
-  // We do NOT set paddingBottom from here — that would double-compensate.
-  useEffect(() => {
-    if (!window.visualViewport) return;
-
-    // Store the initial height so we can detect keyboard open/close
-    const baseHeight = document.documentElement.clientHeight;
-    let scrollTimeout = null;
-
-    const onResize = () => {
-      const currentHeight = document.documentElement.clientHeight;
-      // Keyboard is open when the viewport has shrunk by more than 150px
-      const isOpen = baseHeight - currentHeight > 150;
-      setKeyboardOpen(isOpen);
-
-      // Scroll to bottom after keyboard finishes animating.
-      // We debounce because Android fires this continuously during animation.
-      // 200ms after the LAST resize event, keyboard has settled.
-      if (isOpen) {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          requestAnimationFrame(() => {
-            if (listRef.current)
-              listRef.current.scrollTop = listRef.current.scrollHeight;
-          });
-        }, 200);
-      }
-    };
-
-    window.visualViewport.addEventListener("resize", onResize, {
-      passive: true,
-    });
-    return () => {
-      window.visualViewport.removeEventListener("resize", onResize);
-      clearTimeout(scrollTimeout);
-    };
-  }, []);
-
-  // Scroll to bottom when comments load
-  useEffect(() => {
-    if (!loading && listRef.current)
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [comments, loading]);
-
-  // Close comment menus on outside tap
-  useEffect(() => {
-    const h = (e) => {
-      if (!e.target.closest("[data-comment-menu]")) setActiveCommentMenu(null);
-    };
-    document.addEventListener("mousedown", h);
-    document.addEventListener("touchstart", h, { passive: true });
-    return () => {
-      document.removeEventListener("mousedown", h);
-      document.removeEventListener("touchstart", h);
-    };
-  }, []);
-
-  const handleClose = useCallback(() => {
-    inputRef.current?.blur();
-    setVisible(false);
-    setTimeout(onClose, 350);
-  }, [onClose]);
-
-  const handlePost = useCallback(async () => {
-    await postComment(comment, () => {
-      setComment("");
-      // On Android, after posting, wait for vv to fire (debounced to 200ms above)
-      // then rAF to read the settled scrollHeight.
-      setTimeout(
-        () =>
-          requestAnimationFrame(() => {
-            if (listRef.current)
-              listRef.current.scrollTop = listRef.current.scrollHeight;
-          }),
-        250,
-      );
-    });
-  }, [comment, postComment]);
-
-  // Drag to dismiss
-  const handleTouchStart = (e) => {
-    dragStartY.current = e.touches[0].clientY;
-    setIsDragging(true);
-  };
-  const handleTouchMove = (e) => {
-    if (dragStartY.current === null) return;
-    const d = e.touches[0].clientY - dragStartY.current;
-    if (d > 0) setDragY(d);
-  };
-  const handleTouchEnd = () => {
-    if (dragY > DISMISS_THRESHOLD) handleClose();
-    else setDragY(0);
-    setIsDragging(false);
-    dragStartY.current = null;
-  };
-
-  return (
-    <>
-      <style>{SHARED_CSS}</style>
-      <style>{`
-        .cbs-android-root {
-          /*
-           * position:fixed with resizes-content: the browser already
-           * shrinks the layout viewport (and thus this fixed container)
-           * when the keyboard opens. No JS padding needed.
-           * NO transition here — Android fires vv.resize 30-60x during
-           * keyboard animation; any transition would chase a moving target.
-           */
-          position: fixed;
-          inset: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          z-index: 9999;
-          pointer-events: none;
-          box-sizing: border-box;
-        }
-        .cbs-android-sheet {
-          position: relative;
-          width: 100%;
-          max-width: 470px;
-          margin: 0 auto;
-          /*
-           * dvh: "dynamic viewport height" — respects browser chrome (address bar).
-           * On Android with resizes-content, dvh also respects the keyboard,
-           * so the sheet never overflows behind the keyboard.
-           * Fallback to vh for older Android browsers (Chrome < 108).
-           */
-          height: ${SUPPORTS_DVH ? `${SHEET_HEIGHT_PERCENT}dvh` : `${SHEET_HEIGHT_PERCENT}vh`};
-          max-height: 100%;
-          display: flex;
-          flex-direction: column;
-          background: #141414;
-          border-radius: 16px 16px 0 0;
-          border-top: 0.5px solid rgba(255,255,255,0.08);
-          box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
-          pointer-events: all;
-          overflow: hidden;
-          will-change: transform;
-          box-sizing: border-box;
-        }
-        .cbs-android-list {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
-          /*
-           * overscroll-behavior:contain prevents Android pull-to-refresh
-           * from triggering when scrolling the comment list.
-           * -webkit-overflow-scrolling:touch is still useful on older
-           * Android WebView (pre-Chromium-based browsers).
-           */
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
-          padding: 12px 16px 8px;
-        }
-        .cbs-android-input-bar {
-          flex-shrink: 0;
-          border-top: 0.5px solid rgba(255,255,255,0.07);
-          padding: 10px 12px;
-          /*
-           * Android safe-area behavior:
-           * On gesture-nav Android, safe-area-inset-bottom can be non-zero
-           * AND stays non-zero when the keyboard opens (unlike iOS where it
-           * goes to zero with the home bar). With resizes-content the keyboard
-           * is already handled by browser, so we ONLY apply safe-area when
-           * the keyboard is NOT open — otherwise it adds phantom extra space
-           * at the bottom of the input bar.
-           * We use a CSS custom property set by JS to toggle this.
-           */
-          padding-bottom: var(--cbs-safe-bottom, 12px);
-          background: #141414;
-          box-sizing: border-box;
-        }
-      `}</style>
-
-      {/* Apply safe-area conditional via inline style on root */}
-      <div
-        className="cbs-android-root md:hidden"
-        style={{
-          // When keyboard is open, zero out safe-area inset (browser already compensated).
-          // When keyboard is closed, respect device safe area.
-          "--cbs-safe-bottom": keyboardOpen
-            ? "12px"
-            : "max(12px, calc(12px + env(safe-area-inset-bottom, 0px)))",
-        }}
-      >
-        {/* Backdrop */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)",
-            pointerEvents: "all",
-            transition: "opacity 0.3s ease",
-            opacity: visible ? 1 : 0,
-          }}
-          onClick={handleClose}
-        />
-
-        {/* Sheet */}
-        <div
-          className="cbs-android-sheet"
-          style={{
-            transform: visible ? `translateY(${dragY}px)` : "translateY(100%)",
-            transition: isDragging
-              ? "none"
-              : "transform 0.35s cubic-bezier(0.32,0.72,0,1)",
-          }}
-        >
-          {/* Header + drag handle */}
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "12px 16px 0",
-              userSelect: "none",
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 4,
-                  borderRadius: 99,
-                  background: "rgba(255,255,255,0.15)",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingBottom: 12,
-                borderBottom: "0.5px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#fff",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                Comments
-              </span>
-              <button
-                className="cbs-touch-btn"
-                onClick={handleClose}
-                style={{
-                  width: 28,
-                  height: 28,
-                  minWidth: 44,
-                  minHeight: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,0.07)",
-                  border: "0.5px solid rgba(255,255,255,0.1)",
-                  cursor: "pointer",
-                  marginRight: -8,
-                }}
-              >
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* List */}
-          <div ref={listRef} className="cbs-android-list">
-            <CommentList
-              loading={loading}
-              contentVisible={contentVisible}
-              comments={comments}
-              blockedSet={blockedSet}
-              userId={user?._id}
-              activeCommentMenu={activeCommentMenu}
-              setActiveCommentMenu={setActiveCommentMenu}
-              deleteComment={deleteComment}
-            />
-          </div>
-
-          {/* Input bar */}
-          <div className="cbs-android-input-bar">
-            <InputBar
-              inputRef={inputRef}
-              user={user}
-              comment={comment}
-              setComment={setComment}
-              onPost={handlePost}
-            />
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared InputBar (identical UI, different parent layout)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function InputBar({ inputRef, user, comment, setComment, onPost }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <Avatar
-        username={user?.username || "?"}
-        profilePicture={user?.profilePicture}
-        size={32}
-      />
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          background: "rgba(255,255,255,0.06)",
-          borderRadius: 24,
-          border: "0.5px solid rgba(255,255,255,0.08)",
-          padding: "8px 14px",
-          gap: 8,
-          minWidth: 0,
-        }}
-        onFocus={(e) =>
-          (e.currentTarget.style.border = "0.5px solid rgba(96,165,250,0.4)")
-        }
-        onBlur={(e) =>
-          (e.currentTarget.style.border = "0.5px solid rgba(255,255,255,0.08)")
-        }
-      >
-        <input
-          ref={inputRef}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              onPost();
-            }
-          }}
-          onFocus={(e) =>
-            (e.currentTarget.parentElement.style.border =
-              "0.5px solid rgba(96,165,250,0.4)")
-          }
-          onBlur={(e) =>
-            (e.currentTarget.parentElement.style.border =
-              "0.5px solid rgba(255,255,255,0.08)")
-          }
-          placeholder="Add a comment…"
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            outline: "none",
-            fontSize: 16,
-            lineHeight: 1.4,
-            color: "rgba(255,255,255,0.85)",
-            caretColor: "#60a5fa",
-            minWidth: 0,
-          }}
-          autoComplete="new-password"
-          autoCorrect="off"
-          autoCapitalize="sentences"
-          spellCheck={false}
-          inputMode="text"
-          data-form-type="other"
-        />
-        {comment.trim() && (
-          <button
-            className="cbs-touch-btn"
-            onClick={onPost}
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#60a5fa",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              padding: "4px 0",
-              flexShrink: 0,
-              minHeight: 44,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            Post
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ██████████████████████████████████████████████████████████████████████████████
-// Public export — selects the right variant at module load time
-//
-// Why at module load and not inside the component?
-//   - The platform never changes mid-session.
-//   - Detecting in the component body would re-run on every render.
-//   - This also means React never mounts both variants simultaneously,
-//     avoiding any risk of the two different viewport meta tags fighting.
-//
-// The fallback for unknown platforms uses the iOS strategy because:
-//   - Desktop browsers have no keyboard, so all keyboard logic is a no-op.
-//   - Other mobile browsers (Firefox Android, Samsung Internet) partially
-//     support the iOS model OR the resizes-content model.
-//   - The iOS path degrades more gracefully when its assumptions are wrong.
-// ██████████████████████████████████████████████████████████████████████████████
-
-function CommentsBottomSheet(props) {
-  const Variant = useMemo(() => {
-    if (IS_ANDROID) return CommentsBottomSheetAndroid;
-    // iOS, desktop, unknown → iOS strategy (graceful degradation)
-    return CommentsBottomSheetIOS;
-  }, []); // empty deps — platform never changes
-
-  return <Variant {...props} />;
-}
+  .cbs-post-btn {
+    font-size: 13px; font-weight: 600; color: #60a5fa;
+    background: transparent; border: none; cursor: pointer;
+    white-space: nowrap; padding: 4px 0; flex-shrink: 0;
+    min-height: 44px; display: flex; align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+`;
 
 export default CommentsBottomSheet;
