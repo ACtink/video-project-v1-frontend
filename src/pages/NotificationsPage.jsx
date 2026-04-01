@@ -3639,6 +3639,733 @@
 //   );
 // }
 
+// import React, {
+//   useState,
+//   useEffect,
+//   useCallback,
+//   useLayoutEffect,
+// } from "react";
+// import fetchData from "../utils/fetchData";
+
+// function useAvailableHeight() {
+//   const [height, setHeight] = useState("100dvh");
+//   useLayoutEffect(() => {
+//     function measure() {
+//       const style = getComputedStyle(document.documentElement);
+//       const cssH = parseFloat(style.getPropertyValue("--header-h"));
+//       const cssF = parseFloat(style.getPropertyValue("--footer-h"));
+//       if (!isNaN(cssH) && !isNaN(cssF)) {
+//         setHeight(`calc(100dvh - ${cssH}px - ${cssF}px)`);
+//         return;
+//       }
+//       const headerEl = document.querySelector("header");
+//       const allBodyChildren = Array.from(document.body.children);
+//       const footerEl = allBodyChildren
+//         .slice()
+//         .reverse()
+//         .find(
+//           (el) =>
+//             el !== headerEl &&
+//             el.tagName !== "SCRIPT" &&
+//             el.tagName !== "STYLE" &&
+//             el.getBoundingClientRect().height < 120,
+//         );
+//       const hh = headerEl?.getBoundingClientRect().height ?? 0;
+//       const fh = footerEl?.getBoundingClientRect().height ?? 0;
+//       setHeight(`calc(100dvh - ${Math.round(hh)}px - ${Math.round(fh)}px)`);
+//     }
+//     measure();
+//     const ro =
+//       typeof ResizeObserver !== "undefined"
+//         ? new ResizeObserver(measure)
+//         : null;
+//     if (ro) {
+//       const headerEl = document.querySelector("header");
+//       if (headerEl) ro.observe(headerEl);
+//       ro.observe(document.body);
+//     }
+//     return () => ro?.disconnect();
+//   }, []);
+//   return height;
+// }
+
+// // ─── helpers ─────────────────────────────────────────────────────────────────
+
+// const AVATAR_PALETTE = [
+//   { bg: "#1a1033", fg: "#9d8fef" },
+//   { bg: "#0c2820", fg: "#4ec9a0" },
+//   { bg: "#2a1008", fg: "#e8845a" },
+//   { bg: "#0b1c30", fg: "#6aade8" },
+//   { bg: "#271a04", fg: "#e8952a" },
+//   { bg: "#28091a", fg: "#e87daa" },
+// ];
+
+// function getInitials(name = "") {
+//   return (
+//     name
+//       .trim()
+//       .split(/\s+/)
+//       .map((w) => w[0] ?? "")
+//       .join("")
+//       .slice(0, 2)
+//       .toUpperCase() || "?"
+//   );
+// }
+
+// function getAvatarStyle(id = "") {
+//   const hash = String(id)
+//     .split("")
+//     .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+//   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+// }
+
+// function formatTime(dateStr) {
+//   const diff = Date.now() - new Date(dateStr).getTime();
+//   const mins = Math.floor(diff / 60_000);
+//   if (mins < 1) return "now";
+//   if (mins < 60) return `${mins}m`;
+//   const hrs = Math.floor(mins / 60);
+//   if (hrs < 24) return `${hrs}h`;
+//   const days = Math.floor(hrs / 24);
+//   if (days === 1) return "1d";
+//   if (days < 7) return `${days}d`;
+//   const wks = Math.floor(days / 7);
+//   if (wks < 5) return `${wks}w`;
+//   return `${Math.floor(days / 30)}mo`;
+// }
+
+// function getAgeGroup(dateStr) {
+//   const diff = Date.now() - new Date(dateStr).getTime();
+//   const days = diff / 86_400_000;
+//   if (days < 1) return "new";
+//   if (days < 7) return "week";
+//   return "month";
+// }
+
+// function getNotifText(notif) {
+//   const name = notif.sender?.username || "Someone";
+//   switch (notif.type) {
+//     case "follow_request":
+//       return { bold: name, rest: " requested to follow you." };
+//     case "follow_accepted":
+//       return { bold: name, rest: " accepted your follow request." };
+//     case "like":
+//       return { bold: name, rest: " liked your post." };
+//     case "comment":
+//       return {
+//         bold: name,
+//         rest: ` commented: ${notif.preview || "..."}`,
+//       };
+//     case "message":
+//       return {
+//         bold: name,
+//         rest: ` sent you a message: ${notif.preview || "..."}`,
+//       };
+//     case "mention":
+//       return { bold: name, rest: " mentioned you in a post." };
+//     default:
+//       return { bold: name, rest: ` sent you a ${notif.type}.` };
+//   }
+// }
+
+// // ─── Avatar ──────────────────────────────────────────────────────────────────
+
+// function Avatar({ name, senderId, profilePicture, size = 44 }) {
+//   const { bg, fg } = getAvatarStyle(senderId);
+//   if (profilePicture) {
+//     return (
+//       <img
+//         src={profilePicture}
+//         alt={name}
+//         style={{
+//           width: size,
+//           height: size,
+//           borderRadius: "50%",
+//           objectFit: "cover",
+//           flexShrink: 0,
+//         }}
+//       />
+//     );
+//   }
+//   return (
+//     <div
+//       style={{
+//         width: size,
+//         height: size,
+//         borderRadius: "50%",
+//         background: bg,
+//         color: fg,
+//         flexShrink: 0,
+//         display: "flex",
+//         alignItems: "center",
+//         justifyContent: "center",
+//         fontSize: size * 0.37,
+//         fontWeight: 700,
+//         letterSpacing: "-0.02em",
+//       }}
+//     >
+//       {getInitials(name)}
+//     </div>
+//   );
+// }
+
+// // ─── Thumbnail ───────────────────────────────────────────────────────────────
+
+// function Thumbnail({ url }) {
+//   if (!url) return null;
+//   return (
+//     <img
+//       src={url}
+//       alt=""
+//       style={{
+//         width: 44,
+//         height: 44,
+//         borderRadius: 6,
+//         objectFit: "cover",
+//         flexShrink: 0,
+//       }}
+//     />
+//   );
+// }
+
+// // ─── Skeleton ────────────────────────────────────────────────────────────────
+
+// function SkeletonRow() {
+//   return (
+//     <div
+//       style={{
+//         display: "flex",
+//         alignItems: "center",
+//         gap: 12,
+//         padding: "10px 16px",
+//       }}
+//     >
+//       <div
+//         style={{
+//           width: 44,
+//           height: 44,
+//           borderRadius: "50%",
+//           background: "#1a1a1a",
+//           flexShrink: 0,
+//         }}
+//       />
+//       <div
+//         style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}
+//       >
+//         <div
+//           style={{
+//             height: 11,
+//             width: "55%",
+//             borderRadius: 6,
+//             background: "#1a1a1a",
+//           }}
+//         />
+//         <div
+//           style={{
+//             height: 10,
+//             width: "80%",
+//             borderRadius: 6,
+//             background: "#151515",
+//           }}
+//         />
+//       </div>
+//       <div
+//         style={{
+//           width: 44,
+//           height: 44,
+//           borderRadius: 6,
+//           background: "#1a1a1a",
+//           flexShrink: 0,
+//         }}
+//       />
+//     </div>
+//   );
+// }
+
+// // ─── Section label ────────────────────────────────────────────────────────────
+
+// function SectionLabel({ text }) {
+//   return (
+//     <p
+//       style={{
+//         margin: 0,
+//         padding: "14px 16px 6px",
+//         fontSize: 15,
+//         fontWeight: 700,
+//         color: "#f0f0f0",
+//         letterSpacing: "-0.01em",
+//       }}
+//     >
+//       {text}
+//     </p>
+//   );
+// }
+
+// // ─── Notification row ─────────────────────────────────────────────────────────
+
+// function NotificationRow({
+//   notif,
+//   onRead,
+//   onAccept,
+//   onDecline,
+//   onDelete,
+//   removing,
+// }) {
+//   const sender = notif.sender ?? {};
+//   const senderName = sender.username || "Unknown";
+//   const { bold, rest } = getNotifText(notif);
+//   const time = formatTime(notif.createdAt);
+//   const isPending =
+//     notif.type === "follow_request" && notif.status === "pending";
+//   const hasThumb = ["like", "comment", "mention"].includes(notif.type);
+
+//   return (
+//     <div
+//       onClick={() => {
+//         if (!notif.read) onRead(notif._id);
+//       }}
+//       style={{
+//         display: "flex",
+//         alignItems: "center",
+//         gap: 12,
+//         padding: "10px 16px",
+//         background: removing
+//           ? "transparent"
+//           : notif.read
+//             ? "transparent"
+//             : "#11112a",
+//         opacity: removing ? 0 : 1,
+//         maxHeight: removing ? 0 : 200,
+//         overflow: "hidden",
+//         transition: removing
+//           ? "opacity 0.25s ease, max-height 0.3s ease 0.2s"
+//           : "background 0.2s",
+//         cursor: "default",
+//       }}
+//       onMouseEnter={(e) => {
+//         if (!removing) e.currentTarget.style.background = "#111111";
+//       }}
+//       onMouseLeave={(e) => {
+//         if (!removing) {
+//           e.currentTarget.style.background = notif.read
+//             ? "transparent"
+//             : "#11112a";
+//         }
+//       }}
+//     >
+//       {/* Unread dot */}
+//       <div
+//         style={{
+//           width: 8,
+//           flexShrink: 0,
+//           display: "flex",
+//           justifyContent: "center",
+//         }}
+//       >
+//         {!notif.read && (
+//           <div
+//             style={{
+//               width: 8,
+//               height: 8,
+//               borderRadius: "50%",
+//               background: "#3897f0",
+//             }}
+//           />
+//         )}
+//       </div>
+
+//       {/* Avatar */}
+//       <Avatar
+//         name={senderName}
+//         senderId={sender._id}
+//         profilePicture={sender.profilePicture}
+//         size={44}
+//       />
+
+//       {/* Text */}
+//       <div style={{ flex: 1, minWidth: 0 }}>
+//         <p
+//           style={{
+//             margin: 0,
+//             fontSize: 14,
+//             color: "#e8e8e8",
+//             lineHeight: 1.45,
+//             overflow: "hidden",
+//             display: "-webkit-box",
+//             WebkitLineClamp: isPending ? 1 : 2,
+//             WebkitBoxOrient: "vertical",
+//           }}
+//         >
+//           <span style={{ fontWeight: 600 }}>{bold}</span>
+//           <span style={{ color: "#a0a0a0" }}>{rest}</span>
+//           {"  "}
+//           <span style={{ color: "#555", fontSize: 13 }}>{time}</span>
+//         </p>
+
+//         {/* Follow request buttons */}
+//         {isPending && (
+//           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+//             <button
+//               onClick={(e) => {
+//                 e.stopPropagation();
+//                 onAccept(notif._id);
+//               }}
+//               style={{
+//                 padding: "6px 18px",
+//                 borderRadius: 8,
+//                 border: "none",
+//                 background: "#3897f0",
+//                 color: "#fff",
+//                 fontSize: 13,
+//                 fontWeight: 600,
+//                 cursor: "pointer",
+//                 fontFamily: "inherit",
+//               }}
+//             >
+//               Confirm
+//             </button>
+//             <button
+//               onClick={(e) => {
+//                 e.stopPropagation();
+//                 onDecline(notif._id);
+//               }}
+//               style={{
+//                 padding: "6px 18px",
+//                 borderRadius: 8,
+//                 border: "none",
+//                 background: "#2a2a2a",
+//                 color: "#e8e8e8",
+//                 fontSize: 13,
+//                 fontWeight: 600,
+//                 cursor: "pointer",
+//                 fontFamily: "inherit",
+//               }}
+//             >
+//               Delete
+//             </button>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Post thumbnail or delete button */}
+//       {hasThumb && notif.postThumbnail ? (
+//         <Thumbnail url={notif.postThumbnail} />
+//       ) : !isPending ? (
+//         <button
+//           onClick={(e) => {
+//             e.stopPropagation();
+//             onDelete(notif._id);
+//           }}
+//           style={{
+//             background: "transparent",
+//             border: "none",
+//             color: "#444",
+//             cursor: "pointer",
+//             padding: 4,
+//             borderRadius: 4,
+//             fontSize: 18,
+//             lineHeight: 1,
+//             flexShrink: 0,
+//           }}
+//           title="Remove"
+//         >
+//           ×
+//         </button>
+//       ) : null}
+//     </div>
+//   );
+// }
+
+// // ─── Main page ────────────────────────────────────────────────────────────────
+
+// export default function NotificationsPage() {
+//   const availableHeight = useAvailableHeight();
+//   const [notifications, setNotifications] = useState([]);
+//   const [removing, setRemoving] = useState(new Set());
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+
+//   const fetchNotifications = useCallback(async () => {
+//     try {
+//       setLoading(true);
+//       const res = await fetchData("/api/notifications", {
+//         credentials: "include",
+//       });
+//       if (!res.ok) throw new Error("Failed to fetch notifications");
+//       setNotifications(await res.json());
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     fetchNotifications();
+//   }, [fetchNotifications]);
+
+//   // Once data loads, mark all unread as read on the server,
+//   // then fire a custom event so the Header zeroes its badge.
+//   useEffect(() => {
+//     if (loading || notifications.length === 0) return;
+//     const hasUnread = notifications.some((n) => !n.read);
+//     if (!hasUnread) return;
+
+//     // Optimistically mark all as read in UI
+//     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+//     // Tell the server, then notify the Header via custom event
+//     fetchData("/api/notifications/read-all", {
+//       method: "POST",
+//       credentials: "include",
+//     })
+//       .then(() => {
+//         window.dispatchEvent(new CustomEvent("notifications:read-all"));
+//       })
+//       .catch((err) => console.error("Failed to mark all as read:", err));
+//   }, [loading]); // runs once when loading flips to false
+
+//   // Animate out then remove
+//   const animateRemove = (id) => {
+//     setRemoving((prev) => new Set([...prev, id]));
+//     setTimeout(() => {
+//       setNotifications((prev) => prev.filter((n) => n._id !== id));
+//       setRemoving((prev) => {
+//         const s = new Set(prev);
+//         s.delete(id);
+//         return s;
+//       });
+//     }, 500);
+//   };
+
+//   const markRead = async (id) => {
+//     setNotifications((prev) =>
+//       prev.map((n) => (n._id === id ? { ...n, read: true } : n)),
+//     );
+//     try {
+//       await fetchData(`/api/notifications/${id}/read`, {
+//         method: "PATCH",
+//         credentials: "include",
+//       });
+//     } catch (err) {
+//       console.error("Failed to mark as read:", err);
+//     }
+//   };
+
+//   const handleDelete = async (id) => {
+//     animateRemove(id);
+//     try {
+//       await fetchData(`/api/notifications/${id}`, {
+//         method: "DELETE",
+//         credentials: "include",
+//       });
+//     } catch (err) {
+//       console.error("Failed to delete:", err);
+//       fetchNotifications();
+//     }
+//   };
+
+//   const handleAccept = async (id) => {
+//     animateRemove(id);
+//     try {
+//       await fetchData(`/api/notifications/${id}/accept`, {
+//         method: "POST",
+//         credentials: "include",
+//       });
+//     } catch (err) {
+//       if (err.status === 404) return;
+//       console.error("Accept error:", err);
+//       fetchNotifications();
+//     }
+//   };
+
+//   const handleDecline = async (id) => {
+//     animateRemove(id);
+//     try {
+//       await fetchData(`/api/notifications/${id}/decline`, {
+//         method: "POST",
+//         credentials: "include",
+//       });
+//     } catch (err) {
+//       if (err.status === 404) return;
+//       console.error("Decline error:", err);
+//       fetchNotifications();
+//     }
+//   };
+
+//   // Group by age
+//   const newNotifs = notifications.filter(
+//     (n) => getAgeGroup(n.createdAt) === "new",
+//   );
+//   const weekNotifs = notifications.filter(
+//     (n) => getAgeGroup(n.createdAt) === "week",
+//   );
+//   const monthNotifs = notifications.filter(
+//     (n) => getAgeGroup(n.createdAt) === "month",
+//   );
+
+//   const rowProps = {
+//     onRead: markRead,
+//     onAccept: handleAccept,
+//     onDecline: handleDecline,
+//     onDelete: handleDelete,
+//   };
+
+//   if (error) {
+//     return (
+//       <div
+//         style={{
+//           fontFamily: "'DM Sans', -apple-system, sans-serif",
+//           background: "#0a0a0a",
+//           color: "#e0e0e0",
+//           height: availableHeight,
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "center",
+//         }}
+//       >
+//         <div style={{ textAlign: "center" }}>
+//           <p style={{ margin: 0, color: "#c0392b", fontSize: 14 }}>
+//             Failed to load notifications
+//           </p>
+//           <button
+//             onClick={fetchNotifications}
+//             style={{
+//               marginTop: 12,
+//               padding: "8px 20px",
+//               borderRadius: 8,
+//               border: "none",
+//               background: "#3897f0",
+//               color: "#fff",
+//               fontSize: 13,
+//               fontWeight: 600,
+//               cursor: "pointer",
+//               fontFamily: "inherit",
+//             }}
+//           >
+//             Retry
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div
+//       style={{
+//         fontFamily: "'DM Sans', -apple-system, sans-serif",
+//         background: "#0a0a0a",
+//         color: "#e0e0e0",
+//         height: availableHeight,
+//         overflowY: "auto",
+//         scrollbarWidth: "thin",
+//         scrollbarColor: "#1e1e1e transparent",
+//       }}
+//     >
+//       {/* Header */}
+//       <div
+//         style={{
+//           position: "sticky",
+//           top: 0,
+//           zIndex: 10,
+//           background: "#0a0a0a",
+//           borderBottom: "1px solid #181818",
+//           padding: "16px 16px 14px",
+//         }}
+//       >
+//         <h1
+//           style={{
+//             margin: 0,
+//             fontSize: 22,
+//             fontWeight: 700,
+//             color: "#f0f0f0",
+//             letterSpacing: "-0.03em",
+//           }}
+//         >
+//           Notifications
+//         </h1>
+//       </div>
+
+//       {/* Content */}
+//       {loading ? (
+//         <div>
+//           {Array.from({ length: 7 }).map((_, i) => (
+//             <SkeletonRow key={i} />
+//           ))}
+//         </div>
+//       ) : notifications.length === 0 ? (
+//         <div
+//           style={{
+//             display: "flex",
+//             flexDirection: "column",
+//             alignItems: "center",
+//             justifyContent: "center",
+//             padding: "80px 0",
+//             gap: 12,
+//           }}
+//         >
+//           <svg
+//             width="40"
+//             height="40"
+//             viewBox="0 0 24 24"
+//             fill="none"
+//             stroke="#2a2a2a"
+//             strokeWidth="1.5"
+//           >
+//             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+//             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+//           </svg>
+//           <p style={{ margin: 0, color: "#333", fontSize: 14 }}>
+//             No notifications yet
+//           </p>
+//         </div>
+//       ) : (
+//         <>
+//           {newNotifs.length > 0 && (
+//             <>
+//               <SectionLabel text="New" />
+//               {newNotifs.map((n) => (
+//                 <NotificationRow
+//                   key={n._id}
+//                   notif={n}
+//                   removing={removing.has(n._id)}
+//                   {...rowProps}
+//                 />
+//               ))}
+//             </>
+//           )}
+//           {weekNotifs.length > 0 && (
+//             <>
+//               <SectionLabel text="This week" />
+//               {weekNotifs.map((n) => (
+//                 <NotificationRow
+//                   key={n._id}
+//                   notif={n}
+//                   removing={removing.has(n._id)}
+//                   {...rowProps}
+//                 />
+//               ))}
+//             </>
+//           )}
+//           {monthNotifs.length > 0 && (
+//             <>
+//               <SectionLabel text="This month" />
+//               {monthNotifs.map((n) => (
+//                 <NotificationRow
+//                   key={n._id}
+//                   notif={n}
+//                   removing={removing.has(n._id)}
+//                   {...rowProps}
+//                 />
+//               ))}
+//             </>
+//           )}
+//         </>
+//       )}
+//     </div>
+//   );
+// }
+
 import React, {
   useState,
   useEffect,
@@ -4104,17 +4831,13 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Once data loads, mark all unread as read on the server,
-  // then fire a custom event so the Header zeroes its badge.
   useEffect(() => {
     if (loading || notifications.length === 0) return;
     const hasUnread = notifications.some((n) => !n.read);
     if (!hasUnread) return;
 
-    // Optimistically mark all as read in UI
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
-    // Tell the server, then notify the Header via custom event
     fetchData("/api/notifications/read-all", {
       method: "POST",
       credentials: "include",
@@ -4123,9 +4846,8 @@ export default function NotificationsPage() {
         window.dispatchEvent(new CustomEvent("notifications:read-all"));
       })
       .catch((err) => console.error("Failed to mark all as read:", err));
-  }, [loading]); // runs once when loading flips to false
+  }, [loading]);
 
-  // Animate out then remove
   const animateRemove = (id) => {
     setRemoving((prev) => new Set([...prev, id]));
     setTimeout(() => {
@@ -4193,7 +4915,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // Group by age
   const newNotifs = notifications.filter(
     (n) => getAgeGroup(n.createdAt) === "new",
   );
@@ -4271,8 +4992,39 @@ export default function NotificationsPage() {
           background: "#0a0a0a",
           borderBottom: "1px solid #181818",
           padding: "16px 16px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
         }}
       >
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#f0f0f0",
+            cursor: "pointer",
+            padding: "4px 6px 4px 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+          title="Go back"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
         <h1
           style={{
             margin: 0,
