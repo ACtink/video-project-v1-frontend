@@ -1,6 +1,5 @@
 import HomePage from './pages/HomePage.jsx'
 import './App.css'
-import Header from './components/Header.jsx'
 import JoinPage from './pages/JoinPage.jsx'
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";

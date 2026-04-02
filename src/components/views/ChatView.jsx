@@ -1453,6 +1453,414 @@
 
 // export default ChatView;
 
+// import { useEffect, useState, useRef, useContext, useCallback } from "react";
+// import { MessageCircle, MoreVertical, Trash2 } from "lucide-react";
+// import ChatBox from "./ChatBox";
+// import fetchData from "../../utils/fetchData";
+// import { useLocation } from "react-router-dom";
+// import { useAuth } from "../../hooks/useAuth";
+// import { websocketContext } from "../../context/WebSocket";
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Helpers
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// // Sort a chats array by lastMessageAt descending (most recent first).
+// // This is the single place ordering is decided — no splice/unshift anywhere.
+// function sortChats(chats) {
+//   return [...chats].sort(
+//     (a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0),
+//   );
+// }
+
+// function ChatView() {
+//   const [activeChat, setActiveChat] = useState(null);
+//   const [chats, setChats] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [openMenuId, setOpenMenuId] = useState(null);
+//   const [unreadCounts, setUnreadCounts] = useState({});
+
+//   const menuRef = useRef(null);
+//   const activeChatRef = useRef(null);
+
+//   const location = useLocation();
+//   const { user } = useAuth();
+//   const myUserId = user?._id;
+
+//   const queryParams = new URLSearchParams(location.search);
+//   const conversationIdFromQuery = queryParams.get("conversation");
+//   const { messages } = useContext(websocketContext);
+
+//   useEffect(() => {
+//     activeChatRef.current = activeChat;
+//   }, [activeChat]);
+
+//   // ── React to live WS messages ────────────────────────────────────────────
+//   //
+//   // Previously there were TWO separate effects on `messages`:
+//   //   1. One to update unread counts
+//   //   2. One to reorder chats
+//   //
+//   // They both iterated Object.entries(messages) and both called setChats.
+//   // Because React batches setState calls within the same event tick, the
+//   // second setChats would overwrite the first — causing races where the
+//   // chat list would partially reorder then snap back.
+//   //
+//   // Now there is ONE effect that does both jobs atomically in a single
+//   // setChats call, so the state is always consistent.
+//   //
+//   // Ordering strategy: each chat carries a `lastMessageAt` timestamp (ms).
+//   // We update it whenever a new message arrives for that chat, then sort
+//   // the whole array by that field. This mirrors how WhatsApp/Instagram work —
+//   // the most recently active chat is always at the top, regardless of
+//   // whether you sent or received the message.
+//   useEffect(() => {
+//     const entries = Object.entries(messages);
+//     if (!entries.length) return;
+
+//     // Collect the latest message per conversation from the WS state.
+//     // We process all conversations in one pass so the single setChats call
+//     // below gets the full picture, not just one conversation at a time.
+//     const updates = {}; // { chatId: { latestMsg, liveUnread } }
+
+//     entries.forEach(([chatId, msgs]) => {
+//       if (!Array.isArray(msgs) || !msgs.length) return;
+
+//       const latest = msgs[msgs.length - 1];
+//       const activeChatId = activeChatRef.current?._id;
+
+//       const liveUnread =
+//         chatId === activeChatId
+//           ? 0
+//           : msgs.filter((m) => m.from !== myUserId && m.status !== "read")
+//               .length;
+
+//       updates[chatId] = { latest, liveUnread };
+//     });
+
+//     if (!Object.keys(updates).length) return;
+
+//     // Update chats and unread counts atomically
+//     setChats((prev) => {
+//       const next = prev.map((chat) => {
+//         const update = updates[chat._id];
+//         if (!update) return chat;
+
+//         return {
+//           ...chat,
+//           lastMessage: update.latest.text,
+//           // Store as a number for reliable sort comparison
+//           lastMessageAt: update.latest.createdAt ?? chat.lastMessageAt,
+//         };
+//       });
+
+//       return sortChats(next);
+//     });
+
+//     setUnreadCounts((prev) => {
+//       const next = { ...prev };
+//       Object.entries(updates).forEach(([chatId, { liveUnread }]) => {
+//         if (liveUnread === 0) return;
+//         // Take the max to avoid double-counting with the seeded offline count
+//         next[chatId] = Math.max(prev[chatId] || 0, liveUnread);
+//       });
+//       return next;
+//     });
+//   }, [messages, myUserId]);
+
+//   // ── Initial fetch ─────────────────────────────────────────────────────────
+//   // The server sorts by lastMessageAt DESC, so the initial order is correct.
+//   // We normalise lastMessageAt to a JS timestamp (ms number) here so the
+//   // client-side sortChats() helper can compare it reliably.
+//   useEffect(() => {
+//     const fetchChats = async () => {
+//       try {
+//         const res = await fetchData("/api/chat/conversations", {
+//           credentials: "include",
+//         });
+//         const data = await res.json();
+
+//         // Normalise lastMessageAt to ms number and seed unread counts
+//         const seeded = {};
+//         const normalised = data.map((chat) => {
+//           if (chat.unreadCount > 0) seeded[chat._id] = chat.unreadCount;
+//           return {
+//             ...chat,
+//             lastMessageAt: chat.lastMessageAt
+//               ? new Date(chat.lastMessageAt).getTime()
+//               : 0,
+//           };
+//         });
+
+//         setChats(sortChats(normalised));
+//         if (Object.keys(seeded).length > 0) setUnreadCounts(seeded);
+//       } catch (err) {
+//         console.error("Failed to load chats", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchChats();
+//   }, []);
+
+//   // ── Auto-select chat from query param ────────────────────────────────────
+//   useEffect(() => {
+//     if (!conversationIdFromQuery || chats.length === 0) return;
+//     const conversation = chats.find((c) => c._id === conversationIdFromQuery);
+//     if (conversation) setActiveChat(conversation);
+//   }, [conversationIdFromQuery, chats]);
+
+//   // ── Click-outside to close menu ───────────────────────────────────────────
+//   useEffect(() => {
+//     const handleClickOutside = (e) => {
+//       if (menuRef.current && !menuRef.current.contains(e.target)) {
+//         setOpenMenuId(null);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   // ── Handlers ──────────────────────────────────────────────────────────────
+//   const handleSelectChat = useCallback((chat) => {
+//     setActiveChat(chat);
+//     setUnreadCounts((prev) => ({ ...prev, [chat._id]: 0 }));
+//     setOpenMenuId(null);
+//   }, []);
+
+//   // Called by ChatBox when the current user sends a message.
+//   // Updates lastMessage + lastMessageAt and re-sorts so the chat bubbles to top.
+//   const handleNewMessage = useCallback((chatId, messageText) => {
+//     const now = Date.now();
+//     setChats((prev) => {
+//       const next = prev.map((c) =>
+//         c._id === chatId
+//           ? { ...c, lastMessage: messageText, lastMessageAt: now }
+//           : c,
+//       );
+//       return sortChats(next);
+//     });
+//   }, []);
+
+//   const handleDeleteChat = useCallback(
+//     async (chatId) => {
+//       const confirmed = window.confirm("Delete this conversation?");
+//       if (!confirmed) return;
+//       try {
+//         await fetchData(`/api/chat/conversations/${chatId}`, {
+//           method: "DELETE",
+//           credentials: "include",
+//         });
+//         setChats((prev) => prev.filter((c) => c._id !== chatId));
+//         setUnreadCounts((prev) => {
+//           const next = { ...prev };
+//           delete next[chatId];
+//           return next;
+//         });
+//         if (activeChat?._id === chatId) setActiveChat(null);
+//       } catch (err) {
+//         console.error("Failed to delete chat", err);
+//       }
+//       setOpenMenuId(null);
+//     },
+//     [activeChat],
+//   );
+
+//   // ── Render ────────────────────────────────────────────────────────────────
+//   return (
+//     <div className="w-full h-full min-h-0 flex flex-col overflow-hidden text-white bg-[#020617]">
+//       <div className="flex flex-1 min-h-0 overflow-hidden">
+//         {/* ── CHAT LIST ── */}
+//         <div
+//           className={`
+//             w-full sm:w-72 flex-shrink-0
+//             ${activeChat ? "hidden sm:flex" : "flex"}
+//             flex-col
+//             border-r border-white/10
+//             bg-white/[0.03]
+//           `}
+//         >
+//           <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
+//             <h2 className="text-white font-semibold text-[16px] tracking-tight">
+//               Chats
+//             </h2>
+//             <p className="text-white/40 text-[13px] mt-0.5">
+//               Your conversations
+//             </p>
+//           </div>
+
+//           <div
+//             className="flex-1 overflow-y-auto pt-2 pb-2"
+//             style={{ WebkitOverflowScrolling: "touch" }}
+//           >
+//             {loading && (
+//               <div className="px-3 py-2 space-y-1">
+//                 {[...Array(5)].map((_, i) => (
+//                   <div
+//                     key={i}
+//                     className="flex items-center gap-3 px-2 py-3 animate-pulse"
+//                   >
+//                     <div className="w-10 h-10 rounded-full bg-white/8 flex-shrink-0" />
+//                     <div className="flex-1 space-y-2">
+//                       <div className="h-2.5 w-24 bg-white/8 rounded-full" />
+//                       <div className="h-2 w-32 bg-white/5 rounded-full" />
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {!loading && chats.length === 0 && (
+//               <p className="p-4 text-white/40 text-[13px]">
+//                 No chats available
+//               </p>
+//             )}
+
+//             {!loading &&
+//               chats.map((chat) => {
+//                 const otherUser = chat.participants.find(
+//                   (p) => p._id !== myUserId,
+//                 );
+//                 const isActive = activeChat?._id === chat._id;
+//                 const isMenuOpen = openMenuId === chat._id;
+//                 const unread = unreadCounts[chat._id] || 0;
+
+//                 return (
+//                   <div
+//                     key={chat._id}
+//                     className={`
+//                       relative mx-1 rounded-xl
+//                       flex items-center
+//                       transition-all duration-150
+//                       ${isActive ? "bg-white/10" : "hover:bg-white/5"}
+//                     `}
+//                     style={{ width: "calc(100% - 8px)" }}
+//                   >
+//                     <button
+//                       onClick={() => handleSelectChat(chat)}
+//                       className="flex items-center gap-3 flex-1 min-w-0 px-3 py-3 text-left active:scale-[0.98] transition-all duration-150"
+//                     >
+//                       <div className="relative flex-shrink-0">
+//                         <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800 flex items-center justify-center">
+//                           {otherUser?.profilePicture ? (
+//                             <img
+//                               src={otherUser.profilePicture}
+//                               alt={otherUser.username}
+//                               className="w-full h-full object-cover"
+//                             />
+//                           ) : (
+//                             <span className="text-sm font-semibold text-white">
+//                               {otherUser?.username?.charAt(0).toUpperCase()}
+//                             </span>
+//                           )}
+//                         </div>
+//                         {unread > 0 && (
+//                           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
+//                             {unread > 99 ? "99+" : unread}
+//                           </span>
+//                         )}
+//                       </div>
+
+//                       <div className="flex-1 min-w-0">
+//                         <p
+//                           className={`text-[13.5px] font-semibold leading-tight truncate ${
+//                             unread > 0 ? "text-white" : "text-white/80"
+//                           }`}
+//                         >
+//                           {otherUser?.username}
+//                         </p>
+//                         <p
+//                           className={`text-[12px] truncate mt-0.5 ${
+//                             unread > 0
+//                               ? "text-white font-semibold"
+//                               : "text-white/50 font-normal"
+//                           }`}
+//                         >
+//                           {chat.lastMessage
+//                             ? chat.lastMessage.slice(0, 28) +
+//                               (chat.lastMessage.length > 28 ? "…" : "")
+//                             : "Start chatting"}
+//                         </p>
+//                       </div>
+//                     </button>
+
+//                     <div
+//                       className="relative flex-shrink-0 pr-2"
+//                       ref={isMenuOpen ? menuRef : null}
+//                       onClick={(e) => e.stopPropagation()}
+//                     >
+//                       <button
+//                         onClick={(e) => {
+//                           e.stopPropagation();
+//                           setOpenMenuId(isMenuOpen ? null : chat._id);
+//                         }}
+//                         className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-90 transition-all duration-150 text-white/30 hover:text-white/70"
+//                       >
+//                         <MoreVertical size={14} />
+//                       </button>
+
+//                       {isMenuOpen && (
+//                         <div className="absolute right-0 top-8 z-[999] w-44 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl overflow-hidden">
+//                           <button
+//                             onClick={(e) => {
+//                               e.stopPropagation();
+//                               handleDeleteChat(chat._id);
+//                             }}
+//                             className="w-full flex items-center gap-3 px-4 py-3 text-[13px] font-medium text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors duration-150 text-left"
+//                           >
+//                             <Trash2 size={14} />
+//                             Delete chat
+//                           </button>
+//                         </div>
+//                       )}
+//                     </div>
+//                   </div>
+//                 );
+//               })}
+//           </div>
+//         </div>
+
+//         {/* ── CHAT PANEL ── */}
+//         <div
+//           className={`
+//             flex-1 min-w-0
+//             ${activeChat ? "flex" : "hidden sm:flex"}
+//             flex-col overflow-hidden
+//           `}
+//         >
+//           {!activeChat ? (
+//             <div className="flex-1 flex flex-col items-center justify-center text-white/30 text-center gap-3">
+//               <MessageCircle
+//                 size={48}
+//                 strokeWidth={1.5}
+//                 className="opacity-40"
+//               />
+//               <p className="text-[14px] font-medium">
+//                 Select a chat to start messaging
+//               </p>
+//             </div>
+//           ) : (
+//             <ChatBox
+//               chat={activeChat}
+//               onBack={() => setActiveChat(null)}
+//               onNewMessage={handleNewMessage}
+//               onClearMessages={(chatId) => {
+//                 setChats((prev) =>
+//                   prev.map((c) =>
+//                     c._id === chatId ? { ...c, lastMessage: "" } : c,
+//                   ),
+//                 );
+//               }}
+//             />
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ChatView;
+
 import { useEffect, useState, useRef, useContext, useCallback } from "react";
 import { MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import ChatBox from "./ChatBox";
@@ -1489,7 +1897,7 @@ function ChatView() {
 
   const queryParams = new URLSearchParams(location.search);
   const conversationIdFromQuery = queryParams.get("conversation");
-  const { messages } = useContext(websocketContext);
+  const { messages, onlineUsers } = useContext(websocketContext);
 
   useEffect(() => {
     activeChatRef.current = activeChat;
@@ -1724,6 +2132,7 @@ function ChatView() {
                 const isActive = activeChat?._id === chat._id;
                 const isMenuOpen = openMenuId === chat._id;
                 const unread = unreadCounts[chat._id] || 0;
+                const isOnline = onlineUsers?.has(otherUser?._id?.toString());
 
                 return (
                   <div
@@ -1754,6 +2163,12 @@ function ChatView() {
                             </span>
                           )}
                         </div>
+
+                        {/* ── Online dot ── */}
+                        {isOnline && (
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-400 ring-2 ring-[#020617]" />
+                        )}
+
                         {unread > 0 && (
                           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
                             {unread > 99 ? "99+" : unread}
@@ -1762,13 +2177,20 @@ function ChatView() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-[13.5px] font-semibold leading-tight truncate ${
-                            unread > 0 ? "text-white" : "text-white/80"
-                          }`}
-                        >
-                          {otherUser?.username}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p
+                            className={`text-[13.5px] font-semibold leading-tight truncate ${
+                              unread > 0 ? "text-white" : "text-white/80"
+                            }`}
+                          >
+                            {otherUser?.username}
+                          </p>
+                          {isOnline && (
+                            <span className="text-[10px] text-green-400 font-medium flex-shrink-0">
+                              Online
+                            </span>
+                          )}
+                        </div>
                         <p
                           className={`text-[12px] truncate mt-0.5 ${
                             unread > 0

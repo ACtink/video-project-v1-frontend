@@ -178,18 +178,9 @@ function CreatePostModal({ open, onClose }) {
   return createPortal(
     <div
       onClick={(e) => e.target === e.currentTarget && !loading && handleClose()}
-      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center px-0 sm:px-4"
+      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4"
     >
-      <div
-        className="
-        w-full sm:max-w-md
-        bg-[#0f0f0f]
-        border-t border-white/10 sm:border sm:border-white/10
-        sm:rounded-2xl
-        overflow-hidden
-        flex flex-col
-      "
-      >
+      <div className="w-full max-w-md bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
         {/* HEADER */}
         <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-white/10">
           <h3 className="text-[15px] font-semibold text-white tracking-tight">

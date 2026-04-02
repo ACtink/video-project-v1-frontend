@@ -1964,6 +1964,8 @@ export const WebSocketProvider = ({ children }) => {
   const reconnectTimeoutRef = useRef(null);
   const isIntentionalClose = useRef(false);
 
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+
   const [wsConnected, setWsConnected] = useState(false);
   const [messages, setMessages] = useState({});
 
@@ -2211,6 +2213,10 @@ export const WebSocketProvider = ({ children }) => {
             break;
           }
 
+          case "online_users":
+            setOnlineUsers(new Set(message.userIds));
+            break;
+
           case "ack":
             // Server confirmed our sent message was stored → "sending" → "sent"
             // Server may also push "delivered" here when the recipient ACKs
@@ -2360,6 +2366,7 @@ export const WebSocketProvider = ({ children }) => {
         setMessages,
         markAsRead,
         setCurrentConversation,
+        onlineUsers, // ← add this
       }}
     >
       {children}
