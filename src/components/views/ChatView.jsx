@@ -2092,7 +2092,7 @@ function ChatView() {
               to: "#06b6d4",
               glow: "16,185,129",
               title: "Chat",
-              duration: 300,
+              duration: 500,
               icon: (
                 <svg
                   width="24"

@@ -10061,7 +10061,7 @@ const [showSplash, setShowSplash] = useState(!username);
             to: "#ec4899",
             glow: "244,63,94",
             title: "Profile",
-            duration: 300,
+            duration: 500,
             icon: (
               <svg
                 width="24"
