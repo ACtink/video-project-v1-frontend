@@ -638,7 +638,7 @@ function HomePage() {
             to: "#8b5cf6",
             glow: "99,102,241",
             title: "HelloStranger",
-            duration: 300,
+            duration: 600,
             icon: (
               <svg
                 width="24"

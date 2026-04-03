@@ -1497,7 +1497,7 @@ function VideoView({ onUiStateChange }) {
             to: "#3b82f6",
             glow: "6,182,212",
             title: "Video Chat",
-            duration: 700,
+            duration: 1000,
             iconBoxSize: 150, // 👈 controls the box size
             icon: (
               <svg
