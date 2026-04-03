@@ -901,7 +901,150 @@
 
 // export default SplashScreen;
 
-import { useEffect, useRef, useState } from "react";
+// import { useEffect, useRef, useState } from "react";
+// import { useAuth } from "../hooks/useAuth";
+
+// function SplashScreen({ onDone, config = {} }) {
+//   const { user, loading } = useAuth();
+//   const [visible, setVisible] = useState(false);
+
+//   const {
+//     from = "#6366f1",
+//     to = "#8b5cf6",
+//     glow = "99,102,241",
+//     icon = null,
+//     iconBoxSize = 52,
+//     title = "HelloStranger",
+//     duration = 2000,
+//   } = config;
+
+//   useEffect(() => {
+//     if (!loading && user) setVisible(true);
+//   }, [loading, user]);
+
+//   useEffect(() => {
+//     if (!visible) return;
+//     const timer = setTimeout(() => {
+//       setVisible(false);
+//       onDone?.();
+//     }, duration);
+//     return () => clearTimeout(timer);
+//   }, [visible]);
+
+//   if (!visible) return null;
+
+//   return (
+//     <div
+//       style={{
+//         position: "absolute",
+//         inset: 0,
+//         zIndex: 9999,
+//         background: "#060610",
+//         display: "flex",
+//         flexDirection: "column",
+//         alignItems: "center",
+//         justifyContent: "center",
+//         overflow: "hidden",
+//       }}
+//     >
+//       <style>{`
+//         @keyframes sp-all {
+//           0%   { opacity: 0; transform: scale(0.72); }
+//           55%  { opacity: 1; transform: scale(1.08); }
+//           100% { opacity: 1; transform: scale(1); }
+//         }
+//         @keyframes sp-wipe {
+//           from { transform: scaleX(0); }
+//           to   { transform: scaleX(1); }
+//         }
+//       `}</style>
+
+//       {/* Bloom glow burst */}
+//       <div
+//         style={{
+//           position: "absolute",
+//           inset: 0,
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "center",
+//           pointerEvents: "none",
+//         }}
+//       >
+//         <div
+//           style={{
+//             width: iconBoxSize * 3,
+//             height: iconBoxSize * 3,
+//             borderRadius: "50%",
+//             background: `radial-gradient(circle, rgba(${glow},0.28) 0%, transparent 70%)`,
+//             animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+//             opacity: 0,
+//           }}
+//         />
+//       </div>
+
+//       {/* Center content */}
+//       <div
+//         style={{
+//           position: "relative",
+//           zIndex: 2,
+//           display: "flex",
+//           flexDirection: "column",
+//           alignItems: "center",
+//           gap: 18,
+//           animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+//           opacity: 0,
+//         }}
+//       >
+//         {/* Icon box — size controlled by iconBoxSize */}
+//         <div
+//           style={{
+//             width: iconBoxSize,
+//             height: iconBoxSize,
+//             borderRadius: iconBoxSize * 0.28,
+//             background: `linear-gradient(135deg, ${from}, ${to})`,
+//             display: "flex",
+//             alignItems: "center",
+//             justifyContent: "center",
+//             boxShadow: `0 0 ${iconBoxSize * 0.6}px rgba(${glow}, 0.45)`,
+//           }}
+//         >
+//           {icon}
+//         </div>
+
+//         {/* Title */}
+//         <div
+//           style={{
+//             fontSize: 15,
+//             fontWeight: 800,
+//             color: "#f1f5f9",
+//             letterSpacing: "-0.03em",
+//           }}
+//         >
+//           {title}
+//         </div>
+//       </div>
+
+//       {/* Wipe line */}
+//       <div
+//         style={{
+//           position: "absolute",
+//           bottom: 0,
+//           left: 0,
+//           right: 0,
+//           height: 2,
+//           background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+//           transformOrigin: "left",
+//           animation: "sp-wipe 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
+//           transform: "scaleX(0)",
+//         }}
+//       />
+//     </div>
+//   );
+// }
+
+// export default SplashScreen;
+
+import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
 function SplashScreen({ onDone, config = {} }) {
@@ -939,7 +1082,7 @@ function SplashScreen({ onDone, config = {} }) {
         position: "absolute",
         inset: 0,
         zIndex: 9999,
-        background: "#060610",
+        background: "#050509",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -948,39 +1091,49 @@ function SplashScreen({ onDone, config = {} }) {
       }}
     >
       <style>{`
-        @keyframes sp-all {
-          0%   { opacity: 0; transform: scale(0.72); }
-          55%  { opacity: 1; transform: scale(1.08); }
-          100% { opacity: 1; transform: scale(1); }
+        @keyframes sp-fade {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        @keyframes sp-wipe {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
+
+        @keyframes sp-gradient-shift {
+          0% { transform: translateX(-10%); opacity: 0.6; }
+          50% { transform: translateX(10%); opacity: 1; }
+          100% { transform: translateX(-10%); opacity: 0.6; }
+        }
+
+        @keyframes sp-line {
+          0% {
+            transform: scaleX(0);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          100% {
+            transform: scaleX(1);
+            opacity: 0.7;
+          }
         }
       `}</style>
 
-      {/* Bloom glow burst */}
+      {/* Subtle animated gradient background */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none",
+          background: `linear-gradient(120deg, ${from}, ${to})`,
+          opacity: 0.08,
+          filter: "blur(80px)",
+          animation: "sp-gradient-shift 6s ease-in-out infinite",
         }}
-      >
-        <div
-          style={{
-            width: iconBoxSize * 3,
-            height: iconBoxSize * 3,
-            borderRadius: "50%",
-            background: `radial-gradient(circle, rgba(${glow},0.28) 0%, transparent 70%)`,
-            animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
-            opacity: 0,
-          }}
-        />
-      </div>
+      />
 
       {/* Center content */}
       <div
@@ -990,12 +1143,12 @@ function SplashScreen({ onDone, config = {} }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 18,
-          animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+          gap: 16,
+          animation: "sp-fade 0.6s cubic-bezier(0.22,1,0.36,1) forwards",
           opacity: 0,
         }}
       >
-        {/* Icon box — size controlled by iconBoxSize */}
+        {/* Icon */}
         <div
           style={{
             width: iconBoxSize,
@@ -1005,7 +1158,7 @@ function SplashScreen({ onDone, config = {} }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: `0 0 ${iconBoxSize * 0.6}px rgba(${glow}, 0.45)`,
+            boxShadow: `0 8px 30px rgba(${glow}, 0.25)`,
           }}
         >
           {icon}
@@ -1014,17 +1167,20 @@ function SplashScreen({ onDone, config = {} }) {
         {/* Title */}
         <div
           style={{
-            fontSize: 15,
-            fontWeight: 800,
-            color: "#f1f5f9",
-            letterSpacing: "-0.03em",
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#e5e7eb",
+            letterSpacing: "-0.02em",
+            opacity: 0,
+            animation: "sp-fade 0.7s cubic-bezier(0.22,1,0.36,1) forwards",
+            animationDelay: "0.1s",
           }}
         >
           {title}
         </div>
       </div>
 
-      {/* Wipe line */}
+      {/* Bottom progress line */}
       <div
         style={{
           position: "absolute",
@@ -1032,9 +1188,9 @@ function SplashScreen({ onDone, config = {} }) {
           left: 0,
           right: 0,
           height: 2,
-          background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+          background: `linear-gradient(90deg, ${from}, ${to})`,
           transformOrigin: "left",
-          animation: "sp-wipe 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
+          animation: "sp-line 1.2s cubic-bezier(0.22,1,0.36,1) forwards",
           transform: "scaleX(0)",
         }}
       />
