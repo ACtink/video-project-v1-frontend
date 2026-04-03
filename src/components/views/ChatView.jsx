@@ -2092,7 +2092,7 @@ function ChatView() {
               to: "#06b6d4",
               glow: "16,185,129",
               title: "Chat",
-              duration: 1000,
+              duration: 300,
               icon: (
                 <svg
                   width="24"
@@ -2182,6 +2182,7 @@ function ChatView() {
                     >
                       <div className="relative flex-shrink-0">
                         <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800 flex items-center justify-center">
+                          
                           {otherUser?.profilePicture ? (
                             <img
                               src={otherUser.profilePicture}
@@ -2197,8 +2198,8 @@ function ChatView() {
 
                         {/* ── Online dot ── */}
                         <span
-                          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#020617] ${
-                            isOnline ? "bg-green-400" : "bg-neutral-600"
+                          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${
+                            isOnline ? "bg-green-400" : "bg-neutral-400"
                           }`}
                         />
 

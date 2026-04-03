@@ -1497,20 +1497,26 @@ function VideoView({ onUiStateChange }) {
             to: "#3b82f6",
             glow: "6,182,212",
             title: "Video Chat",
-            duration: 1000,
+            duration: 700,
+            iconBoxSize: 150, // 👈 controls the box size
             icon: (
               <svg
-                width="24"
-                height="24"
+                width="120" // 👈 icon fills the box
+                height="120"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#fff"
-                strokeWidth="2.2"
+                strokeWidth="1.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <rect x="2" y="7" width="14" height="10" rx="2" />
-                <path d="M16 10l5-3v10l-5-3V10z" />
+                <rect x="2" y="8" width="20" height="13" rx="2" />
+                <line x1="8" y1="8" x2="5" y2="2" />
+                <line x1="16" y1="8" x2="19" y2="2" />
+                <circle cx="5" cy="2" r="0.8" fill="#fff" />
+                <circle cx="19" cy="2" r="0.8" fill="#fff" />
+                <line x1="8" y1="21" x2="7" y2="23" />
+                <line x1="16" y1="21" x2="17" y2="23" />
               </svg>
             ),
           }}

@@ -1,19 +1,541 @@
-// // import { useEffect, useState } from "react";
+// // // // // import { useEffect, useState } from "react";
+// // // // // import { useAuth } from "../hooks/useAuth";
+
+// // // // // function SplashScreen({ onDone, config = {} }) {
+// // // // //   const { user, loading } = useAuth();
+// // // // //   const [visible, setVisible] = useState(false);
+
+// // // // //   const {
+// // // // //     background = "#060610",
+// // // // //     gradientFrom = "#6366f1",
+// // // // //     gradientTo = "#8b5cf6",
+// // // // //     glowColor = "99,102,241",
+// // // // //     initials = "HS",
+// // // // //     title = "HelloStranger",
+// // // // //     tagline = "Meet Strangers · Make Stories",
+// // // // //     duration = 1800,
+// // // // //   } = config;
+
+// // // // //   useEffect(() => {
+// // // // //     if (!loading && user) setVisible(true);
+// // // // //   }, [loading, user]);
+
+// // // // //   useEffect(() => {
+// // // // //     if (!visible) return;
+// // // // //     const timer = setTimeout(() => {
+// // // // //       setVisible(false);
+// // // // //       onDone?.();
+// // // // //     }, duration);
+// // // // //     return () => clearTimeout(timer);
+// // // // //   }, [visible]);
+
+// // // // //   if (!visible) return null;
+
+// // // // //   return (
+// // // // //     <div
+// // // // //       style={{
+// // // // //         position: "absolute",
+// // // // //         inset: 0,
+// // // // //         zIndex: 9999,
+// // // // //         background,
+// // // // //         display: "flex",
+// // // // //         flexDirection: "column",
+// // // // //         alignItems: "center",
+// // // // //         justifyContent: "center",
+// // // // //       }}
+// // // // //     >
+// // // // //       <style>{`
+// // // // //         @keyframes splash-logo-pop {
+// // // // //           0%   { transform: scale(0.7); opacity: 0; }
+// // // // //           60%  { transform: scale(1.08); opacity: 1; }
+// // // // //           100% { transform: scale(1); opacity: 1; }
+// // // // //         }
+// // // // //         @keyframes splash-fade-up {
+// // // // //           from { opacity: 0; transform: translateY(10px); }
+// // // // //           to   { opacity: 1; transform: translateY(0); }
+// // // // //         }
+// // // // //         @keyframes splash-bar {
+// // // // //           from { width: 0%; }
+// // // // //           to   { width: 100%; }
+// // // // //         }
+// // // // //         @keyframes splash-pulse {
+// // // // //           0%   { transform: scale(0.85); opacity: 0.5; }
+// // // // //           50%  { transform: scale(1.12); opacity: 0.12; }
+// // // // //           100% { transform: scale(0.85); opacity: 0.5; }
+// // // // //         }
+// // // // //       `}</style>
+
+// // // // //       {/* Ambient glow */}
+// // // // //       <div
+// // // // //         style={{
+// // // // //           position: "absolute",
+// // // // //           width: 360,
+// // // // //           height: 360,
+// // // // //           borderRadius: "50%",
+// // // // //           background: `radial-gradient(circle, rgba(${glowColor},0.18) 0%, transparent 70%)`,
+// // // // //           pointerEvents: "none",
+// // // // //         }}
+// // // // //       />
+
+// // // // //       {/* Pulse rings */}
+// // // // //       {[120, 170].map((size, i) => (
+// // // // //         <div
+// // // // //           key={i}
+// // // // //           style={{
+// // // // //             position: "absolute",
+// // // // //             width: size,
+// // // // //             height: size,
+// // // // //             borderRadius: "50%",
+// // // // //             border: `1.5px solid rgba(${glowColor},${i === 0 ? "0.35" : "0.18"})`,
+// // // // //             animation: `splash-pulse ${i === 0 ? "2.2s" : "2.6s"} ${
+// // // // //               i === 0 ? "0s" : "0.4s"
+// // // // //             } ease-in-out infinite`,
+// // // // //           }}
+// // // // //         />
+// // // // //       ))}
+
+// // // // //       {/* Logo */}
+// // // // //       <div
+// // // // //         style={{
+// // // // //           position: "relative",
+// // // // //           zIndex: 2,
+// // // // //           display: "flex",
+// // // // //           flexDirection: "column",
+// // // // //           alignItems: "center",
+// // // // //           gap: 16,
+// // // // //           animation:
+// // // // //             "splash-logo-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// // // // //         }}
+// // // // //       >
+// // // // //         <div
+// // // // //           style={{
+// // // // //             width: 72,
+// // // // //             height: 72,
+// // // // //             borderRadius: 22,
+// // // // //             background: `linear-gradient(135deg,${gradientFrom},${gradientTo})`,
+// // // // //             display: "flex",
+// // // // //             alignItems: "center",
+// // // // //             justifyContent: "center",
+// // // // //             boxShadow: `0 0 40px rgba(${glowColor},0.5), 0 0 80px rgba(${glowColor},0.15)`,
+// // // // //           }}
+// // // // //         >
+// // // // //           <span
+// // // // //             style={{
+// // // // //               color: "#fff",
+// // // // //               fontSize: 24,
+// // // // //               fontWeight: 900,
+// // // // //               letterSpacing: "-0.04em",
+// // // // //             }}
+// // // // //           >
+// // // // //             {initials}
+// // // // //           </span>
+// // // // //         </div>
+
+// // // // //         <span
+// // // // //           style={{
+// // // // //             fontSize: 18,
+// // // // //             fontWeight: 700,
+// // // // //             color: "#f1f5f9",
+// // // // //             letterSpacing: "-0.03em",
+// // // // //             animation: "splash-fade-up 0.4s 0.35s ease forwards",
+// // // // //             opacity: 0,
+// // // // //           }}
+// // // // //         >
+// // // // //           {title}
+// // // // //         </span>
+// // // // //       </div>
+
+// // // // //       {/* Progress bar */}
+// // // // //       <div
+// // // // //         style={{
+// // // // //           position: "absolute",
+// // // // //           bottom: 52,
+// // // // //           width: 80,
+// // // // //           height: 2,
+// // // // //           background: "rgba(255,255,255,0.08)",
+// // // // //           borderRadius: 99,
+// // // // //           overflow: "hidden",
+// // // // //         }}
+// // // // //       >
+// // // // //         <div
+// // // // //           style={{
+// // // // //             height: "100%",
+// // // // //             background: `linear-gradient(90deg,${gradientFrom},${gradientTo})`,
+// // // // //             borderRadius: 99,
+// // // // //             animation:
+// // // // //               "splash-bar 1.4s 0.2s cubic-bezier(0.4,0,0.2,1) forwards",
+// // // // //             width: "0%",
+// // // // //           }}
+// // // // //         />
+// // // // //       </div>
+
+// // // // //       {/* Tagline */}
+// // // // //       <span
+// // // // //         style={{
+// // // // //           position: "absolute",
+// // // // //           bottom: 30,
+// // // // //           fontSize: 10,
+// // // // //           color: "rgba(255,255,255,0.2)",
+// // // // //           letterSpacing: "0.08em",
+// // // // //           textTransform: "uppercase",
+// // // // //           animation: "splash-fade-up 0.4s 0.5s ease forwards",
+// // // // //           opacity: 0,
+// // // // //         }}
+// // // // //       >
+// // // // //         {tagline}
+// // // // //       </span>
+// // // // //     </div>
+// // // // //   );
+// // // // // }
+
+// // // // // export default SplashScreen;
+
+// // // // import { useEffect, useState } from "react";
+// // // // import { useAuth } from "../hooks/useAuth";
+
+// // // // function SplashScreen({ onDone, config = {} }) {
+// // // //   const { user, loading } = useAuth();
+// // // //   const [visible, setVisible] = useState(false);
+
+// // // //   const {
+// // // //     dot = "#6366f1",
+// // // //     gradientFrom = "#6366f1",
+// // // //     gradientTo = "#8b5cf6",
+// // // //     title = "HelloStranger",
+// // // //     duration = 1800,
+// // // //   } = config;
+
+// // // //   useEffect(() => {
+// // // //     if (!loading && user) setVisible(true);
+// // // //   }, [loading, user]);
+
+// // // //   useEffect(() => {
+// // // //     if (!visible) return;
+// // // //     const timer = setTimeout(() => {
+// // // //       setVisible(false);
+// // // //       onDone?.();
+// // // //     }, duration);
+// // // //     return () => clearTimeout(timer);
+// // // //   }, [visible]);
+
+// // // //   if (!visible) return null;
+
+// // // //   return (
+// // // //     <div
+// // // //       style={{
+// // // //         position: "absolute",
+// // // //         inset: 0,
+// // // //         zIndex: 9999,
+// // // //         background: "#060610",
+// // // //         display: "flex",
+// // // //         flexDirection: "column",
+// // // //         alignItems: "center",
+// // // //         justifyContent: "center",
+// // // //         overflow: "hidden",
+// // // //       }}
+// // // //     >
+// // // //       <style>{`
+// // // //         @keyframes splash-pop {
+// // // //           0%   { transform: scale(0.7); opacity: 0; }
+// // // //           60%  { transform: scale(1.05); opacity: 1; }
+// // // //           100% { transform: scale(1); opacity: 1; }
+// // // //         }
+// // // //         @keyframes splash-wipe {
+// // // //           from { width: 0%; }
+// // // //           to   { width: 100%; }
+// // // //         }
+// // // //       `}</style>
+
+// // // //       {/* Dot + Wordmark */}
+// // // //       <div
+// // // //         style={{
+// // // //           display: "flex",
+// // // //           alignItems: "center",
+// // // //           gap: 12,
+// // // //           animation: "splash-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// // // //         }}
+// // // //       >
+// // // //         <div
+// // // //           style={{
+// // // //             width: 10,
+// // // //             height: 10,
+// // // //             borderRadius: "50%",
+// // // //             background: dot,
+// // // //           }}
+// // // //         />
+// // // //         <span
+// // // //           style={{
+// // // //             fontSize: 22,
+// // // //             fontWeight: 800,
+// // // //             color: "#f1f5f9",
+// // // //             letterSpacing: "-0.04em",
+// // // //           }}
+// // // //         >
+// // // //           {title}
+// // // //         </span>
+// // // //       </div>
+
+// // // //       {/* Bottom wipe line */}
+// // // //       <div
+// // // //         style={{
+// // // //           position: "absolute",
+// // // //           bottom: 0,
+// // // //           left: 0,
+// // // //           height: 2,
+// // // //           background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo}, transparent)`,
+// // // //           animation: "splash-wipe 1.4s 0.2s ease forwards",
+// // // //           width: "0%",
+// // // //         }}
+// // // //       />
+// // // //     </div>
+// // // //   );
+// // // // }
+
+// // // // export default SplashScreen;
+
+// // // import { useEffect, useRef, useState } from "react";
+// // // import { useAuth } from "../hooks/useAuth";
+
+// // // function SplashScreen({ onDone, config = {} }) {
+// // //   const { user, loading } = useAuth();
+// // //   const [visible, setVisible] = useState(false);
+// // //   const canvasRef = useRef(null);
+
+// // //   const {
+// // //     from = "#6366f1",
+// // //     to = "#8b5cf6",
+// // //     glow = "99,102,241",
+// // //     icon = null,
+// // //     title = "HelloStranger",
+// // //     duration = 2000,
+// // //   } = config;
+
+// // //   useEffect(() => {
+// // //     if (!loading && user) setVisible(true);
+// // //   }, [loading, user]);
+
+// // //   useEffect(() => {
+// // //     if (!visible) return;
+// // //     const timer = setTimeout(() => {
+// // //       setVisible(false);
+// // //       onDone?.();
+// // //     }, duration);
+// // //     return () => clearTimeout(timer);
+// // //   }, [visible]);
+
+// // //   useEffect(() => {
+// // //     if (!visible) return;
+// // //     const canvas = canvasRef.current;
+// // //     if (!canvas) return;
+// // //     canvas.width = canvas.offsetWidth;
+// // //     canvas.height = canvas.offsetHeight;
+// // //     const ctx = canvas.getContext("2d");
+// // //     const [r, g, b] = glow.split(",");
+// // //     const pts = Array.from({ length: 24 }, () => ({
+// // //       x: Math.random() * canvas.width,
+// // //       y: Math.random() * canvas.height,
+// // //       radius: Math.random() * 1.2 + 0.3,
+// // //       delay: Math.random() * 1.2,
+// // //       dur: Math.random() * 1.2 + 1,
+// // //       max: Math.random() * 0.25 + 0.06,
+// // //     }));
+// // //     let start = null;
+// // //     let raf;
+// // //     function draw(ts) {
+// // //       if (!start) start = ts;
+// // //       const elapsed = (ts - start) / 1000;
+// // //       ctx.clearRect(0, 0, canvas.width, canvas.height);
+// // //       pts.forEach((p) => {
+// // //         const t = elapsed - p.delay;
+// // //         if (t < 0) return;
+// // //         const prog = Math.min(t / p.dur, 1);
+// // //         const a =
+// // //           prog < 0.5 ? p.max * (prog / 0.5) : p.max * (1 - (prog - 0.5) / 0.5);
+// // //         ctx.beginPath();
+// // //         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+// // //         ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+// // //         ctx.fill();
+// // //       });
+// // //       raf = requestAnimationFrame(draw);
+// // //     }
+// // //     raf = requestAnimationFrame(draw);
+// // //     return () => cancelAnimationFrame(raf);
+// // //   }, [visible]);
+
+// // //   if (!visible) return null;
+
+// // //   const circumference = 2 * Math.PI * 40;
+// // //   const gradId = `sg-${title.replace(/\s/g, "")}`;
+
+// // //   return (
+// // //     <div
+// // //       style={{
+// // //         position: "absolute",
+// // //         inset: 0,
+// // //         zIndex: 9999,
+// // //         background: "#060610",
+// // //         display: "flex",
+// // //         flexDirection: "column",
+// // //         alignItems: "center",
+// // //         justifyContent: "center",
+// // //         overflow: "hidden",
+// // //       }}
+// // //     >
+// // //       <style>{`
+// // //         @keyframes sp-pop {
+// // //           0%   { transform: scale(0.6); opacity: 0; }
+// // //           60%  { transform: scale(1.1); opacity: 1; }
+// // //           100% { transform: scale(1); opacity: 1; }
+// // //         }
+// // //         @keyframes sp-ring-draw {
+// // //           from { stroke-dashoffset: ${circumference}; }
+// // //           to   { stroke-dashoffset: 0; }
+// // //         }
+// // //         @keyframes sp-ring-fade {
+// // //           0%   { opacity: 0; }
+// // //           25%  { opacity: 1; }
+// // //           75%  { opacity: 1; }
+// // //           100% { opacity: 0; }
+// // //         }
+// // //         @keyframes sp-fadeup {
+// // //           from { opacity: 0; transform: translateY(6px); }
+// // //           to   { opacity: 1; transform: translateY(0); }
+// // //         }
+// // //         @keyframes sp-wipe {
+// // //           from { width: 0%; }
+// // //           to   { width: 100%; }
+// // //         }
+// // //       `}</style>
+
+// // //       {/* Particles */}
+// // //       <canvas
+// // //         ref={canvasRef}
+// // //         style={{
+// // //           position: "absolute",
+// // //           inset: 0,
+// // //           width: "100%",
+// // //           height: "100%",
+// // //         }}
+// // //       />
+
+// // //       {/* Center content */}
+// // //       <div
+// // //         style={{
+// // //           position: "relative",
+// // //           zIndex: 2,
+// // //           display: "flex",
+// // //           flexDirection: "column",
+// // //           alignItems: "center",
+// // //           gap: 14,
+// // //         }}
+// // //       >
+// // //         {/* Ring + Icon */}
+// // //         <div
+// // //           style={{
+// // //             position: "relative",
+// // //             display: "flex",
+// // //             alignItems: "center",
+// // //             justifyContent: "center",
+// // //           }}
+// // //         >
+// // //           <svg
+// // //             width="90"
+// // //             height="90"
+// // //             viewBox="0 0 90 90"
+// // //             style={{
+// // //               position: "absolute",
+// // //               animation: "sp-ring-fade 2s 0.2s ease forwards",
+// // //               opacity: 0,
+// // //             }}
+// // //           >
+// // //             <defs>
+// // //               <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+// // //                 <stop offset="0%" stopColor={from} />
+// // //                 <stop offset="100%" stopColor={to} />
+// // //               </linearGradient>
+// // //             </defs>
+// // //             <circle
+// // //               cx="45"
+// // //               cy="45"
+// // //               r="40"
+// // //               fill="none"
+// // //               stroke={`url(#${gradId})`}
+// // //               strokeWidth="1.5"
+// // //               strokeDasharray={circumference}
+// // //               strokeDashoffset={circumference}
+// // //               style={{
+// // //                 animation: `sp-ring-draw 1s 0.3s ease forwards`,
+// // //               }}
+// // //             />
+// // //           </svg>
+
+// // //           <div
+// // //             style={{
+// // //               width: 52,
+// // //               height: 52,
+// // //               borderRadius: 15,
+// // //               background: `linear-gradient(135deg, ${from}, ${to})`,
+// // //               display: "flex",
+// // //               alignItems: "center",
+// // //               justifyContent: "center",
+// // //               boxShadow: `0 0 24px rgba(${glow}, 0.4)`,
+// // //               animation:
+// // //                 "sp-pop 0.55s 0.1s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// // //               opacity: 0,
+// // //             }}
+// // //           >
+// // //             {icon}
+// // //           </div>
+// // //         </div>
+
+// // //         {/* Title */}
+// // //         <div
+// // //           style={{
+// // //             fontSize: 15,
+// // //             fontWeight: 800,
+// // //             color: "#f1f5f9",
+// // //             letterSpacing: "-0.03em",
+// // //             animation: "sp-fadeup 0.4s 0.6s ease forwards",
+// // //             opacity: 0,
+// // //           }}
+// // //         >
+// // //           {title}
+// // //         </div>
+// // //       </div>
+
+// // //       {/* Wipe line */}
+// // //       <div
+// // //         style={{
+// // //           position: "absolute",
+// // //           bottom: 0,
+// // //           left: 0,
+// // //           height: 2,
+// // //           background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+// // //           animation: "sp-wipe 1.4s 0.3s ease forwards",
+// // //           width: "0%",
+// // //         }}
+// // //       />
+// // //     </div>
+// // //   );
+// // // }
+
+// // // export default SplashScreen;
+
+// // import { useEffect, useRef, useState } from "react";
 // // import { useAuth } from "../hooks/useAuth";
 
 // // function SplashScreen({ onDone, config = {} }) {
 // //   const { user, loading } = useAuth();
 // //   const [visible, setVisible] = useState(false);
+// //   const canvasRef = useRef(null);
 
 // //   const {
-// //     background = "#060610",
-// //     gradientFrom = "#6366f1",
-// //     gradientTo = "#8b5cf6",
-// //     glowColor = "99,102,241",
-// //     initials = "HS",
+// //     from = "#6366f1",
+// //     to = "#8b5cf6",
+// //     glow = "99,102,241",
+// //     icon = null,
 // //     title = "HelloStranger",
-// //     tagline = "Meet Strangers · Make Stories",
-// //     duration = 1800,
+// //     duration = 2000,
 // //   } = config;
 
 // //   useEffect(() => {
@@ -29,7 +551,52 @@
 // //     return () => clearTimeout(timer);
 // //   }, [visible]);
 
+// //   useEffect(() => {
+// //     if (!visible) return;
+// //     const canvas = canvasRef.current;
+// //     if (!canvas) return;
+// //     canvas.width = canvas.offsetWidth;
+// //     canvas.height = canvas.offsetHeight;
+// //     const ctx = canvas.getContext("2d");
+// //     const [r, g, b] = glow.split(",");
+
+// //     // Particle timings compressed: delay 0–0.08s, duration 0.1–0.2s (was 0–1.2s / 1–2.2s)
+// //     const pts = Array.from({ length: 24 }, () => ({
+// //       x: Math.random() * canvas.width,
+// //       y: Math.random() * canvas.height,
+// //       radius: Math.random() * 1.2 + 0.3,
+// //       delay: Math.random() * 0.08,
+// //       dur: Math.random() * 0.1 + 0.1,
+// //       max: Math.random() * 0.25 + 0.06,
+// //     }));
+
+// //     let start = null;
+// //     let raf;
+// //     function draw(ts) {
+// //       if (!start) start = ts;
+// //       const elapsed = (ts - start) / 1000;
+// //       ctx.clearRect(0, 0, canvas.width, canvas.height);
+// //       pts.forEach((p) => {
+// //         const t = elapsed - p.delay;
+// //         if (t < 0) return;
+// //         const prog = Math.min(t / p.dur, 1);
+// //         const a =
+// //           prog < 0.5 ? p.max * (prog / 0.5) : p.max * (1 - (prog - 0.5) / 0.5);
+// //         ctx.beginPath();
+// //         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+// //         ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+// //         ctx.fill();
+// //       });
+// //       raf = requestAnimationFrame(draw);
+// //     }
+// //     raf = requestAnimationFrame(draw);
+// //     return () => cancelAnimationFrame(raf);
+// //   }, [visible]);
+
 // //   if (!visible) return null;
+
+// //   const circumference = 2 * Math.PI * 40;
+// //   const gradId = `sg-${title.replace(/\s/g, "")}`;
 
 // //   return (
 // //     <div
@@ -37,64 +604,52 @@
 // //         position: "absolute",
 // //         inset: 0,
 // //         zIndex: 9999,
-// //         background,
+// //         background: "#060610",
 // //         display: "flex",
 // //         flexDirection: "column",
 // //         alignItems: "center",
 // //         justifyContent: "center",
+// //         overflow: "hidden",
 // //       }}
 // //     >
 // //       <style>{`
-// //         @keyframes splash-logo-pop {
-// //           0%   { transform: scale(0.7); opacity: 0; }
-// //           60%  { transform: scale(1.08); opacity: 1; }
+// //         @keyframes sp-pop {
+// //           0%   { transform: scale(0.6); opacity: 0; }
+// //           60%  { transform: scale(1.1); opacity: 1; }
 // //           100% { transform: scale(1); opacity: 1; }
 // //         }
-// //         @keyframes splash-fade-up {
-// //           from { opacity: 0; transform: translateY(10px); }
+// //         @keyframes sp-ring-draw {
+// //           from { stroke-dashoffset: ${circumference}; }
+// //           to   { stroke-dashoffset: 0; }
+// //         }
+// //         @keyframes sp-ring-fade {
+// //           0%   { opacity: 0; }
+// //           25%  { opacity: 1; }
+// //           75%  { opacity: 1; }
+// //           100% { opacity: 0; }
+// //         }
+// //         @keyframes sp-fadeup {
+// //           from { opacity: 0; transform: translateY(6px); }
 // //           to   { opacity: 1; transform: translateY(0); }
 // //         }
-// //         @keyframes splash-bar {
+// //         @keyframes sp-wipe {
 // //           from { width: 0%; }
 // //           to   { width: 100%; }
 // //         }
-// //         @keyframes splash-pulse {
-// //           0%   { transform: scale(0.85); opacity: 0.5; }
-// //           50%  { transform: scale(1.12); opacity: 0.12; }
-// //           100% { transform: scale(0.85); opacity: 0.5; }
-// //         }
 // //       `}</style>
 
-// //       {/* Ambient glow */}
-// //       <div
+// //       {/* Particles */}
+// //       <canvas
+// //         ref={canvasRef}
 // //         style={{
 // //           position: "absolute",
-// //           width: 360,
-// //           height: 360,
-// //           borderRadius: "50%",
-// //           background: `radial-gradient(circle, rgba(${glowColor},0.18) 0%, transparent 70%)`,
-// //           pointerEvents: "none",
+// //           inset: 0,
+// //           width: "100%",
+// //           height: "100%",
 // //         }}
 // //       />
 
-// //       {/* Pulse rings */}
-// //       {[120, 170].map((size, i) => (
-// //         <div
-// //           key={i}
-// //           style={{
-// //             position: "absolute",
-// //             width: size,
-// //             height: size,
-// //             borderRadius: "50%",
-// //             border: `1.5px solid rgba(${glowColor},${i === 0 ? "0.35" : "0.18"})`,
-// //             animation: `splash-pulse ${i === 0 ? "2.2s" : "2.6s"} ${
-// //               i === 0 ? "0s" : "0.4s"
-// //             } ease-in-out infinite`,
-// //           }}
-// //         />
-// //       ))}
-
-// //       {/* Logo */}
+// //       {/* Center content */}
 // //       <div
 // //         style={{
 // //           position: "relative",
@@ -102,95 +657,107 @@
 // //           display: "flex",
 // //           flexDirection: "column",
 // //           alignItems: "center",
-// //           gap: 16,
-// //           animation:
-// //             "splash-logo-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// //           gap: 14,
 // //         }}
 // //       >
+// //         {/* Ring + Icon */}
 // //         <div
 // //           style={{
-// //             width: 72,
-// //             height: 72,
-// //             borderRadius: 22,
-// //             background: `linear-gradient(135deg,${gradientFrom},${gradientTo})`,
+// //             position: "relative",
 // //             display: "flex",
 // //             alignItems: "center",
 // //             justifyContent: "center",
-// //             boxShadow: `0 0 40px rgba(${glowColor},0.5), 0 0 80px rgba(${glowColor},0.15)`,
 // //           }}
 // //         >
-// //           <span
+// //           <svg
+// //             width="90"
+// //             height="90"
+// //             viewBox="0 0 90 90"
 // //             style={{
-// //               color: "#fff",
-// //               fontSize: 24,
-// //               fontWeight: 900,
-// //               letterSpacing: "-0.04em",
+// //               position: "absolute",
+// //               // ring-fade: was 2s 0.2s → now 0.22s 0.02s
+// //               animation: "sp-ring-fade 0.22s 0.02s ease forwards",
+// //               opacity: 0,
 // //             }}
 // //           >
-// //             {initials}
-// //           </span>
+// //             <defs>
+// //               <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+// //                 <stop offset="0%" stopColor={from} />
+// //                 <stop offset="100%" stopColor={to} />
+// //               </linearGradient>
+// //             </defs>
+// //             <circle
+// //               cx="45"
+// //               cy="45"
+// //               r="40"
+// //               fill="none"
+// //               stroke={`url(#${gradId})`}
+// //               strokeWidth="1.5"
+// //               strokeDasharray={circumference}
+// //               strokeDashoffset={circumference}
+// //               style={{
+// //                 // ring-draw: was 1s 0.3s → now 0.18s 0.03s
+// //                 animation: `sp-ring-draw 0.18s 0.03s ease forwards`,
+// //               }}
+// //             />
+// //           </svg>
+
+// //           <div
+// //             style={{
+// //               width: 52,
+// //               height: 52,
+// //               borderRadius: 15,
+// //               background: `linear-gradient(135deg, ${from}, ${to})`,
+// //               display: "flex",
+// //               alignItems: "center",
+// //               justifyContent: "center",
+// //               boxShadow: `0 0 24px rgba(${glow}, 0.4)`,
+// //               // sp-pop: was 0.55s 0.1s → now 0.12s 0.01s
+// //               animation:
+// //                 "sp-pop 0.12s 0.01s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// //               opacity: 0,
+// //             }}
+// //           >
+// //             {icon}
+// //           </div>
 // //         </div>
 
-// //         <span
+// //         {/* Title */}
+// //         <div
 // //           style={{
-// //             fontSize: 18,
-// //             fontWeight: 700,
+// //             fontSize: 15,
+// //             fontWeight: 800,
 // //             color: "#f1f5f9",
 // //             letterSpacing: "-0.03em",
-// //             animation: "splash-fade-up 0.4s 0.35s ease forwards",
+// //             // sp-fadeup: was 0.4s 0.6s → now 0.1s 0.14s
+// //             animation: "sp-fadeup 0.1s 0.14s ease forwards",
 // //             opacity: 0,
 // //           }}
 // //         >
 // //           {title}
-// //         </span>
+// //         </div>
 // //       </div>
 
-// //       {/* Progress bar */}
+// //       {/* Wipe line */}
 // //       <div
 // //         style={{
 // //           position: "absolute",
-// //           bottom: 52,
-// //           width: 80,
+// //           bottom: 0,
+// //           left: 0,
 // //           height: 2,
-// //           background: "rgba(255,255,255,0.08)",
-// //           borderRadius: 99,
-// //           overflow: "hidden",
+// //           background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+// //           // sp-wipe: was 1.4s 0.3s → now 0.24s 0.04s
+// //           animation: "sp-wipe 0.24s 0.04s ease forwards",
+// //           width: "0%",
 // //         }}
-// //       >
-// //         <div
-// //           style={{
-// //             height: "100%",
-// //             background: `linear-gradient(90deg,${gradientFrom},${gradientTo})`,
-// //             borderRadius: 99,
-// //             animation:
-// //               "splash-bar 1.4s 0.2s cubic-bezier(0.4,0,0.2,1) forwards",
-// //             width: "0%",
-// //           }}
-// //         />
-// //       </div>
-
-// //       {/* Tagline */}
-// //       <span
-// //         style={{
-// //           position: "absolute",
-// //           bottom: 30,
-// //           fontSize: 10,
-// //           color: "rgba(255,255,255,0.2)",
-// //           letterSpacing: "0.08em",
-// //           textTransform: "uppercase",
-// //           animation: "splash-fade-up 0.4s 0.5s ease forwards",
-// //           opacity: 0,
-// //         }}
-// //       >
-// //         {tagline}
-// //       </span>
+// //       />
 // //     </div>
 // //   );
 // // }
 
 // // export default SplashScreen;
 
-// import { useEffect, useState } from "react";
+// import { useEffect, useRef, useState } from "react";
 // import { useAuth } from "../hooks/useAuth";
 
 // function SplashScreen({ onDone, config = {} }) {
@@ -198,11 +765,12 @@
 //   const [visible, setVisible] = useState(false);
 
 //   const {
-//     dot = "#6366f1",
-//     gradientFrom = "#6366f1",
-//     gradientTo = "#8b5cf6",
+//     from = "#6366f1",
+//     to = "#8b5cf6",
+//     glow = "99,102,241",
+//     icon = null,
 //     title = "HelloStranger",
-//     duration = 1800,
+//     duration = 2000,
 //   } = config;
 
 //   useEffect(() => {
@@ -220,6 +788,8 @@
 
 //   if (!visible) return null;
 
+//   const gradId = `sg-${title.replace(/\s/g, "")}`;
+
 //   return (
 //     <div
 //       style={{
@@ -235,56 +805,94 @@
 //       }}
 //     >
 //       <style>{`
-//         @keyframes splash-pop {
-//           0%   { transform: scale(0.7); opacity: 0; }
-//           60%  { transform: scale(1.05); opacity: 1; }
-//           100% { transform: scale(1); opacity: 1; }
+//         @keyframes sp-all {
+//           0%   { opacity: 0; transform: scale(0.72); }
+//           55%  { opacity: 1; transform: scale(1.08); }
+//           100% { opacity: 1; transform: scale(1); }
 //         }
-//         @keyframes splash-wipe {
-//           from { width: 0%; }
-//           to   { width: 100%; }
+//         @keyframes sp-wipe {
+//           from { transform: scaleX(0); }
+//           to   { transform: scaleX(1); }
 //         }
 //       `}</style>
 
-//       {/* Dot + Wordmark */}
+//       {/* Bloom glow burst */}
 //       <div
 //         style={{
+//           position: "absolute",
+//           inset: 0,
 //           display: "flex",
 //           alignItems: "center",
-//           gap: 12,
-//           animation: "splash-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+//           justifyContent: "center",
+//           pointerEvents: "none",
 //         }}
 //       >
 //         <div
 //           style={{
-//             width: 10,
-//             height: 10,
+//             width: 200,
+//             height: 200,
 //             borderRadius: "50%",
-//             background: dot,
+//             background: `radial-gradient(circle, rgba(${glow},0.28) 0%, transparent 70%)`,
+//             animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+//             opacity: 0,
 //           }}
 //         />
-//         <span
+//       </div>
+
+//       {/* Center content — everything pops as one unit */}
+//       <div
+//         style={{
+//           position: "relative",
+//           zIndex: 2,
+//           display: "flex",
+//           flexDirection: "column",
+//           alignItems: "center",
+//           gap: 14,
+//           animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+//           opacity: 0,
+//         }}
+//       >
+//         {/* Icon box */}
+//         <div
 //           style={{
-//             fontSize: 22,
+//             width: 56,
+//             height: 56,
+//             borderRadius: 16,
+//             background: `linear-gradient(135deg, ${from}, ${to})`,
+//             display: "flex",
+//             alignItems: "center",
+//             justifyContent: "center",
+//             boxShadow: `0 0 32px rgba(${glow}, 0.45)`,
+//           }}
+//         >
+//           {icon}
+//         </div>
+
+//         {/* Title */}
+//         <div
+//           style={{
+//             fontSize: 15,
 //             fontWeight: 800,
 //             color: "#f1f5f9",
-//             letterSpacing: "-0.04em",
+//             letterSpacing: "-0.03em",
 //           }}
 //         >
 //           {title}
-//         </span>
+//         </div>
 //       </div>
 
-//       {/* Bottom wipe line */}
+//       {/* Wipe line */}
 //       <div
 //         style={{
 //           position: "absolute",
 //           bottom: 0,
 //           left: 0,
+//           right: 0,
 //           height: 2,
-//           background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo}, transparent)`,
-//           animation: "splash-wipe 1.4s 0.2s ease forwards",
-//           width: "0%",
+//           background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+//           transformOrigin: "left",
+//           animation: "sp-wipe 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
+//           transform: "scaleX(0)",
 //         }}
 //       />
 //     </div>
@@ -299,13 +907,13 @@ import { useAuth } from "../hooks/useAuth";
 function SplashScreen({ onDone, config = {} }) {
   const { user, loading } = useAuth();
   const [visible, setVisible] = useState(false);
-  const canvasRef = useRef(null);
 
   const {
     from = "#6366f1",
     to = "#8b5cf6",
     glow = "99,102,241",
     icon = null,
+    iconBoxSize = 52,
     title = "HelloStranger",
     duration = 2000,
   } = config;
@@ -323,49 +931,7 @@ function SplashScreen({ onDone, config = {} }) {
     return () => clearTimeout(timer);
   }, [visible]);
 
-  useEffect(() => {
-    if (!visible) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    const ctx = canvas.getContext("2d");
-    const [r, g, b] = glow.split(",");
-    const pts = Array.from({ length: 24 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 1.2 + 0.3,
-      delay: Math.random() * 1.2,
-      dur: Math.random() * 1.2 + 1,
-      max: Math.random() * 0.25 + 0.06,
-    }));
-    let start = null;
-    let raf;
-    function draw(ts) {
-      if (!start) start = ts;
-      const elapsed = (ts - start) / 1000;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pts.forEach((p) => {
-        const t = elapsed - p.delay;
-        if (t < 0) return;
-        const prog = Math.min(t / p.dur, 1);
-        const a =
-          prog < 0.5 ? p.max * (prog / 0.5) : p.max * (1 - (prog - 0.5) / 0.5);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-        ctx.fill();
-      });
-      raf = requestAnimationFrame(draw);
-    }
-    raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
-  }, [visible]);
-
   if (!visible) return null;
-
-  const circumference = 2 * Math.PI * 40;
-  const gradId = `sg-${title.replace(/\s/g, "")}`;
 
   return (
     <div
@@ -382,41 +948,39 @@ function SplashScreen({ onDone, config = {} }) {
       }}
     >
       <style>{`
-        @keyframes sp-pop {
-          0%   { transform: scale(0.6); opacity: 0; }
-          60%  { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes sp-ring-draw {
-          from { stroke-dashoffset: ${circumference}; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes sp-ring-fade {
-          0%   { opacity: 0; }
-          25%  { opacity: 1; }
-          75%  { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes sp-fadeup {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes sp-all {
+          0%   { opacity: 0; transform: scale(0.72); }
+          55%  { opacity: 1; transform: scale(1.08); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes sp-wipe {
-          from { width: 0%; }
-          to   { width: 100%; }
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
         }
       `}</style>
 
-      {/* Particles */}
-      <canvas
-        ref={canvasRef}
+      {/* Bloom glow burst */}
+      <div
         style={{
           position: "absolute",
           inset: 0,
-          width: "100%",
-          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
         }}
-      />
+      >
+        <div
+          style={{
+            width: iconBoxSize * 3,
+            height: iconBoxSize * 3,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, rgba(${glow},0.28) 0%, transparent 70%)`,
+            animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            opacity: 0,
+          }}
+        />
+      </div>
 
       {/* Center content */}
       <div
@@ -426,66 +990,25 @@ function SplashScreen({ onDone, config = {} }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 14,
+          gap: 18,
+          animation: "sp-all 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards",
+          opacity: 0,
         }}
       >
-        {/* Ring + Icon */}
+        {/* Icon box — size controlled by iconBoxSize */}
         <div
           style={{
-            position: "relative",
+            width: iconBoxSize,
+            height: iconBoxSize,
+            borderRadius: iconBoxSize * 0.28,
+            background: `linear-gradient(135deg, ${from}, ${to})`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            boxShadow: `0 0 ${iconBoxSize * 0.6}px rgba(${glow}, 0.45)`,
           }}
         >
-          <svg
-            width="90"
-            height="90"
-            viewBox="0 0 90 90"
-            style={{
-              position: "absolute",
-              animation: "sp-ring-fade 2s 0.2s ease forwards",
-              opacity: 0,
-            }}
-          >
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor={from} />
-                <stop offset="100%" stopColor={to} />
-              </linearGradient>
-            </defs>
-            <circle
-              cx="45"
-              cy="45"
-              r="40"
-              fill="none"
-              stroke={`url(#${gradId})`}
-              strokeWidth="1.5"
-              strokeDasharray={circumference}
-              strokeDashoffset={circumference}
-              style={{
-                animation: `sp-ring-draw 1s 0.3s ease forwards`,
-              }}
-            />
-          </svg>
-
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 15,
-              background: `linear-gradient(135deg, ${from}, ${to})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: `0 0 24px rgba(${glow}, 0.4)`,
-              animation:
-                "sp-pop 0.55s 0.1s cubic-bezier(0.34,1.56,0.64,1) forwards",
-              opacity: 0,
-            }}
-          >
-            {icon}
-          </div>
+          {icon}
         </div>
 
         {/* Title */}
@@ -495,8 +1018,6 @@ function SplashScreen({ onDone, config = {} }) {
             fontWeight: 800,
             color: "#f1f5f9",
             letterSpacing: "-0.03em",
-            animation: "sp-fadeup 0.4s 0.6s ease forwards",
-            opacity: 0,
           }}
         >
           {title}
@@ -509,10 +1030,12 @@ function SplashScreen({ onDone, config = {} }) {
           position: "absolute",
           bottom: 0,
           left: 0,
+          right: 0,
           height: 2,
           background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
-          animation: "sp-wipe 1.4s 0.3s ease forwards",
-          width: "0%",
+          transformOrigin: "left",
+          animation: "sp-wipe 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
+          transform: "scaleX(0)",
         }}
       />
     </div>

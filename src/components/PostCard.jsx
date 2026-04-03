@@ -1670,6 +1670,316 @@
 
 // export default PostCard;
 
+// import { useState, useRef } from "react";
+// import { createPortal } from "react-dom";
+// import { useNavigate } from "react-router-dom";
+// import PostModal from "./PostModal";
+// import CommentsBottomSheet from "./CommentsBottomSheet";
+// import PostOptionsSheet from "./PostOptionsSheet";
+// import PostOptionsPopup from "./PostOptionsPopup";
+// import { useAuth } from "../hooks/useAuth";
+// import fetchData from "../utils/fetchData";
+
+// function PostCard({ post, onDelete, onLikeUpdate }) {
+//   const { user } = useAuth();
+//   const isOwner = String(user?._id) === String(post.user?._id);
+//   const [selectedPost, setSelectedPost] = useState(null);
+//   const [showMobileComments, setShowMobileComments] = useState(false);
+//   const [showMobileOptions, setShowMobileOptions] = useState(false);
+//   const [showDesktopOptions, setShowDesktopOptions] = useState(false);
+//   const optionsRef = useRef(null);
+//   const navigate = useNavigate();
+
+//   const [hidden, setHidden] = useState(false);
+//   const [commentsCount, setCommentsCount] = useState(post.commentsCount ?? 0);
+
+//   const [liked, setLiked] = useState(() =>
+//     post.likes?.some((id) => String(id) === String(user?.id ?? user?._id)),
+//   );
+//   const [likesCount, setLikesCount] = useState(post.likesCount ?? 0);
+//   const [likeLoading, setLikeLoading] = useState(false);
+//   const [animating, setAnimating] = useState(false);
+
+//   if (hidden) return null;
+
+//   const handleImageClick = () => {
+//     if (window.innerWidth >= 768) setSelectedPost(post);
+//   };
+
+//   const handleLike = async () => {
+//     if (likeLoading) return;
+//     setLikeLoading(true);
+
+//     const wasLiked = liked;
+//     const newLiked = !wasLiked;
+//     const newCount = wasLiked ? likesCount - 1 : likesCount + 1;
+
+//     setLiked(newLiked);
+//     setLikesCount(newCount);
+//     setAnimating(true);
+//     setTimeout(() => setAnimating(false), 350);
+
+//     try {
+//       await fetchData(`/api/posts/${post._id}/like`, {
+//         method: "POST",
+//         credentials: "include",
+//       });
+//       onLikeUpdate?.(post._id, user?._id ?? user?.id, newLiked, newCount);
+//     } catch (err) {
+//       setLiked(wasLiked);
+//       setLikesCount(wasLiked ? likesCount : likesCount);
+//       console.error("Like error:", err);
+//     } finally {
+//       setLikeLoading(false);
+//     }
+//   };
+
+//   return (
+//     <>
+//       {/*
+//        * Removed overflow-hidden from this wrapper.
+//        * overflow-hidden creates a stacking context that can trap
+//        * position:fixed children (CommentsBottomSheet, PostOptionsSheet)
+//        * on certain Android/iOS browsers, clipping or misplacing them.
+//        * The card has no content that actually needs overflow clipping.
+//        */}
+//       <div className="bg-[#0a0a0a] max-w-[470px] mx-auto">
+//         {/* Header */}
+//         <div className="flex items-center gap-2.5 px-3.5 py-2.5">
+//           <div
+//             onClick={() => navigate(`/profile/${post.user.username}`)}
+//             className="flex items-center gap-2.5 cursor-pointer min-w-0"
+//           >
+//             {post.user.profilePicture ? (
+//               <img
+//                 src={post.user.profilePicture}
+//                 alt=""
+//                 className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0"
+//               />
+//             ) : (
+//               <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+//                 {post.user.username?.charAt(0).toUpperCase()}
+//               </div>
+//             )}
+//             <span className="font-semibold text-[13.5px] text-neutral-100 tracking-wide truncate">
+//               {post.user.username}
+//             </span>
+//           </div>
+
+//           <div className="flex-1" />
+
+//           <div ref={optionsRef} className="relative flex-shrink-0">
+//             <button
+//               onClick={() => {
+//                 if (window.innerWidth < 768) setShowMobileOptions(true);
+//                 else setShowDesktopOptions((v) => !v);
+//               }}
+//               className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
+//             >
+//               <svg
+//                 width="16"
+//                 height="16"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="rgba(255,255,255,0.4)"
+//                 strokeWidth="2"
+//               >
+//                 <circle cx="5" cy="12" r="1" />
+//                 <circle cx="12" cy="12" r="1" />
+//                 <circle cx="19" cy="12" r="1" />
+//               </svg>
+//             </button>
+
+//             {showDesktopOptions && (
+//               <PostOptionsPopup
+//                 post={post}
+//                 isOwner={isOwner}
+//                 onClose={() => setShowDesktopOptions(false)}
+//                 onHide={() => setHidden(true)}
+//                 anchorRef={optionsRef}
+//               />
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Image */}
+//         <div className="relative">
+//           <img
+//             onClick={handleImageClick}
+//             onDoubleClick={!liked ? handleLike : undefined}
+//             src={post.imageUrl}
+//             alt=""
+//             className="w-full max-h-[950px] object-cover block md:cursor-pointer"
+//           />
+//         </div>
+
+//         {/* Actions */}
+//         <div className="px-3.5 pt-2.5 pb-4">
+//           <div className="flex items-center gap-1 mb-2">
+//             {/* Like */}
+//             <button
+//               onClick={handleLike}
+//               disabled={likeLoading}
+//               className="p-1.5 rounded-full bg-transparent border-none cursor-pointer disabled:cursor-default"
+//               style={{
+//                 transform: animating ? "scale(1.3)" : "scale(1)",
+//                 transition:
+//                   "transform 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97)",
+//               }}
+//             >
+//               <svg
+//                 width="22"
+//                 height="22"
+//                 viewBox="0 0 24 24"
+//                 fill={liked ? "#ef4444" : "none"}
+//                 stroke={liked ? "#ef4444" : "rgba(255,255,255,0.85)"}
+//                 strokeWidth="1.8"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//                 style={{ transition: "fill 0.2s ease, stroke 0.2s ease" }}
+//               >
+//                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+//               </svg>
+//             </button>
+
+//             {/* Comment */}
+//             <button
+//               onClick={() => {
+//                 if (window.innerWidth < 768) setShowMobileComments(true);
+//                 else setSelectedPost(post);
+//               }}
+//               className="p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer"
+//             >
+//               <svg
+//                 width="22"
+//                 height="22"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="rgba(255,255,255,0.85)"
+//                 strokeWidth="1.8"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               >
+//                 <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10a9.954 9.954 0 0 1-1.515 5.31L22 22l-4.69-1.515A9.954 9.954 0 0 1 12 22z" />
+//               </svg>
+//             </button>
+
+//             {/* Share — mobile only */}
+//             <button
+//               onClick={async () => {
+//                 if (navigator.share) {
+//                   try {
+//                     await navigator.share({
+//                       title: `${post.user.username}'s post`,
+//                       text: post.caption || "Check out this post",
+//                       url: `${window.location.origin}/post/${post._id}`,
+//                     });
+//                   } catch (err) {}
+//                 }
+//               }}
+//               className="md:hidden p-1.5 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 bg-transparent border-none cursor-pointer ml-auto"
+//             >
+//               <svg
+//                 width="22"
+//                 height="22"
+//                 viewBox="0 0 24 24"
+//                 fill="none"
+//                 stroke="rgba(255,255,255,0.85)"
+//                 strokeWidth="1.8"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               >
+//                 <line x1="22" y1="2" x2="11" y2="13" />
+//                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
+//               </svg>
+//             </button>
+//           </div>
+
+//           <p className="text-[13.5px] font-semibold text-neutral-100 mb-1 tracking-wide">
+//             {likesCount.toLocaleString()} {likesCount === 1 ? "like" : "likes"}
+//           </p>
+
+//           {post.caption && (
+//             <p className="text-[13.5px] leading-relaxed text-white/75 mb-1.5">
+//               <span className="font-semibold text-neutral-100 mr-1.5">
+//                 {post.user.username}
+//               </span>
+//               {post.caption}
+//             </p>
+//           )}
+
+//           <p
+//             onClick={() => {
+//               if (window.innerWidth < 768) setShowMobileComments(true);
+//               else setSelectedPost(post);
+//             }}
+//             className="text-[13px] text-white/35 cursor-pointer mb-2 tracking-wide"
+//           >
+//             View all {commentsCount} comments
+//           </p>
+
+//           <p className="text-[11px] text-white/25 mb-2.5 uppercase tracking-widest">
+//             {new Date(post.createdAt).toLocaleDateString("en-US", {
+//               month: "long",
+//               day: "numeric",
+//             })}
+//           </p>
+//         </div>
+//       </div>
+
+//       {/* PostModal — manages its own positioning, no portal needed */}
+//       {selectedPost && (
+//         <PostModal
+//           post={{
+//             ...selectedPost,
+//             likesCount,
+//             likes: liked
+//               ? [...(selectedPost.likes || []), user?._id]
+//               : (selectedPost.likes || []).filter(
+//                   (id) => String(id) !== String(user?._id),
+//                 ),
+//           }}
+//           onClose={() => setSelectedPost(null)}
+//           onDelete={onDelete}
+//           onCommentAdded={() => setCommentsCount((c) => c + 1)}
+//           onCommentDeleted={() => setCommentsCount((c) => Math.max(0, c - 1))}
+//         />
+//       )}
+
+//       {/*
+//        * Portal to document.body — keeps CommentsBottomSheet completely outside
+//        * any parent stacking context. Without this, ancestors with
+//        * overflow:hidden, transform, or will-change can trap position:fixed
+//        * children on Android/iOS, clipping or misplacing the sheet.
+//        */}
+//       {showMobileComments &&
+//         createPortal(
+//           <CommentsBottomSheet
+//             post={post}
+//             onClose={() => setShowMobileComments(false)}
+//             onCommentAdded={() => setCommentsCount((c) => c + 1)}
+//             onCommentDeleted={() => setCommentsCount((c) => Math.max(0, c - 1))}
+//           />,
+//           document.body,
+//         )}
+
+//       {/* Same portal treatment for PostOptionsSheet */}
+//       {showMobileOptions &&
+//         createPortal(
+//           <PostOptionsSheet
+//             post={post}
+//             isOwner={isOwner}
+//             onClose={() => setShowMobileOptions(false)}
+//             onHide={() => setHidden(true)} // ← make sure this is there
+//           />,
+//           document.body,
+//         )}
+//     </>
+//   );
+// }
+
+// export default PostCard;
+
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -1769,26 +2079,28 @@ function PostCard({ post, onDelete, onLikeUpdate }) {
           <div className="flex-1" />
 
           <div ref={optionsRef} className="relative flex-shrink-0">
-            <button
-              onClick={() => {
-                if (window.innerWidth < 768) setShowMobileOptions(true);
-                else setShowDesktopOptions((v) => !v);
-              }}
-              className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth="2"
+            {!isOwner && (
+              <button
+                onClick={() => {
+                  if (window.innerWidth < 768) setShowMobileOptions(true);
+                  else setShowDesktopOptions((v) => !v);
+                }}
+                className="p-1.5 rounded-full bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-white/8 active:scale-90"
               >
-                <circle cx="5" cy="12" r="1" />
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="19" cy="12" r="1" />
-              </svg>
-            </button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.4)"
+                  strokeWidth="2"
+                >
+                  <circle cx="5" cy="12" r="1" />
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="19" cy="12" r="1" />
+                </svg>
+              </button>
+            )}
 
             {showDesktopOptions && (
               <PostOptionsPopup
@@ -1970,7 +2282,7 @@ function PostCard({ post, onDelete, onLikeUpdate }) {
             post={post}
             isOwner={isOwner}
             onClose={() => setShowMobileOptions(false)}
-            onHide={() => setHidden(true)} // ← make sure this is there
+            onHide={() => setHidden(true)}
           />,
           document.body,
         )}
