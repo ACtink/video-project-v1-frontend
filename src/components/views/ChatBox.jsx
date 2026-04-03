@@ -9915,7 +9915,10 @@ function ChatHeader({ otherUser, isBlocked, navigate, chatOptionsRef, handleTogg
 
   return (
     <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center gap-3 text-white bg-white/5 backdrop-blur-sm">
-      <button onClick={onBack} className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95">
+      <button
+        onClick={onBack}
+        className="sm:hidden p-2 rounded-xl hover:bg-white/10 transition active:scale-95"
+      >
         <ArrowLeft size={18} />
       </button>
       <div
@@ -9923,14 +9926,21 @@ function ChatHeader({ otherUser, isBlocked, navigate, chatOptionsRef, handleTogg
         className="relative w-9 h-9 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-150"
       >
         <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-700 flex items-center justify-center">
-          {otherUser.profilePicture
-            ? <img src={otherUser.profilePicture} alt={otherUser.username} className="w-full h-full object-cover" />
-            : <span className="text-sm font-semibold text-white">{otherUser.username?.[0]?.toUpperCase()}</span>
-          }
+          {otherUser.profilePicture ? (
+            <img
+              src={otherUser.profilePicture}
+              alt={otherUser.username}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-sm font-semibold text-white">
+              {otherUser.username?.[0]?.toUpperCase()}
+            </span>
+          )}
         </div>
-        {isOnline && (
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-400 ring-2 ring-[#1a1a2e]" />
-        )}
+        <span
+          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#1a1a2e] ${isOnline ? "bg-green-400" : "bg-neutral-600"}`}
+        />
       </div>
       <div className="flex flex-col flex-1 min-w-0">
         <h3
@@ -9939,17 +9949,29 @@ function ChatHeader({ otherUser, isBlocked, navigate, chatOptionsRef, handleTogg
         >
           {otherUser.username}
         </h3>
-        {isBlocked
-          ? <span className="text-[10px] text-red-400/80 font-medium tracking-wide">Blocked</span>
-          : isOnline
-            ? <span className="text-[11px] text-green-400 font-medium">Online</span>
-            : <span className="text-[11px] text-white/30">Offline</span>
-        }
+        {isBlocked && (
+          <span className="text-[10px] text-red-400/80 font-medium tracking-wide">
+            Blocked
+          </span>
+        )}
       </div>
       <div ref={chatOptionsRef} className="relative flex-shrink-0">
-        <button onClick={handleToggleChatOptions} className="p-2 rounded-xl hover:bg-white/10 transition active:scale-95 text-white/50 hover:text-white">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" />
+        <button
+          onClick={handleToggleChatOptions}
+          className="p-2 rounded-xl hover:bg-white/10 transition active:scale-95 text-white/50 hover:text-white"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
           </svg>
         </button>
       </div>

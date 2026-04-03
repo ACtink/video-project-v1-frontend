@@ -1868,6 +1868,7 @@ import fetchData from "../../utils/fetchData";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { websocketContext } from "../../context/WebSocket";
+import SplashScreen from "../SplashScreen";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -1890,6 +1891,9 @@ function ChatView() {
 
   const menuRef = useRef(null);
   const activeChatRef = useRef(null);
+
+   // 2. add state
+    const [showSplash, setShowSplash] = useState(true);
 
   const location = useLocation();
   const { user } = useAuth();
@@ -2076,9 +2080,36 @@ function ChatView() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full min-h-0 flex flex-col overflow-hidden text-white bg-[#020617]">
+    <div className="w-full h-full min-h-0 flex flex-col relative overflow-hidden text-white bg-[#020617]">
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── CHAT LIST ── */}
+
+        {showSplash && (
+          <SplashScreen
+            onDone={() => setShowSplash(false)}
+            config={{
+              from: "#10b981",
+              to: "#06b6d4",
+              glow: "16,185,129",
+              title: "Chat",
+              duration: 1000,
+              icon: (
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              ),
+            }}
+          />
+        )}
         <div
           className={`
             w-full sm:w-72 flex-shrink-0
@@ -2165,9 +2196,11 @@ function ChatView() {
                         </div>
 
                         {/* ── Online dot ── */}
-                        {isOnline && (
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-400 ring-2 ring-[#020617]" />
-                        )}
+                        <span
+                          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#020617] ${
+                            isOnline ? "bg-green-400" : "bg-neutral-600"
+                          }`}
+                        />
 
                         {unread > 0 && (
                           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
@@ -2185,11 +2218,6 @@ function ChatView() {
                           >
                             {otherUser?.username}
                           </p>
-                          {isOnline && (
-                            <span className="text-[10px] text-green-400 font-medium flex-shrink-0">
-                              Online
-                            </span>
-                          )}
                         </div>
                         <p
                           className={`text-[12px] truncate mt-0.5 ${

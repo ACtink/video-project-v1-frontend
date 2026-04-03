@@ -1,0 +1,522 @@
+// // import { useEffect, useState } from "react";
+// // import { useAuth } from "../hooks/useAuth";
+
+// // function SplashScreen({ onDone, config = {} }) {
+// //   const { user, loading } = useAuth();
+// //   const [visible, setVisible] = useState(false);
+
+// //   const {
+// //     background = "#060610",
+// //     gradientFrom = "#6366f1",
+// //     gradientTo = "#8b5cf6",
+// //     glowColor = "99,102,241",
+// //     initials = "HS",
+// //     title = "HelloStranger",
+// //     tagline = "Meet Strangers · Make Stories",
+// //     duration = 1800,
+// //   } = config;
+
+// //   useEffect(() => {
+// //     if (!loading && user) setVisible(true);
+// //   }, [loading, user]);
+
+// //   useEffect(() => {
+// //     if (!visible) return;
+// //     const timer = setTimeout(() => {
+// //       setVisible(false);
+// //       onDone?.();
+// //     }, duration);
+// //     return () => clearTimeout(timer);
+// //   }, [visible]);
+
+// //   if (!visible) return null;
+
+// //   return (
+// //     <div
+// //       style={{
+// //         position: "absolute",
+// //         inset: 0,
+// //         zIndex: 9999,
+// //         background,
+// //         display: "flex",
+// //         flexDirection: "column",
+// //         alignItems: "center",
+// //         justifyContent: "center",
+// //       }}
+// //     >
+// //       <style>{`
+// //         @keyframes splash-logo-pop {
+// //           0%   { transform: scale(0.7); opacity: 0; }
+// //           60%  { transform: scale(1.08); opacity: 1; }
+// //           100% { transform: scale(1); opacity: 1; }
+// //         }
+// //         @keyframes splash-fade-up {
+// //           from { opacity: 0; transform: translateY(10px); }
+// //           to   { opacity: 1; transform: translateY(0); }
+// //         }
+// //         @keyframes splash-bar {
+// //           from { width: 0%; }
+// //           to   { width: 100%; }
+// //         }
+// //         @keyframes splash-pulse {
+// //           0%   { transform: scale(0.85); opacity: 0.5; }
+// //           50%  { transform: scale(1.12); opacity: 0.12; }
+// //           100% { transform: scale(0.85); opacity: 0.5; }
+// //         }
+// //       `}</style>
+
+// //       {/* Ambient glow */}
+// //       <div
+// //         style={{
+// //           position: "absolute",
+// //           width: 360,
+// //           height: 360,
+// //           borderRadius: "50%",
+// //           background: `radial-gradient(circle, rgba(${glowColor},0.18) 0%, transparent 70%)`,
+// //           pointerEvents: "none",
+// //         }}
+// //       />
+
+// //       {/* Pulse rings */}
+// //       {[120, 170].map((size, i) => (
+// //         <div
+// //           key={i}
+// //           style={{
+// //             position: "absolute",
+// //             width: size,
+// //             height: size,
+// //             borderRadius: "50%",
+// //             border: `1.5px solid rgba(${glowColor},${i === 0 ? "0.35" : "0.18"})`,
+// //             animation: `splash-pulse ${i === 0 ? "2.2s" : "2.6s"} ${
+// //               i === 0 ? "0s" : "0.4s"
+// //             } ease-in-out infinite`,
+// //           }}
+// //         />
+// //       ))}
+
+// //       {/* Logo */}
+// //       <div
+// //         style={{
+// //           position: "relative",
+// //           zIndex: 2,
+// //           display: "flex",
+// //           flexDirection: "column",
+// //           alignItems: "center",
+// //           gap: 16,
+// //           animation:
+// //             "splash-logo-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards",
+// //         }}
+// //       >
+// //         <div
+// //           style={{
+// //             width: 72,
+// //             height: 72,
+// //             borderRadius: 22,
+// //             background: `linear-gradient(135deg,${gradientFrom},${gradientTo})`,
+// //             display: "flex",
+// //             alignItems: "center",
+// //             justifyContent: "center",
+// //             boxShadow: `0 0 40px rgba(${glowColor},0.5), 0 0 80px rgba(${glowColor},0.15)`,
+// //           }}
+// //         >
+// //           <span
+// //             style={{
+// //               color: "#fff",
+// //               fontSize: 24,
+// //               fontWeight: 900,
+// //               letterSpacing: "-0.04em",
+// //             }}
+// //           >
+// //             {initials}
+// //           </span>
+// //         </div>
+
+// //         <span
+// //           style={{
+// //             fontSize: 18,
+// //             fontWeight: 700,
+// //             color: "#f1f5f9",
+// //             letterSpacing: "-0.03em",
+// //             animation: "splash-fade-up 0.4s 0.35s ease forwards",
+// //             opacity: 0,
+// //           }}
+// //         >
+// //           {title}
+// //         </span>
+// //       </div>
+
+// //       {/* Progress bar */}
+// //       <div
+// //         style={{
+// //           position: "absolute",
+// //           bottom: 52,
+// //           width: 80,
+// //           height: 2,
+// //           background: "rgba(255,255,255,0.08)",
+// //           borderRadius: 99,
+// //           overflow: "hidden",
+// //         }}
+// //       >
+// //         <div
+// //           style={{
+// //             height: "100%",
+// //             background: `linear-gradient(90deg,${gradientFrom},${gradientTo})`,
+// //             borderRadius: 99,
+// //             animation:
+// //               "splash-bar 1.4s 0.2s cubic-bezier(0.4,0,0.2,1) forwards",
+// //             width: "0%",
+// //           }}
+// //         />
+// //       </div>
+
+// //       {/* Tagline */}
+// //       <span
+// //         style={{
+// //           position: "absolute",
+// //           bottom: 30,
+// //           fontSize: 10,
+// //           color: "rgba(255,255,255,0.2)",
+// //           letterSpacing: "0.08em",
+// //           textTransform: "uppercase",
+// //           animation: "splash-fade-up 0.4s 0.5s ease forwards",
+// //           opacity: 0,
+// //         }}
+// //       >
+// //         {tagline}
+// //       </span>
+// //     </div>
+// //   );
+// // }
+
+// // export default SplashScreen;
+
+// import { useEffect, useState } from "react";
+// import { useAuth } from "../hooks/useAuth";
+
+// function SplashScreen({ onDone, config = {} }) {
+//   const { user, loading } = useAuth();
+//   const [visible, setVisible] = useState(false);
+
+//   const {
+//     dot = "#6366f1",
+//     gradientFrom = "#6366f1",
+//     gradientTo = "#8b5cf6",
+//     title = "HelloStranger",
+//     duration = 1800,
+//   } = config;
+
+//   useEffect(() => {
+//     if (!loading && user) setVisible(true);
+//   }, [loading, user]);
+
+//   useEffect(() => {
+//     if (!visible) return;
+//     const timer = setTimeout(() => {
+//       setVisible(false);
+//       onDone?.();
+//     }, duration);
+//     return () => clearTimeout(timer);
+//   }, [visible]);
+
+//   if (!visible) return null;
+
+//   return (
+//     <div
+//       style={{
+//         position: "absolute",
+//         inset: 0,
+//         zIndex: 9999,
+//         background: "#060610",
+//         display: "flex",
+//         flexDirection: "column",
+//         alignItems: "center",
+//         justifyContent: "center",
+//         overflow: "hidden",
+//       }}
+//     >
+//       <style>{`
+//         @keyframes splash-pop {
+//           0%   { transform: scale(0.7); opacity: 0; }
+//           60%  { transform: scale(1.05); opacity: 1; }
+//           100% { transform: scale(1); opacity: 1; }
+//         }
+//         @keyframes splash-wipe {
+//           from { width: 0%; }
+//           to   { width: 100%; }
+//         }
+//       `}</style>
+
+//       {/* Dot + Wordmark */}
+//       <div
+//         style={{
+//           display: "flex",
+//           alignItems: "center",
+//           gap: 12,
+//           animation: "splash-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+//         }}
+//       >
+//         <div
+//           style={{
+//             width: 10,
+//             height: 10,
+//             borderRadius: "50%",
+//             background: dot,
+//           }}
+//         />
+//         <span
+//           style={{
+//             fontSize: 22,
+//             fontWeight: 800,
+//             color: "#f1f5f9",
+//             letterSpacing: "-0.04em",
+//           }}
+//         >
+//           {title}
+//         </span>
+//       </div>
+
+//       {/* Bottom wipe line */}
+//       <div
+//         style={{
+//           position: "absolute",
+//           bottom: 0,
+//           left: 0,
+//           height: 2,
+//           background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo}, transparent)`,
+//           animation: "splash-wipe 1.4s 0.2s ease forwards",
+//           width: "0%",
+//         }}
+//       />
+//     </div>
+//   );
+// }
+
+// export default SplashScreen;
+
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+
+function SplashScreen({ onDone, config = {} }) {
+  const { user, loading } = useAuth();
+  const [visible, setVisible] = useState(false);
+  const canvasRef = useRef(null);
+
+  const {
+    from = "#6366f1",
+    to = "#8b5cf6",
+    glow = "99,102,241",
+    icon = null,
+    title = "HelloStranger",
+    duration = 2000,
+  } = config;
+
+  useEffect(() => {
+    if (!loading && user) setVisible(true);
+  }, [loading, user]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const timer = setTimeout(() => {
+      setVisible(false);
+      onDone?.();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const ctx = canvas.getContext("2d");
+    const [r, g, b] = glow.split(",");
+    const pts = Array.from({ length: 24 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.2 + 0.3,
+      delay: Math.random() * 1.2,
+      dur: Math.random() * 1.2 + 1,
+      max: Math.random() * 0.25 + 0.06,
+    }));
+    let start = null;
+    let raf;
+    function draw(ts) {
+      if (!start) start = ts;
+      const elapsed = (ts - start) / 1000;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pts.forEach((p) => {
+        const t = elapsed - p.delay;
+        if (t < 0) return;
+        const prog = Math.min(t / p.dur, 1);
+        const a =
+          prog < 0.5 ? p.max * (prog / 0.5) : p.max * (1 - (prog - 0.5) / 0.5);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+        ctx.fill();
+      });
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const circumference = 2 * Math.PI * 40;
+  const gradId = `sg-${title.replace(/\s/g, "")}`;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 9999,
+        background: "#060610",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+    >
+      <style>{`
+        @keyframes sp-pop {
+          0%   { transform: scale(0.6); opacity: 0; }
+          60%  { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes sp-ring-draw {
+          from { stroke-dashoffset: ${circumference}; }
+          to   { stroke-dashoffset: 0; }
+        }
+        @keyframes sp-ring-fade {
+          0%   { opacity: 0; }
+          25%  { opacity: 1; }
+          75%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes sp-fadeup {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sp-wipe {
+          from { width: 0%; }
+          to   { width: 100%; }
+        }
+      `}</style>
+
+      {/* Particles */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      />
+
+      {/* Center content */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        {/* Ring + Icon */}
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width="90"
+            height="90"
+            viewBox="0 0 90 90"
+            style={{
+              position: "absolute",
+              animation: "sp-ring-fade 2s 0.2s ease forwards",
+              opacity: 0,
+            }}
+          >
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor={from} />
+                <stop offset="100%" stopColor={to} />
+              </linearGradient>
+            </defs>
+            <circle
+              cx="45"
+              cy="45"
+              r="40"
+              fill="none"
+              stroke={`url(#${gradId})`}
+              strokeWidth="1.5"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference}
+              style={{
+                animation: `sp-ring-draw 1s 0.3s ease forwards`,
+              }}
+            />
+          </svg>
+
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 15,
+              background: `linear-gradient(135deg, ${from}, ${to})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: `0 0 24px rgba(${glow}, 0.4)`,
+              animation:
+                "sp-pop 0.55s 0.1s cubic-bezier(0.34,1.56,0.64,1) forwards",
+              opacity: 0,
+            }}
+          >
+            {icon}
+          </div>
+        </div>
+
+        {/* Title */}
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 800,
+            color: "#f1f5f9",
+            letterSpacing: "-0.03em",
+            animation: "sp-fadeup 0.4s 0.6s ease forwards",
+            opacity: 0,
+          }}
+        >
+          {title}
+        </div>
+      </div>
+
+      {/* Wipe line */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: 2,
+          background: `linear-gradient(90deg, ${from}, ${to}, transparent)`,
+          animation: "sp-wipe 1.4s 0.3s ease forwards",
+          width: "0%",
+        }}
+      />
+    </div>
+  );
+}
+
+export default SplashScreen;

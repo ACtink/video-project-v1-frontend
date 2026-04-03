@@ -1325,6 +1325,9 @@ import { webRTCContext } from "../../context/WebRTC.jsx";
 import DisplayUserInfoCard from "../DisplayUserInfoCard.jsx";
 import Loader from "../Loader.jsx";
 import AddFriend from "../AddFriend.jsx";
+ // 1. import at the top
+  import SplashScreen from "../SplashScreen";
+
 
 function VideoView({ onUiStateChange }) {
   const {
@@ -1366,6 +1369,10 @@ function VideoView({ onUiStateChange }) {
   const [isLoaderDone, setIsLoaderDone] = useState(false);
   const [isUserCardDone, setIsUserCardDone] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+ 
+  // 2. add state
+  const [showSplash, setShowSplash] = useState(true);
 
   const shouldShowVideo = isLoaderDone && isUserCardDone && isVideoPlaying;
   const [isMatchedDataReceived, setIsMatchedDataReceived] = useState(false);
@@ -1467,9 +1474,48 @@ function VideoView({ onUiStateChange }) {
   return (
     // ✅ No fixed height — fills whatever <main> gives it (flex-1 in Layout)
     // ✅ overflow-hidden stops any internal scrolling
-    <div className="w-full h-full overflow-hidden flex flex-col text-white bg-gradient-to-br from-[#0f172a] via-[#020617] to-[#020617]">
+    <div className="w-full h-full overflow-hidden relative flex flex-col text-white bg-gradient-to-br from-[#0f172a] via-[#020617] to-[#020617]">
       {/* ===================== VIDEO AREA ===================== */}
       {/* ✅ min-h-0 is critical — without it, flex children don't shrink below their content size */}
+
+      {/* Video Splash */}
+      {showSplash && (
+        // <SplashScreen
+        //   onDone={() => setShowSplash(false)}
+        //   config={{
+        //     dot: "#06b6d4",
+        //     gradientFrom: "#06b6d4",
+        //     gradientTo: "#3b82f6",
+        //     title: "Video Chat",
+        //     duration: 1800,
+        //   }}
+        // />
+        <SplashScreen
+          onDone={() => setShowSplash(false)}
+          config={{
+            from: "#06b6d4",
+            to: "#3b82f6",
+            glow: "6,182,212",
+            title: "Video Chat",
+            duration: 1000,
+            icon: (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="2" y="7" width="14" height="10" rx="2" />
+                <path d="M16 10l5-3v10l-5-3V10z" />
+              </svg>
+            ),
+          }}
+        />
+      )}
       <div className="flex-1 min-h-0 overflow-hidden relative flex flex-col xl:flex-row">
         {/* ── LOCAL VIDEO (PiP on mobile, left half on desktop) ── */}
         <div
