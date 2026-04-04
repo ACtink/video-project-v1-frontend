@@ -1480,16 +1480,7 @@ function VideoView({ onUiStateChange }) {
 
       {/* Video Splash */}
       {showSplash && (
-        // <SplashScreen
-        //   onDone={() => setShowSplash(false)}
-        //   config={{
-        //     dot: "#06b6d4",
-        //     gradientFrom: "#06b6d4",
-        //     gradientTo: "#3b82f6",
-        //     title: "Video Chat",
-        //     duration: 1800,
-        //   }}
-        // />
+      
         <SplashScreen
           onDone={() => setShowSplash(false)}
           config={{
@@ -1497,7 +1488,7 @@ function VideoView({ onUiStateChange }) {
             to: "#3b82f6",
             glow: "6,182,212",
             title: "Video Chat",
-            duration: 1000,
+            duration: 2000,
             iconBoxSize: 150, // 👈 controls the box size
             icon: (
               <svg
