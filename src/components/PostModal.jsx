@@ -3707,6 +3707,488 @@
 
 // export default PostModal;
 
+// import { useEffect, useState, useRef, useCallback } from "react";
+// import { createPortal } from "react-dom";
+// import { SendHorizontal, MoreHorizontal, X, Trash2 } from "lucide-react";
+// import { useAuth } from "../hooks/useAuth";
+// import fetchData from "../utils/fetchData";
+
+// // Inject comment shimmer once — transform-based, no paint cost
+// if (typeof document !== "undefined") {
+//   const id = "modal-shimmer-style";
+//   if (!document.getElementById(id)) {
+//     const style = document.createElement("style");
+//     style.id = id;
+//     style.textContent = `
+//       @keyframes modalShimmer {
+//         0%   { transform: translateX(-100%); }
+//         100% { transform: translateX(100%); }
+//       }
+//       @keyframes fadeSlideIn {
+//         from { opacity: 0; transform: translateY(6px); }
+//         to   { opacity: 1; transform: translateY(0); }
+//       }
+//       .comment-shimmer {
+//         position: relative;
+//         overflow: hidden;
+//         background: rgba(255,255,255,0.04);
+//         border-radius: 6px;
+//       }
+//       .comment-shimmer::after {
+//         content: "";
+//         position: absolute;
+//         inset: 0;
+//         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+//         will-change: transform;
+//         animation: modalShimmer 1.4s ease-in-out infinite;
+//       }
+//     `;
+//     document.head.appendChild(style);
+//   }
+// }
+
+// const Avatar = ({ username, profilePicture, size = 28, border = false }) => (
+//   <div
+//     style={{
+//       width: size,
+//       height: size,
+//       borderRadius: "50%",
+//       flexShrink: 0,
+//       border: border
+//         ? "2px solid rgba(255,255,255,0.25)"
+//         : "1.5px solid rgba(255,255,255,0.1)",
+//       overflow: "hidden",
+//       boxSizing: "border-box",
+//     }}
+//   >
+//     {profilePicture ? (
+//       <img
+//         src={profilePicture}
+//         alt={username}
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           objectFit: "cover",
+//           display: "block",
+//         }}
+//       />
+//     ) : (
+//       <div
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           background: `hsl(${(username?.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "center",
+//         }}
+//       >
+//         <span style={{ fontSize: size * 0.38, fontWeight: 700, color: "#fff" }}>
+//           {username?.[0]?.toUpperCase()}
+//         </span>
+//       </div>
+//     )}
+//   </div>
+// );
+
+// function PostModal({
+//   post,
+//   onClose,
+//   onDelete,
+//   onDeleteProfilePost,
+//   onCommentAdded,
+//   onCommentDeleted,
+// }) {
+//   const { user } = useAuth();
+//   const isOwner = String(user?._id) === String(post.user?._id);
+//   const [showMenu, setShowMenu] = useState(false);
+//   const [comments, setComments] = useState([]);
+//   const [commentsLoading, setCommentsLoading] = useState(true);
+//   const [comment, setComment] = useState("");
+//   const [activeCommentMenu, setActiveCommentMenu] = useState(null);
+//   const [likesCount] = useState(post.likesCount ?? 0);
+//   const menuRef = useRef(null);
+//   const inputRef = useRef(null);
+
+//   const handleDelete = async () => {
+//     if (!window.confirm("Delete this post?")) return;
+//     try {
+//       await fetchData(`/api/posts/${post._id}`, {
+//         method: "DELETE",
+//         credentials: "include",
+//       });
+//       onDelete?.(post._id);
+//       onDeleteProfilePost?.(post._id);
+//       onClose();
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   const handlePost = async () => {
+//     if (!comment.trim()) return;
+//     try {
+//       const res = await fetchData(`/api/posts/${post._id}/comments`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({ text: comment }),
+//       });
+//       const data = await res.json();
+//       setComments((prev) => [data.comment, ...prev]);
+//       setComment("");
+//       onCommentAdded?.();
+//     } catch (err) {
+//       console.error("Post comment error:", err);
+//     }
+//   };
+
+//   const handleDeleteComment = async (commentId) => {
+//     try {
+//       const res = await fetchData(
+//         `/api/posts/${post._id}/comments/${commentId}`,
+//         {
+//           method: "DELETE",
+//           credentials: "include",
+//         },
+//       );
+//       const data = await res.json();
+//       if (data.success) {
+//         setComments((prev) => prev.filter((c) => c._id !== commentId));
+//         setActiveCommentMenu(null);
+//         onCommentDeleted?.();
+//       }
+//     } catch (err) {
+//       console.error("Delete comment error:", err);
+//     }
+//   };
+
+//   // Fetch comments — cancellable, no artificial delay
+//   useEffect(() => {
+//     let cancelled = false;
+//     fetchData(`/api/posts/${post._id}/comments`, { credentials: "include" })
+//       .then((r) => r.json())
+//       .then((data) => {
+//         if (!cancelled) {
+//           setComments(data.comments || []);
+//           setCommentsLoading(false);
+//         }
+//       })
+//       .catch(() => {
+//         if (!cancelled) setCommentsLoading(false);
+//       });
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, [post._id]);
+
+//   // Lock body scroll
+//   useEffect(() => {
+//     const scrollY = window.scrollY;
+//     document.body.style.cssText = `position:fixed;top:-${scrollY}px;width:100%;overflow:hidden`;
+//     return () => {
+//       document.body.style.cssText = "";
+//       window.scrollTo(0, scrollY);
+//     };
+//   }, []);
+
+//   // Close menus on outside click
+//   useEffect(() => {
+//     const handler = (e) => {
+//       if (menuRef.current && !menuRef.current.contains(e.target))
+//         setShowMenu(false);
+//       if (!e.target.closest("[data-comment-menu]")) setActiveCommentMenu(null);
+//     };
+//     document.addEventListener("mousedown", handler);
+//     return () => document.removeEventListener("mousedown", handler);
+//   }, []);
+
+//   return createPortal(
+//     <div
+//       onClick={(e) => e.target === e.currentTarget && onClose()}
+//       className="fixed inset-0 z-[9999] bg-black/85 flex items-end md:items-center justify-center"
+//     >
+//       <div
+//         className="
+//         w-full md:max-w-4xl
+//         max-h-[92dvh] md:h-[82vh]
+//         bg-[#0a0a0a]
+//         border-t border-white/10 md:border md:border-white/10
+//         rounded-t-2xl md:rounded-2xl overflow-hidden
+//         flex flex-col md:flex-row
+//       "
+//       >
+//         {/* IMAGE — natural square on mobile, fixed half-panel on desktop */}
+//         <div className="w-full md:w-1/2 md:h-full bg-black flex items-center justify-center shrink-0 md:rounded-l-2xl overflow-hidden">
+//           <img
+//             src={post.imageUrl}
+//             alt=""
+//             className="w-full md:h-full object-cover md:object-contain aspect-square md:aspect-auto"
+//           />
+//         </div>
+
+//         {/* RIGHT PANEL */}
+//         <div className="flex flex-col w-full md:w-1/2 flex-1 border-t md:border-t-0 md:border-l border-white/10 overflow-hidden min-h-0">
+//           {/* HEADER */}
+//           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/10">
+//             <Avatar
+//               username={post.user?.username}
+//               profilePicture={post.user?.profilePicture}
+//               size={28}
+//               border
+//             />
+//             {/* Username: xs on mobile → sm on sm+ */}
+//             <span className="text-xs sm:text-sm font-semibold text-white tracking-wide flex-1 truncate">
+//               {post.user?.username}
+//             </span>
+//             {isOwner && (
+//               <div ref={menuRef} className="relative flex-shrink-0">
+//                 <button
+//                   onClick={() => setShowMenu((p) => !p)}
+//                   className="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white/70 hover:text-white active:scale-90 transition-all duration-150"
+//                 >
+//                   <MoreHorizontal size={15} />
+//                 </button>
+//                 {showMenu && (
+//                   <div className="absolute right-0 mt-2 z-30 w-44 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl overflow-hidden">
+//                     {/* Delete post: xs on mobile → sm on sm+ */}
+//                     <button
+//                       onClick={handleDelete}
+//                       className="w-full flex items-center gap-3 px-4 py-3 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-white/8 transition-colors duration-150 text-left"
+//                     >
+//                       <Trash2 size={13} />
+//                       Delete post
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             )}
+//             <button
+//               onClick={onClose}
+//               className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 text-white active:scale-90 transition-all duration-150"
+//             >
+//               <X size={14} />
+//             </button>
+//           </div>
+
+//           {/* CAPTION */}
+//           {post.caption && (
+//             <div className="flex-shrink-0 flex items-start gap-3 px-4 pt-4 pb-3 border-b border-white/10">
+//               <Avatar
+//                 username={post.user?.username}
+//                 profilePicture={post.user?.profilePicture}
+//                 size={28}
+//                 border
+//               />
+//               <div className="flex flex-col gap-0.5">
+//                 {/* Caption username: xs on mobile → sm on sm+ */}
+//                 <span className="text-xs sm:text-sm font-semibold text-white/90">
+//                   {post.user?.username}
+//                 </span>
+//                 {/* Caption body: xs on mobile → sm on sm+ */}
+//                 <p className="text-xs sm:text-sm text-white/75 leading-relaxed">
+//                   {post.caption}
+//                 </p>
+//               </div>
+//             </div>
+//           )}
+
+//           {/* COMMENTS LABEL */}
+//           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3">
+//             <div className="flex-1 h-px bg-white/[0.06]" />
+//             {/* "comments" divider label: [10px] on mobile → xs on sm+ */}
+//             <span className="text-[10px] sm:text-xs text-white/30 tracking-widest uppercase">
+//               comments
+//             </span>
+//             <div className="flex-1 h-px bg-white/[0.06]" />
+//           </div>
+
+//           {/* COMMENTS LIST */}
+//           <div className="flex-1 overflow-y-auto min-h-0 px-4 pb-4">
+//             {commentsLoading ? (
+//               <div className="flex flex-col gap-4">
+//                 {[1, 2, 3].map((i) => (
+//                   <div key={i} className="flex gap-3 items-start">
+//                     <div className="comment-shimmer w-7 h-7 rounded-full flex-shrink-0" />
+//                     <div className="flex flex-col gap-2 flex-1">
+//                       <div
+//                         className="comment-shimmer h-2.5 rounded"
+//                         style={{ width: `${[40, 55, 45][i - 1]}%` }}
+//                       />
+//                       <div
+//                         className="comment-shimmer h-2.5 rounded"
+//                         style={{ width: `${[65, 80, 55][i - 1]}%` }}
+//                       />
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             ) : comments.length === 0 ? (
+//               <div className="flex flex-col items-center justify-center py-6 gap-2 text-white/25">
+//                 <svg
+//                   width="28"
+//                   height="28"
+//                   viewBox="0 0 24 24"
+//                   fill="none"
+//                   stroke="currentColor"
+//                   strokeWidth="1.5"
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                 >
+//                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+//                 </svg>
+//                 {/* "No comments yet": xs on mobile → sm on sm+ */}
+//                 <p className="text-xs sm:text-sm tracking-wide">
+//                   No comments yet
+//                 </p>
+//               </div>
+//             ) : (
+//               <div className="flex flex-col gap-4">
+//                 {comments.map((c, i) => {
+//                   const isMyComment = String(user?._id) === String(c.user?._id);
+//                   return (
+//                     <div
+//                       key={c._id}
+//                       className="flex items-start gap-3 group relative"
+//                       style={{
+//                         animation: "fadeSlideIn 0.2s ease forwards",
+//                         animationDelay: `${i * 30}ms`,
+//                         opacity: 0,
+//                       }}
+//                     >
+//                       <Avatar
+//                         username={c.user?.username}
+//                         profilePicture={c.user?.profilePicture}
+//                         size={28}
+//                         border
+//                       />
+//                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+//                         {/* Comment author username: xs on mobile → sm on sm+ */}
+//                         <span className="text-xs sm:text-sm font-semibold text-white/90">
+//                           {c.user?.username}
+//                         </span>
+//                         {/* Comment body: xs on mobile → sm on sm+ */}
+//                         <p className="text-xs sm:text-sm text-white/75 leading-relaxed">
+//                           {c.text}
+//                         </p>
+//                         {/* Comment date: [10px] on mobile → xs on sm+ */}
+//                         <span className="text-[10px] sm:text-xs text-white/30 mt-0.5">
+//                           {new Date(c.createdAt).toLocaleDateString("en-US", {
+//                             month: "short",
+//                             day: "numeric",
+//                           })}
+//                         </span>
+//                       </div>
+//                       {isMyComment && (
+//                         <div
+//                           className="relative flex-shrink-0"
+//                           data-comment-menu
+//                         >
+//                           <button
+//                             onClick={(e) => {
+//                               e.stopPropagation();
+//                               setActiveCommentMenu(
+//                                 activeCommentMenu === c._id ? null : c._id,
+//                               );
+//                             }}
+//                             className="w-6 h-6 flex items-center justify-center rounded-full text-white/20 hover:text-white/60 hover:bg-white/8 opacity-0 group-hover:opacity-100 transition-all duration-150"
+//                           >
+//                             <MoreHorizontal size={13} />
+//                           </button>
+//                           {activeCommentMenu === c._id && (
+//                             <div
+//                               className="absolute right-0 mt-1 z-30 w-36 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl overflow-hidden"
+//                               data-comment-menu
+//                             >
+//                               {/* Delete comment: xs on mobile → sm on sm+ */}
+//                               <button
+//                                 onClick={() => handleDeleteComment(c._id)}
+//                                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-white/8 transition-colors duration-150 text-left"
+//                               >
+//                                 <Trash2 size={12} />
+//                                 Delete comment
+//                               </button>
+//                             </div>
+//                           )}
+//                         </div>
+//                       )}
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             )}
+//           </div>
+
+//           {/* LIKES */}
+//           <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 border-t border-white/[0.06]">
+//             <svg
+//               width="14"
+//               height="14"
+//               viewBox="0 0 24 24"
+//               fill="#ef4444"
+//               stroke="#ef4444"
+//               strokeWidth="1.8"
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//             >
+//               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+//             </svg>
+//             {/* Likes count: xs on mobile → sm on sm+ */}
+//             <span className="text-xs sm:text-sm font-semibold text-white/90">
+//               {likesCount.toLocaleString()}
+//             </span>
+//             {/* "like/likes" label: xs on mobile → sm on sm+ */}
+//             <span className="text-xs sm:text-sm text-white/35">
+//               {likesCount === 1 ? "like" : "likes"}
+//             </span>
+//           </div>
+
+//           {/* COMMENT INPUT */}
+//           <div
+//             className="flex-shrink-0 border-t border-white/10 bg-[#0a0a0a] px-3 py-3"
+//             style={{
+//               paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
+//             }}
+//           >
+//             <div className="flex items-center gap-2">
+//               <Avatar
+//                 username={user?.username}
+//                 profilePicture={user?.profilePicture}
+//                 size={28}
+//               />
+//               {/* Comment input: xs on mobile → sm on sm+ */}
+//               <input
+//                 ref={inputRef}
+//                 type="text"
+//                 value={comment}
+//                 onChange={(e) => setComment(e.target.value)}
+//                 onKeyDown={(e) => e.key === "Enter" && handlePost()}
+//                 placeholder="Add a comment…"
+//                 className="flex-1 bg-white/8 hover:bg-white/10 focus:bg-white/10 rounded-full px-4 py-2 text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors duration-150"
+//                 style={{
+//                   backgroundColor: "transparent",
+//                   WebkitBoxShadow: "0 0 0px 1000px transparent inset",
+//                   WebkitTextFillColor: "rgba(255,255,255,0.8)",
+//                   caretColor: "white",
+//                 }}
+//               />
+//               <button
+//                 onClick={handlePost}
+//                 className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-500 active:scale-90 transition-all duration-150"
+//               >
+//                 <SendHorizontal size={14} className="text-white ml-0.5" />
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>,
+//     document.body,
+//   );
+// }
+
+// export default PostModal;
+
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { SendHorizontal, MoreHorizontal, X, Trash2 } from "lucide-react";
@@ -3910,25 +4392,51 @@ function PostModal({
     >
       <div
         className="
-        w-full md:max-w-4xl
-        max-h-[92dvh] md:h-[82vh]
-        bg-[#0a0a0a]
-        border-t border-white/10 md:border md:border-white/10
-        rounded-t-2xl md:rounded-2xl overflow-hidden
-        flex flex-col md:flex-row
-      "
+          /* ── MOBILE: full-screen, column layout ── */
+          w-full h-[100dvh]
+          flex flex-col
+          bg-[#0a0a0a]
+          /* ── DESKTOP: centred card, row layout ── */
+          md:h-[82vh] md:max-w-4xl md:max-h-[92dvh]
+          md:flex-row
+          md:rounded-2xl md:border md:border-white/10
+          overflow-hidden
+        "
       >
-        {/* IMAGE — natural square on mobile, fixed half-panel on desktop */}
-        <div className="w-full md:w-1/2 md:h-full bg-black flex items-center justify-center shrink-0 md:rounded-l-2xl overflow-hidden">
+        {/* ── IMAGE PANEL ──
+            Mobile  : fixed 40dvh tall, full width, no rounding
+            Desktop : half-width, full height, left-rounded
+        */}
+        <div
+          className="
+            w-full bg-black flex items-center justify-center shrink-0 overflow-hidden
+            /* mobile: 40% of viewport height */
+            h-[40dvh]
+            /* desktop: half-panel, full height */
+            md:h-full md:w-1/2 md:rounded-l-2xl
+          "
+        >
           <img
             src={post.imageUrl}
             alt=""
-            className="w-full md:h-full object-cover md:object-contain aspect-square md:aspect-auto"
+            className="
+              w-full h-full object-cover
+              md:object-contain
+            "
           />
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="flex flex-col w-full md:w-1/2 flex-1 border-t md:border-t-0 md:border-l border-white/10 overflow-hidden min-h-0">
+        {/* ── RIGHT / BOTTOM PANEL ──
+            Mobile  : flex-1 so it fills the remaining 60dvh, column, no side borders
+            Desktop : half-width, left border
+        */}
+        <div
+          className="
+            flex flex-col flex-1 min-h-0 overflow-hidden
+            border-t border-white/10
+            md:w-1/2 md:border-t-0 md:border-l
+          "
+        >
           {/* HEADER */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/10">
             <Avatar
@@ -3937,7 +4445,6 @@ function PostModal({
               size={28}
               border
             />
-            {/* Username: xs on mobile → sm on sm+ */}
             <span className="text-xs sm:text-sm font-semibold text-white tracking-wide flex-1 truncate">
               {post.user?.username}
             </span>
@@ -3951,7 +4458,6 @@ function PostModal({
                 </button>
                 {showMenu && (
                   <div className="absolute right-0 mt-2 z-30 w-44 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl overflow-hidden">
-                    {/* Delete post: xs on mobile → sm on sm+ */}
                     <button
                       onClick={handleDelete}
                       className="w-full flex items-center gap-3 px-4 py-3 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-white/8 transition-colors duration-150 text-left"
@@ -3981,11 +4487,9 @@ function PostModal({
                 border
               />
               <div className="flex flex-col gap-0.5">
-                {/* Caption username: xs on mobile → sm on sm+ */}
                 <span className="text-xs sm:text-sm font-semibold text-white/90">
                   {post.user?.username}
                 </span>
-                {/* Caption body: xs on mobile → sm on sm+ */}
                 <p className="text-xs sm:text-sm text-white/75 leading-relaxed">
                   {post.caption}
                 </p>
@@ -3996,14 +4500,13 @@ function PostModal({
           {/* COMMENTS LABEL */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3">
             <div className="flex-1 h-px bg-white/[0.06]" />
-            {/* "comments" divider label: [10px] on mobile → xs on sm+ */}
             <span className="text-[10px] sm:text-xs text-white/30 tracking-widest uppercase">
               comments
             </span>
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
 
-          {/* COMMENTS LIST */}
+          {/* COMMENTS LIST — scrollable, fills all remaining space */}
           <div className="flex-1 overflow-y-auto min-h-0 px-4 pb-4">
             {commentsLoading ? (
               <div className="flex flex-col gap-4">
@@ -4037,7 +4540,6 @@ function PostModal({
                 >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                {/* "No comments yet": xs on mobile → sm on sm+ */}
                 <p className="text-xs sm:text-sm tracking-wide">
                   No comments yet
                 </p>
@@ -4063,15 +4565,12 @@ function PostModal({
                         border
                       />
                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                        {/* Comment author username: xs on mobile → sm on sm+ */}
                         <span className="text-xs sm:text-sm font-semibold text-white/90">
                           {c.user?.username}
                         </span>
-                        {/* Comment body: xs on mobile → sm on sm+ */}
                         <p className="text-xs sm:text-sm text-white/75 leading-relaxed">
                           {c.text}
                         </p>
-                        {/* Comment date: [10px] on mobile → xs on sm+ */}
                         <span className="text-[10px] sm:text-xs text-white/30 mt-0.5">
                           {new Date(c.createdAt).toLocaleDateString("en-US", {
                             month: "short",
@@ -4100,7 +4599,6 @@ function PostModal({
                               className="absolute right-0 mt-1 z-30 w-36 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl overflow-hidden"
                               data-comment-menu
                             >
-                              {/* Delete comment: xs on mobile → sm on sm+ */}
                               <button
                                 onClick={() => handleDeleteComment(c._id)}
                                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-white/8 transition-colors duration-150 text-left"
@@ -4133,11 +4631,9 @@ function PostModal({
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
-            {/* Likes count: xs on mobile → sm on sm+ */}
             <span className="text-xs sm:text-sm font-semibold text-white/90">
               {likesCount.toLocaleString()}
             </span>
-            {/* "like/likes" label: xs on mobile → sm on sm+ */}
             <span className="text-xs sm:text-sm text-white/35">
               {likesCount === 1 ? "like" : "likes"}
             </span>
@@ -4156,7 +4652,6 @@ function PostModal({
                 profilePicture={user?.profilePicture}
                 size={28}
               />
-              {/* Comment input: xs on mobile → sm on sm+ */}
               <input
                 ref={inputRef}
                 type="text"
