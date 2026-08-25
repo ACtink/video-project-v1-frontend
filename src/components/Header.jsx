@@ -807,7 +807,7 @@ function Header() {
               filter: "drop-shadow(0 0 14px rgba(99,102,241,0.35))",
             }}
           >
-            quikchat
+            QuikChat
           </span>
         </div>
 
