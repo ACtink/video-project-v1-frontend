@@ -795,6 +795,7 @@ function Header() {
           <span
             className="hdr-logo-text"
             style={{
+              fontFamily: "'Exo 2', sans-serif",
               fontWeight: 800,
               fontSize: "clamp(17px, 4.2vw, 20px)",
               letterSpacing: "-0.03em",

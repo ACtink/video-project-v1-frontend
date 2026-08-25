@@ -26,6 +26,10 @@ body,
 }
 
 
+.logo {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 800;
+}
 
 @keyframes viewFade {
   from {
